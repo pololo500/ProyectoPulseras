@@ -1,0 +1,70 @@
+<div class="card">
+  <h1>Agregá tu producto!</h1>
+  <!--
+    <ul>
+      <li *ngFor="let pulsera of pulseras">
+        <strong>Nombre:</strong> {{ pulsera.nombre }} <br>
+        <strong>Dijes:</strong> {{ pulsera.dijes.join(', ') }}<br>
+        <img [src]="pulsera.imagenUrl" width="200" /><br>
+      </li>
+    </ul>
+  -->
+  <form [formGroup]="addProductForm" (ngSubmit)="submit()">
+    <div class="form">
+      <div>
+        <label for="producto">Producto</label>
+        <select formControlName="producto" id="producto" [ngClass]="{ 'filled': addProductForm.get('producto')?.value }">
+          <option *ngFor="let prod of productos" [value]="prod">{{ prod | capitalize }}</option>
+        </select>
+      </div>
+      <div>
+        <label for="material">Material</label>
+        <select formControlName="material" id="material" [ngClass]="{ 'filled': addProductForm.get('material')?.value }">
+          <option *ngFor="let mat of materiales" [value]="mat">{{ mat }}</option>
+        </select>
+      </div>
+      <div>
+        <label for="nombre">Nombre</label>
+        <input type="text" formControlName="nombre" name="nombre" id="nombre" [ngClass]="{ 'filled': addProductForm.get('nombre')?.value?.length > 0 }" required/>
+      </div>
+    </div>
+    <div class="form">
+      <div>
+        <label for="mostacillas">Mostacillas</label>
+        <input type="text" formControlName="mostacillas" name="mostacillas" id="mostacillas" placeholder="Mostacillas separadas por coma" [ngClass]="{ 'filled': addProductForm.get('mostacillas')?.value?.length > 0 }"/>
+      </div>
+      <div>
+        <label for="dijes">Dijes</label>
+        <input type="text" formControlName="dijes" name="dijes" id="dijes" placeholder="Dijes separados por coma" [ngClass]="{ 'filled': addProductForm.get('dijes')?.value?.length > 0 }"/>
+      </div>
+      <div>
+        <label for="descripcion">Descripción</label>
+        <input type="text" formControlName="descripcion" name="descripcion" id="descripcion" [ngClass]="{ 'filled': addProductForm.get('descripcion')?.value?.length > 0 }"/>
+      </div>
+    </div>
+    <div class="form">
+      <div>
+        <label for="cant">Cantidad</label>
+        <input type="number" formControlName="cant" name="cant" id="cant" [ngClass]="{ 'filled': addProductForm.get('cant')?.value > 0 }"/>
+      </div>
+      <div>
+        <label for="precio">Precio</label>
+        <input type="number" formControlName="precio" name="precio" id="precio" placeholder="$" [ngClass]="{ 'filled': addProductForm.get('precio')?.value > 0 }" required/>
+      </div>
+      <div>
+        <label for="addImagen" id="imagen">Foto</label>
+        <input type="file" name="imagen" id="addImagen" (change)="onFileSelected($event)" accept=".jpg, .jpeg, .png" [ngClass]="{ 'filled': addProductForm.get('imagen')?.value }" required/>
+      </div>
+    </div>
+    <button type="submit" [disabled]="addProductForm.invalid">Agregar Producto</button>
+  </form>
+
+  <!--
+    <div *ngIf="imagenUrl">
+      <p>Imagen subida:</p>
+      <img [src]="imagenUrl" width="200" />
+    </div>
+    -->
+</div>
+
+<app-button buttonClass="modificarProductos" etiqueta="Modificar Productos" link="/modificarProductos"></app-button>

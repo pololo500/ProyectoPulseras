@@ -1,0 +1,32 @@
+<div class="card">
+  <h1>Agregá tu dije!</h1>
+  <form [formGroup]="addDijeForm" (ngSubmit)="submit()">
+    <div class="form">
+      <div>
+        <label for="nombre">Nombre</label>
+        <input type="text" formControlName="nombre" name="nombre" id="nombre" [ngClass]="{ 'filled': addDijeForm.get('nombre')?.value?.length > 0 }" required/>
+      </div>
+      <div>
+        <label for="categoria">Categorías</label>
+        <input type="text" formControlName="categoria" name="categoria" id="categoria" placeholder="Categorías separadas por coma" [ngClass]="{ 'filled': addDijeForm.get('categoria')?.value?.length > 0 }"/>
+      </div>
+      <div>
+        <label for="color">Color</label>
+        <input type="text" formControlName="color" name="color" id="color" [ngClass]="{ 'filled': addDijeForm.get('color')?.value?.length > 0 }"/>
+      </div>
+    </div>
+    <div class="form">
+      <div>
+        <label for="precio">Precio</label>
+        <input type="number" formControlName="precio" name="precio" id="precio" placeholder="$" [ngClass]="{ 'filled': addDijeForm.get('precio')?.value > 0 }" required/>
+      </div>
+      <div>
+        <label for="addImagen" id="imagen">Foto</label>
+        <input type="file" name="imagen" id="addImagen" (change)="onFileSelected($event)" accept=".jpg, .jpeg, .png" [ngClass]="{ 'filled': addDijeForm.get('imagen')?.value }" required/>
+      </div>
+    </div>
+    <button type="submit" [disabled]="addDijeForm.invalid">Agregar Dije</button>
+  </form>
+</div>
+
+<app-button buttonClass="modificarProductos" etiqueta="Modificar Dijes" link="/modificarDijes"></app-button>

@@ -1,0 +1,72 @@
+<!--<header *ngIf="validRoute && type == ''">
+    <a routerLink="/"><img src="images/Logo final.png" class="logo"></a>
+    <app-button etiqueta="Iniciar" link="/login"></app-button>
+</header>-->
+
+<!--Propietarios e Inquilinos-->
+<canvas id="particle-canvas-circle" *ngIf="validRoute"></canvas>
+<header *ngIf="validRoute">
+    <ul>
+        <li [class.active]="isActive('colgantesCelular')">
+            <a routerLink="/colgantesCelular">
+                <span *ngIf="!isMobile">Colgantes celular</span>
+                <img *ngIf="isMobile && color == 'azul'" src="images/home azul.png">
+                <img *ngIf="isMobile && color == 'blanco'" src="images/home blanco.png">
+            </a>
+        </li>
+        <li *ngIf="!isMobile">|</li>
+        <li [class.active]="isActive('colgantesCartera')">
+            <a routerLink="/colgantesCartera">
+                <span *ngIf="!isMobile">Colgantes cartera</span>
+                <img *ngIf="isMobile && color == 'azul'" src="images/expensas azul.png">
+                <img *ngIf="isMobile && color == 'blanco'" src="images/expensas blanco.png">
+            </a>
+        </li>
+        <li *ngIf="!isMobile">|</li>
+        <li [class.active]="isActive('llaveros')">
+            <a routerLink="/llaveros">
+                <span *ngIf="!isMobile">Llaveros</span>
+                <img *ngIf="isMobile && color == 'azul'" src="images/pagar azul.png">
+                <img *ngIf="isMobile && color == 'blanco'" src="images/pagar blanco.png">
+            </a>
+        </li>
+    </ul>
+        
+        <a routerLink="/"><img src="images/Logo final.png" class="logo"></a>
+
+    <ul class="ulRight">
+        <li [class.active]="isActive('pulseras')">
+            <a routerLink="/pulseras">
+                <span *ngIf="!isMobile">Pulseras</span>
+                <img *ngIf="isMobile && color == 'azul'" src="images/contactos azul.png">
+                <img *ngIf="isMobile && color == 'blanco'" src="images/contactos blanco.png">
+            </a>
+        </li>
+        <li *ngIf="!isMobile">|</li>
+        <li [class.active]="isActive('aritos')">
+            <a routerLink="/aritos">
+                <span *ngIf="!isMobile">Aritos</span>
+                <img *ngIf="isMobile && color == 'azul'" src="images/contactos azul.png">
+                <img *ngIf="isMobile && color == 'blanco'" src="images/contactos blanco.png">
+            </a>
+        </li>
+        <li *ngIf="!isMobile">|</li>
+        <li [class.active]="isActive('promos')">
+            <a routerLink="/promos">
+                <span *ngIf="!isMobile">Promos</span>
+                <img *ngIf="isMobile && color == 'azul'" src="images/contactos azul.png">
+                <img *ngIf="isMobile && color == 'blanco'" src="images/contactos blanco.png">
+            </a>
+        </li>
+        <li *ngIf="!isMobile">|</li>
+        <li [class.active]="isActive('contacto')">
+            <a routerLink="/contacto">
+                <span *ngIf="!isMobile">Contacto</span>
+                <img *ngIf="isMobile && color == 'azul'" src="images/contactos azul.png">
+                <img *ngIf="isMobile && color == 'blanco'" src="images/contactos blanco.png">
+            </a>
+        </li>
+    </ul>
+</header>
+
+<canvas id="particle-canvas-square" *ngIf="validRoute"></canvas>
