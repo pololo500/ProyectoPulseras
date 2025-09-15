@@ -1,19 +1,16 @@
 import { Component, OnInit } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { TitleComponent } from '../title/title.component';
 import { ButtonComponent } from '../button/button.component';
 import { CapitalizePipe } from '../../extras/capitalizePipe';
 import { GlobalService } from '../../services/global.service';
 
 @Component({
-  selector: 'app-agregarProducto',
-  standalone: true,
-  imports: [RouterOutlet, CommonModule, FormsModule, ReactiveFormsModule, TitleComponent, ButtonComponent, CapitalizePipe],
-  templateUrl: './agregarProducto.component.html',
-  styleUrl: './agregarProducto.component.css'
+    selector: 'app-agregarProducto',
+    imports: [CommonModule, FormsModule, ReactiveFormsModule, ButtonComponent, CapitalizePipe],
+    templateUrl: './agregarProducto.component.html',
+    styleUrl: './agregarProducto.component.css'
 })
 export class AgregarProductoComponent implements OnInit {
   addProductForm: FormGroup;

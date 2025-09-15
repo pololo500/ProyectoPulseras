@@ -1,19 +1,15 @@
 import { Component, OnInit } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { TitleComponent } from '../title/title.component';
 import { ButtonComponent } from '../button/button.component';
-import { CapitalizePipe } from '../../extras/capitalizePipe';
 import { GlobalService } from '../../services/global.service';
 
 @Component({
-  selector: 'app-agregarDije',
-  standalone: true,
-  imports: [RouterOutlet, CommonModule, FormsModule, ReactiveFormsModule, TitleComponent, ButtonComponent, CapitalizePipe],
-  templateUrl: './agregarDije.component.html',
-  styleUrl: './agregarDije.component.css'
+    selector: 'app-agregarDije',
+    imports: [CommonModule, FormsModule, ReactiveFormsModule, ButtonComponent],
+    templateUrl: './agregarDije.component.html',
+    styleUrl: './agregarDije.component.css'
 })
 export class AgregarDijeComponent {
   addDijeForm: FormGroup;

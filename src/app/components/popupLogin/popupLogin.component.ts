@@ -6,11 +6,10 @@ import { GlobalService } from '../../services/global.service';
 
 
 @Component({
-  selector: 'app-popupLogin',
-  standalone: true,
-  imports: [ ButtonComponent, CommonModule ],
-  templateUrl: './popupLogin.component.html',
-  styleUrl: './popupLogin.component.css'
+    selector: 'app-popupLogin',
+    imports: [ButtonComponent, CommonModule],
+    templateUrl: './popupLogin.component.html',
+    styleUrl: './popupLogin.component.css'
 })
 export class PopupLoginComponent implements OnInit {
   dni = '';

@@ -1,7 +1,4 @@
 import { AfterViewInit, Component, OnDestroy, OnInit } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import { AppComponent } from '../../app.component';
-import { ButtonComponent } from '../button/button.component';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { PopupLoginComponent } from '../popupLogin/popupLogin.component';
 import { CommonModule } from '@angular/common';
@@ -10,11 +7,10 @@ import { PopupErrorComponent } from '../popupError/popupError.component';
 import { ParticleEffectSquare } from '../../extras/particle-effect-square';
 
 @Component({
-  selector: 'app-login',
-  standalone: true,
-  imports: [ RouterOutlet, AppComponent, ReactiveFormsModule, ButtonComponent, PopupLoginComponent, CommonModule, PopupErrorComponent ],
-  templateUrl: './login.component.html',
-  styleUrl: './login.component.css'
+    selector: 'app-login',
+    imports: [ReactiveFormsModule, PopupLoginComponent, CommonModule, PopupErrorComponent],
+    templateUrl: './login.component.html',
+    styleUrl: './login.component.css'
 })
 export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
   loginForm = new FormGroup({

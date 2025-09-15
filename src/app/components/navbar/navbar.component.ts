@@ -2,15 +2,13 @@ import { AfterViewInit, Component, HostListener, OnDestroy, OnInit } from '@angu
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { CommonModule, NgIf } from '@angular/common';
 import { filter } from 'rxjs';
-import { ButtonComponent } from '../button/button.component';
 import { ParticleEffectCircle } from '../../extras/particle-effect-circle';
 import { ParticleEffectSquare } from '../../extras/particle-effect-square';
 @Component({
-  selector: 'app-navbar',
-  standalone: true,
-  imports: [ RouterModule, NgIf, CommonModule, ButtonComponent ],
-  templateUrl: './navbar.component.html',
-  styleUrl: './navbar.component.css'
+    selector: 'app-navbar',
+    imports: [RouterModule, NgIf, CommonModule],
+    templateUrl: './navbar.component.html',
+    styleUrl: './navbar.component.css'
 })
 export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
   validRoute = true;

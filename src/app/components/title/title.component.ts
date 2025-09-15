@@ -1,14 +1,13 @@
 import { Component, HostListener, Input, OnInit } from '@angular/core';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
-import { CommonModule, NgIf } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs';
 
 @Component({
-  selector: 'app-title',
-  standalone: true,
-  imports: [ RouterModule, NgIf, CommonModule ],
-  templateUrl: './title.component.html',
-  styleUrl: './title.component.css'
+    selector: 'app-title',
+    imports: [RouterModule, CommonModule],
+    templateUrl: './title.component.html',
+    styleUrl: './title.component.css'
 })
 export class TitleComponent implements OnInit {
   validRoute = false;

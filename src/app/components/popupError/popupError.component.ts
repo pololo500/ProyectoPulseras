@@ -3,11 +3,10 @@ import { ButtonComponent } from '../button/button.component';
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'app-popupError',
-  standalone: true,
-  imports: [ ButtonComponent, CommonModule ],
-  templateUrl: './popupError.component.html',
-  styleUrl: './popupError.component.css'
+    selector: 'app-popupError',
+    imports: [ButtonComponent, CommonModule],
+    templateUrl: './popupError.component.html',
+    styleUrl: './popupError.component.css'
 })
 export class PopupErrorComponent {
   @Input() text = '';

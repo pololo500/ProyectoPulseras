@@ -1,5 +1,4 @@
 import { AfterViewInit, Component, ElementRef, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { AppComponent } from '../../app.component';
 import { ButtonComponent } from '../button/button.component';
 import { GlobalService } from '../../services/global.service';
 import { Router } from '@angular/router';
@@ -7,11 +6,10 @@ import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'app-inicioAdmin',
-  standalone: true,
-  imports: [ AppComponent, ButtonComponent, CommonModule ],
-  templateUrl: './inicioAdmin.component.html',
-  styleUrl: './inicioAdmin.component.css',
+    selector: 'app-inicioAdmin',
+    imports: [ButtonComponent, CommonModule],
+    templateUrl: './inicioAdmin.component.html',
+    styleUrl: './inicioAdmin.component.css'
 })
 export class InicioAdminComponent implements OnInit, AfterViewInit, OnDestroy{
   @ViewChild('viewport') viewport!: ElementRef;
