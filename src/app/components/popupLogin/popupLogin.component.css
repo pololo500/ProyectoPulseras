@@ -41,6 +41,16 @@ p {
     font-weight: bold;
 }
 
+#tipo {
+    font-size: 18px;
+    color: #666;
+    font-weight: normal;
+    background-color: #f0f4ff;
+    padding: 5px 15px;
+    border-radius: 20px;
+    text-align: center;
+}
+
 app-button {
     margin-top: 0px;
 }

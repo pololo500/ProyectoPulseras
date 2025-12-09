@@ -1,0 +1,142 @@
+<div class="carrito-page">
+    <h1>Mi Carrito</h1>
+    
+    <!-- Carrito con items -->
+    <div class="carrito-contenido" *ngIf="items.length > 0">
+        <div class="carrito-items">
+            <div class="carrito-item" *ngFor="let item of items; let i = index">
+                <div class="item-imagen">
+                    <img [src]="item.imagen" [alt]="item.nombre">
+                </div>
+                
+                <div class="item-info">
+                    <h3>{{ item.nombre }}</h3>
+                    <p class="item-tipo">{{ item.producto | capitalize }}</p>
+                    <p class="item-material" *ngIf="item.material">{{ item.material | capitalize }}</p>
+                    <div class="item-colores" *ngIf="item.coloresPorCapa && item.coloresPorCapa.length > 0">
+                        <div class="color-capa-item" *ngFor="let colorCapa of item.coloresPorCapa">
+                            <span class="color-dot-carrito" [style.background-color]="colorCapa.colorRgb"></span>
+                            <span class="capa-info">{{ colorCapa.capaNombre }}: {{ colorCapa.colorNombre | capitalize }}</span>
+                        </div>
+                    </div>
+                    <p class="item-precio-unitario">${{ item.precio }} c/u</p>
+                </div>
+                
+                <div class="item-cantidad">
+                    <button class="btn-cantidad" (click)="decrementar(item)">-</button>
+                    <input type="number" [value]="item.cantidad" (change)="actualizarCantidad(item, $any($event.target).value)" min="1">
+                    <button class="btn-cantidad" (click)="incrementar(item)">+</button>
+                </div>
+                
+                <div class="item-subtotal">
+                    <p class="subtotal-label">Subtotal</p>
+                    <p class="subtotal-valor">${{ getSubtotal(item) }}</p>
+                </div>
+                
+                <button class="btn-eliminar" (click)="eliminarItem(item)" title="Eliminar">✕</button>
+            </div>
+        </div>
+        
+        <div class="carrito-resumen">
+            <h2>Resumen del pedido</h2>
+            
+            <div class="resumen-linea">
+                <span>Productos ({{ getCantidadTotal() }})</span>
+                <span>${{ getTotal() }}</span>
+            </div>
+            
+            <div class="resumen-linea">
+                <span>Envío</span>
+                <span class="envio-calcular">A calcular</span>
+            </div>
+            
+            <div class="resumen-total">
+                <span>Total</span>
+                <span>${{ getTotal() }}</span>
+            </div>
+            
+            <button class="btn-finalizar" (click)="finalizarCompra()">Finalizar compra</button>
+            <button class="btn-continuar" (click)="continuarComprando()">Continuar comprando</button>
+            <button class="btn-vaciar" (click)="vaciarCarrito()">Vaciar carrito</button>
+        </div>
+    </div>
+    
+    <!-- Carrito vacío -->
+    <div class="carrito-vacio" *ngIf="items.length === 0">
+        <div class="icono-vacio">🛒</div>
+        <h2>Tu carrito está vacío</h2>
+        <p>¡Explora nuestros productos y agrega tus favoritos!</p>
+        <button (click)="continuarComprando()">Ver productos</button>
+    </div>
+</div>
+
+<!-- Popup Confirmación de Compra -->
+<div class="popup-overlay" *ngIf="mostrarPopupConfirmacion" (click)="cancelarCompra()">
+    <div class="popup-content" (click)="$event.stopPropagation()">
+        <h2>📱 Confirmar Pedido</h2>
+        
+        <p class="popup-descripcion">
+            Al confirmar, se creará tu pedido y serás redirigido a <strong>WhatsApp</strong> para coordinar los detalles con nosotros.
+        </p>
+        
+        <div class="popup-resumen">
+            <h3>Resumen del pedido:</h3>
+            <div class="popup-items">
+                <div class="popup-item" *ngFor="let item of items">
+                    <div class="popup-item-info">
+                        <span class="item-nombre">{{ item.nombre }}</span>
+                        <div class="item-colores-popup" *ngIf="item.coloresPorCapa && item.coloresPorCapa.length > 0">
+                            <span class="color-capa-mini" *ngFor="let cc of item.coloresPorCapa">
+                                <span class="color-dot-mini" [style.background-color]="cc.colorRgb"></span>
+                                {{ cc.capaNombre }}
+                            </span>
+                        </div>
+                    </div>
+                    <span class="item-detalle">x{{ item.cantidad }} - ${{ getSubtotal(item) }}</span>
+                </div>
+            </div>
+            <div class="popup-total">
+                <span>Total:</span>
+                <span class="total-valor">${{ getTotal() }}</span>
+            </div>
+        </div>
+        
+        <div class="popup-acciones">
+            <button class="btn-cancelar" (click)="cancelarCompra()" [disabled]="procesando">Cancelar</button>
+            <button class="btn-confirmar" (click)="confirmarCompra()" [disabled]="procesando">
+                <span *ngIf="!procesando">📲 Confirmar y enviar</span>
+                <span *ngIf="procesando">Procesando...</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Popup Solicitar Teléfono -->
+<div class="popup-overlay" *ngIf="mostrarPopupTelefono" (click)="cerrarPopupTelefono()">
+    <div class="popup-content popup-telefono" (click)="$event.stopPropagation()">
+        <h2>📞 Número de Teléfono</h2>
+        
+        <p class="popup-descripcion">
+            Para poder contactarte sobre tu pedido, necesitamos tu número de teléfono.
+        </p>
+        
+        <div class="form-telefono">
+            <label for="telefono">Teléfono / WhatsApp *</label>
+            <input 
+                type="tel" 
+                id="telefono" 
+                [(ngModel)]="telefonoInput" 
+                placeholder="Ej: 1140766376"
+                [disabled]="guardandoTelefono">
+            <small>Ingresa tu número sin el 0 y sin el 15</small>
+        </div>
+        
+        <div class="popup-acciones">
+            <button class="btn-cancelar" (click)="cerrarPopupTelefono()" [disabled]="guardandoTelefono">Cancelar</button>
+            <button class="btn-confirmar" (click)="guardarTelefono()" [disabled]="guardandoTelefono || !telefonoInput">
+                <span *ngIf="!guardandoTelefono">Guardar y continuar</span>
+                <span *ngIf="guardandoTelefono">Guardando...</span>
+            </button>
+        </div>
+    </div>
+</div>

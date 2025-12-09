@@ -3,67 +3,118 @@
     <app-button etiqueta="Iniciar" link="/login"></app-button>
 </header>-->
 
-<!--Propietarios e Inquilinos-->
+<!--Navbar Cliente-->
 <canvas id="particle-canvas-circle" *ngIf="validRoute"></canvas>
-<header *ngIf="validRoute">
+<header *ngIf="validRoute && !isAdmin">
     <ul>
-        <li [class.active]="isActive('colgantesCelular')">
-            <a routerLink="/colgantesCelular">
-                <span *ngIf="!isMobile">Colgantes celular</span>
-                <img *ngIf="isMobile && color == 'azul'" src="images/home azul.png">
-                <img *ngIf="isMobile && color == 'blanco'" src="images/home blanco.png">
+        <li [class.active]="isActive('productos')">
+            <a routerLink="/productos">
+                <span *ngIf="!isMobile">Productos</span>
+                <span *ngIf="isMobile" class="nav-icon">🛍️</span>
             </a>
         </li>
         <li *ngIf="!isMobile">|</li>
-        <li [class.active]="isActive('colgantesCartera')">
-            <a routerLink="/colgantesCartera">
-                <span *ngIf="!isMobile">Colgantes cartera</span>
-                <img *ngIf="isMobile && color == 'azul'" src="images/expensas azul.png">
-                <img *ngIf="isMobile && color == 'blanco'" src="images/expensas blanco.png">
-            </a>
-        </li>
-        <li *ngIf="!isMobile">|</li>
-        <li [class.active]="isActive('llaveros')">
-            <a routerLink="/llaveros">
-                <span *ngIf="!isMobile">Llaveros</span>
-                <img *ngIf="isMobile && color == 'azul'" src="images/pagar azul.png">
-                <img *ngIf="isMobile && color == 'blanco'" src="images/pagar blanco.png">
+        <li [class.active]="isActive('favoritos')">
+            <a routerLink="/favoritos" class="favoritos-link">
+                <span *ngIf="!isMobile">Favoritos</span>
+                <span *ngIf="isMobile" class="nav-icon">✦</span>
+                <span class="favoritos-badge" *ngIf="cantidadFavoritos > 0">{{ cantidadFavoritos }}</span>
             </a>
         </li>
     </ul>
         
-        <a routerLink="/"><img src="images/Logo final.png" class="logo"></a>
+    <a routerLink="/inicio"><img src="images/Logo final.png" class="logo"></a>
 
     <ul class="ulRight">
-        <li [class.active]="isActive('pulseras')">
-            <a routerLink="/pulseras">
-                <span *ngIf="!isMobile">Pulseras</span>
-                <img *ngIf="isMobile && color == 'azul'" src="images/contactos azul.png">
-                <img *ngIf="isMobile && color == 'blanco'" src="images/contactos blanco.png">
+        <li [class.active]="isActive('mis-pedidos')">
+            <a routerLink="/mis-pedidos">
+                <span *ngIf="!isMobile">Mis Pedidos</span>
+                <span *ngIf="isMobile" class="nav-icon">📦</span>
             </a>
         </li>
         <li *ngIf="!isMobile">|</li>
-        <li [class.active]="isActive('aritos')">
-            <a routerLink="/aritos">
-                <span *ngIf="!isMobile">Aritos</span>
-                <img *ngIf="isMobile && color == 'azul'" src="images/contactos azul.png">
-                <img *ngIf="isMobile && color == 'blanco'" src="images/contactos blanco.png">
-            </a>
-        </li>
-        <li *ngIf="!isMobile">|</li>
-        <li [class.active]="isActive('promos')">
-            <a routerLink="/promos">
-                <span *ngIf="!isMobile">Promos</span>
-                <img *ngIf="isMobile && color == 'azul'" src="images/contactos azul.png">
-                <img *ngIf="isMobile && color == 'blanco'" src="images/contactos blanco.png">
+        <li [class.active]="isActive('carrito')">
+            <a routerLink="/carrito" class="carrito-link">
+                <span *ngIf="!isMobile">Carrito</span>
+                <span *ngIf="isMobile" class="nav-icon">🛒</span>
+                <span class="carrito-badge" *ngIf="cantidadCarrito > 0">{{ cantidadCarrito }}</span>
             </a>
         </li>
         <li *ngIf="!isMobile">|</li>
         <li [class.active]="isActive('contacto')">
             <a routerLink="/contacto">
                 <span *ngIf="!isMobile">Contacto</span>
+                <span *ngIf="isMobile" class="nav-icon">📞</span>
+            </a>
+        </li>
+        <li *ngIf="!isMobile">|</li>
+        <li [class.active]="isActive('perfil')">
+            <a routerLink="/perfil">
+                <span *ngIf="!isMobile">Mi Perfil</span>
+                <span *ngIf="isMobile" class="nav-icon">👤</span>
+            </a>
+        </li>
+    </ul>
+</header>
+
+<!--Navbar Administrador-->
+<header *ngIf="validRoute && isAdmin" class="admin-header">
+    <ul>
+        <li [class.active]="isActive('stock')">
+            <a routerLink="/stock">
+                <span *ngIf="!isMobile">Stock</span>
+                <span *ngIf="isMobile" class="nav-icon">📦</span>
+            </a>
+        </li>
+        <li *ngIf="!isMobile">|</li>
+        <li [class.active]="isActive('agregarProducto')">
+            <a routerLink="/agregarProducto">
+                <span *ngIf="!isMobile">Agregar Productos</span>
+                <img *ngIf="isMobile && color == 'azul'" src="images/home azul.png">
+                <img *ngIf="isMobile && color == 'blanco'" src="images/home blanco.png">
+            </a>
+        </li>
+        <li *ngIf="!isMobile">|</li>
+        <li [class.active]="isActive('calculadoraResina')">
+            <a routerLink="/calculadoraResina">
+                <span *ngIf="!isMobile">Calculadora Resina</span>
+                <img *ngIf="isMobile && color == 'azul'" src="images/expensas azul.png">
+                <img *ngIf="isMobile && color == 'blanco'" src="images/expensas blanco.png">
+            </a>
+        </li>
+    </ul>
+        
+    <a routerLink="/inicioAdministrador"><img src="images/Logo final.png" class="logo"></a>
+
+    <ul class="ulRight">
+        <li [class.active]="isActive('ventas')">
+            <a routerLink="/ventas">
+                <span *ngIf="!isMobile">Ventas</span>
                 <img *ngIf="isMobile && color == 'azul'" src="images/contactos azul.png">
                 <img *ngIf="isMobile && color == 'blanco'" src="images/contactos blanco.png">
+            </a>
+        </li>
+        <li *ngIf="!isMobile">|</li>
+        <li [class.active]="isActive('compras')">
+            <a routerLink="/compras">
+                <span *ngIf="!isMobile">Compras</span>
+                <img *ngIf="isMobile && color == 'azul'" src="images/contactos azul.png">
+                <img *ngIf="isMobile && color == 'blanco'" src="images/contactos blanco.png">
+            </a>
+        </li>
+        <li *ngIf="!isMobile">|</li>
+        <li [class.active]="isActive('pedidos')">
+            <a routerLink="/pedidos">
+                <span *ngIf="!isMobile">Pedidos</span>
+                <img *ngIf="isMobile && color == 'azul'" src="images/contactos azul.png">
+                <img *ngIf="isMobile && color == 'blanco'" src="images/contactos blanco.png">
+            </a>
+        </li>
+        <li *ngIf="!isMobile">|</li>
+        <li [class.active]="isActive('clientes')">
+            <a routerLink="/clientes">
+                <span *ngIf="!isMobile">Clientes</span>
+                <span *ngIf="isMobile" class="nav-icon">👥</span>
             </a>
         </li>
     </ul>

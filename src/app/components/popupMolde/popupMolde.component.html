@@ -1,0 +1,63 @@
+<div class="overlay" (click)="cerrarPopup()"></div>
+<div class="card popup">
+  <button class="btn-cerrar" (click)="cerrarPopup()">✕</button>
+  
+  <h2>Agregar Molde</h2>
+  
+  <form (ngSubmit)="guardarMolde()">
+    <label for="nombreMolde">Nombre del Molde</label>
+    <input 
+      type="text" 
+      id="nombreMolde" 
+      [(ngModel)]="nombreMolde" 
+      name="nombreMolde"
+      placeholder="Ej: Corazón Grande"
+      [class.filled]="nombreMolde"
+    >
+
+    <div class="capas-section">
+      <label>Capas del Molde</label>
+      
+      <div class="capa-row" *ngFor="let capa of capas; let i = index">
+        <div class="capa-inputs">
+          <input 
+            type="text" 
+            [(ngModel)]="capa.nombre" 
+            [name]="'capaNombre' + i"
+            placeholder="Nombre de capa"
+            (input)="verificarYAgregarCapa(i)"
+            [class.filled]="capa.nombre"
+          >
+          <input 
+            type="number" 
+            [(ngModel)]="capa.volumen" 
+            [name]="'capaVolumen' + i"
+            placeholder="Volumen (ml)"
+            min="0"
+            step="0.1"
+            (input)="verificarYAgregarCapa(i)"
+            [class.filled]="capa.volumen"
+          >
+        </div>
+        <button 
+          type="button" 
+          class="btn-eliminar-capa" 
+          (click)="eliminarCapa(i)"
+          *ngIf="capas.length > 1"
+        >🗑️</button>
+      </div>
+    </div>
+
+    <p class="error" *ngIf="error">{{ error }}</p>
+
+    <div class="botones-popup">
+      <button type="submit" [disabled]="!formularioValido() || guardando">
+        {{ guardando ? 'Guardando...' : 'Guardar Molde' }}
+      </button>
+      <button type="button" class="btn-importar" (click)="inputMoldesJson.click()">
+        📁 Importar desde JSON
+      </button>
+      <input #inputMoldesJson type="file" accept=".json" (change)="importarMoldesJson($event)" style="display: none;">
+    </div>
+  </form>
+</div>

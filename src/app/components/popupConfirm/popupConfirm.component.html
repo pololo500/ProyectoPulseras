@@ -1,0 +1,11 @@
+<div class="overlay">
+  <div class="card">
+    <div class="icono">⚠️</div>
+    <h2>{{ titulo }}</h2>
+    <p *ngIf="mensaje">{{ mensaje }}</p>
+    <div class="botones">
+      <button class="btn-cancelar" (click)="onCancelar()">Cancelar</button>
+      <button class="btn-confirmar" (click)="onConfirmar()">Confirmar</button>
+    </div>
+  </div>
+</div>

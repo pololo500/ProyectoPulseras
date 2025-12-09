@@ -1,0 +1,249 @@
+<div class="mis-pedidos-page">
+    <h1>Mis Pedidos</h1>
+    
+    <!-- Tabs -->
+    <div class="tabs-container">
+        <button class="tab" [class.activo]="vistaActual === 'proceso'" (click)="cambiarVista('proceso')">
+            🛍️ En Proceso
+            <span class="badge" *ngIf="getTotalPedidosEnProceso() > 0">{{ getTotalPedidosEnProceso() }}</span>
+        </button>
+        <button class="tab" [class.activo]="vistaActual === 'historial'" (click)="cambiarVista('historial')">
+            📋 Historial
+            <span class="badge historial" *ngIf="getTotalHistorial() > 0">{{ getTotalHistorial() }}</span>
+        </button>
+    </div>
+    
+    <!-- Pedidos en proceso -->
+    <div class="pedidos-container" *ngIf="vistaActual === 'proceso'">
+        <div class="pedido-card" *ngFor="let pedido of pedidosEnProceso" (click)="verDetallePedido(pedido)">
+            <div class="pedido-header">
+                <span class="pedido-fecha">{{ formatearFecha(pedido.fecha) }}</span>
+                <span class="pedido-estado" [ngClass]="getEstadoClassCliente(pedido)">
+                    {{ getEstadoTextoCliente(pedido) }}
+                </span>
+            </div>
+            
+            <div class="pedido-body">
+                <h3>{{ getResumenProductos(pedido) }}</h3>
+                <p class="tipo" *ngIf="!tieneItems(pedido)">{{ (pedido.productoTipo || '') | capitalize }} - {{ (pedido.material || '') | capitalize }}</p>
+                <p class="tipo" *ngIf="tieneItems(pedido)">{{ getCantidadProductos(pedido) }} producto(s)</p>
+                <div class="pedido-info">
+                    <span class="cantidad">x{{ getCantidadItems(pedido) }}</span>
+                    <span class="precio">${{ getTotalPedido(pedido) }}</span>
+                </div>
+            </div>
+            
+            <div class="pedido-footer">
+                <span class="pago" [class.pagado]="pedido.pagado">
+                    {{ pedido.pagado ? '✅ Pagado' : '⏳ Pago pendiente' }}
+                </span>
+                <div class="footer-acciones">
+                    <button class="btn-cancelar-pedido" (click)="abrirPopupCancelar(pedido, $event)" title="Cancelar pedido">✕</button>
+                    <span class="ver-detalle">Ver detalle →</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="sin-pedidos" *ngIf="pedidosEnProceso.length === 0">
+            <div class="icono">📦</div>
+            <h2>No tienes pedidos en proceso</h2>
+            <p>Cuando realices un pedido, podrás ver su estado aquí</p>
+            <a routerLink="/productos" class="btn-explorar">Ver productos</a>
+        </div>
+    </div>
+    
+    <!-- Historial -->
+    <div class="historial-container" *ngIf="vistaActual === 'historial'">
+        <div class="venta-card" *ngFor="let venta of historial" (click)="verDetalleVenta(venta)">
+            <div class="venta-header">
+                <span class="venta-fecha">{{ formatearFecha(venta.fechaVenta) }}</span>
+                <span class="venta-estado" [ngClass]="getEstadoClass(venta.estado)">
+                    {{ getEstadoTexto(venta.estado) }}
+                </span>
+            </div>
+            
+            <div class="venta-body">
+                <h3>{{ venta.productoNombre }}</h3>
+                <p class="tipo">{{ venta.productoTipo | capitalize }} - {{ venta.material | capitalize }}</p>
+                <div class="venta-info">
+                    <span class="cantidad">x{{ venta.cantidad }}</span>
+                    <span class="precio">${{ venta.precio }}</span>
+                </div>
+            </div>
+            
+            <div class="venta-footer">
+                <span class="metodo-pago">💳 {{ venta.metodoPago }}</span>
+                <span class="ver-detalle">Ver detalle →</span>
+            </div>
+        </div>
+        
+        <div class="sin-pedidos" *ngIf="historial.length === 0">
+            <div class="icono">📋</div>
+            <h2>No tienes historial de pedidos</h2>
+            <p>Los pedidos entregados o cancelados aparecerán aquí</p>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Detalle Pedido -->
+<div class="modal-overlay" *ngIf="mostrarDetalle" (click)="cerrarDetalle()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+        <button class="btn-cerrar" (click)="cerrarDetalle()">✕</button>
+        
+        <!-- Detalle de pedido en proceso -->
+        <div *ngIf="pedidoSeleccionado">
+            <h2>Detalle del Pedido</h2>
+            
+            <div class="detalle-estado" [ngClass]="getEstadoClassCliente(pedidoSeleccionado)">
+                {{ getEstadoTextoCliente(pedidoSeleccionado) }}
+            </div>
+            
+            <!-- Pedido con múltiples items -->
+            <div class="detalle-seccion" *ngIf="tieneItems(pedidoSeleccionado)">
+                <h3>Productos ({{ pedidoSeleccionado.items!.length }})</h3>
+                <div class="items-lista">
+                    <div class="item-pedido" *ngFor="let item of pedidoSeleccionado.items">
+                        <div class="item-info">
+                            <p class="item-nombre"><strong>{{ item.productoNombre }}</strong></p>
+                            <p class="item-tipo">{{ item.productoTipo | capitalize }} <span *ngIf="item.material">- {{ item.material | capitalize }}</span></p>
+                            <div class="item-colores" *ngIf="item.coloresPorCapa && item.coloresPorCapa.length > 0">
+                                <div class="color-capa-item" *ngFor="let colorCapa of item.coloresPorCapa">
+                                    <span class="color-dot" [style.background-color]="colorCapa.colorRgb"></span>
+                                    <span class="capa-info">{{ colorCapa.capaNombre }}: {{ colorCapa.colorNombre | capitalize }}</span>
+                                </div>
+                            </div>
+                            <p class="item-molde" *ngIf="item.moldeNombre">Molde: {{ item.moldeNombre }}</p>
+                        </div>
+                        <div class="item-cantidad">x{{ item.cantidad }}</div>
+                        <div class="item-precio">${{ item.precio * item.cantidad }}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pedido individual (legacy) -->
+            <div class="detalle-seccion" *ngIf="!tieneItems(pedidoSeleccionado)">
+                <h3>Producto</h3>
+                <p><strong>{{ pedidoSeleccionado.productoNombre }}</strong></p>
+                <p>{{ (pedidoSeleccionado.productoTipo || '') | capitalize }} - {{ (pedidoSeleccionado.material || '') | capitalize }}</p>
+                <p *ngIf="pedidoSeleccionado.moldeNombre">Molde: {{ pedidoSeleccionado.moldeNombre }}</p>
+            </div>
+            
+            <div class="detalle-seccion" *ngIf="!tieneItems(pedidoSeleccionado) && pedidoSeleccionado.coloresPorCapa && pedidoSeleccionado.coloresPorCapa.length > 0">
+                <h3>Colores</h3>
+                <div class="colores-lista">
+                    <div class="color-item" *ngFor="let color of pedidoSeleccionado.coloresPorCapa">
+                        <span class="color-muestra" [style.background-color]="color.colorRgb"></span>
+                        <span>{{ color.capaNombre }}: {{ color.colorNombre }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="detalle-seccion">
+                <h3>Información del Pedido</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="label">Fecha</span>
+                        <span class="value">{{ formatearFecha(pedidoSeleccionado.fecha) }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Cantidad Total</span>
+                        <span class="value">{{ getCantidadItems(pedidoSeleccionado) }}</span>
+                    </div>
+                    <div class="info-item" *ngIf="!tieneItems(pedidoSeleccionado)">
+                        <span class="label">Precio Unitario</span>
+                        <span class="value">${{ pedidoSeleccionado.precio }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Total</span>
+                        <span class="value total">${{ getTotalPedido(pedidoSeleccionado) }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Método de Pago</span>
+                        <span class="value">{{ pedidoSeleccionado.metodoPago }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Estado del Pago</span>
+                        <span class="value" [class.pagado]="pedidoSeleccionado.pagado">
+                            {{ pedidoSeleccionado.pagado ? '✅ Pagado' : '⏳ Pendiente' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="detalle-seccion" *ngIf="pedidoSeleccionado.nota">
+                <h3>Nota</h3>
+                <p class="nota">{{ pedidoSeleccionado.nota }}</p>
+            </div>
+            
+            <!-- Botón cancelar pedido -->
+            <div class="detalle-acciones">
+                <button class="btn-cancelar-grande" (click)="abrirPopupCancelar(pedidoSeleccionado, $event)">
+                    ✕ Cancelar Pedido
+                </button>
+            </div>
+        </div>
+        
+        <!-- Detalle de venta (historial) -->
+        <div *ngIf="ventaSeleccionada">
+            <h2>Detalle del Pedido</h2>
+            
+            <div class="detalle-estado" [ngClass]="getEstadoClass(ventaSeleccionada.estado)">
+                {{ getEstadoTexto(ventaSeleccionada.estado) }}
+            </div>
+            
+            <div class="detalle-seccion">
+                <h3>Producto</h3>
+                <p><strong>{{ ventaSeleccionada.productoNombre }}</strong></p>
+                <p>{{ ventaSeleccionada.productoTipo | capitalize }} - {{ ventaSeleccionada.material | capitalize }}</p>
+            </div>
+            
+            <div class="detalle-seccion">
+                <h3>Información del Pedido</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="label">Fecha del Pedido</span>
+                        <span class="value">{{ formatearFecha(ventaSeleccionada.fechaPedido) }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Fecha de {{ ventaSeleccionada.estado === 'Entregado' ? 'Entrega' : 'Cancelación' }}</span>
+                        <span class="value">{{ formatearFecha(ventaSeleccionada.fechaVenta) }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Cantidad</span>
+                        <span class="value">{{ ventaSeleccionada.cantidad }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Total</span>
+                        <span class="value total">${{ ventaSeleccionada.precio }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Método de Pago</span>
+                        <span class="value">{{ ventaSeleccionada.metodoPago }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="detalle-seccion" *ngIf="ventaSeleccionada.nota">
+                <h3>Nota</h3>
+                <p class="nota">{{ ventaSeleccionada.nota }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Popup Confirmar Cancelación -->
+<div class="popup-overlay" *ngIf="mostrarPopupCancelar" (click)="cerrarPopupCancelar()">
+    <div class="popup-cancelar" (click)="$event.stopPropagation()">
+        <h3>¿Cancelar pedido?</h3>
+        <p>Estás por cancelar el pedido de:</p>
+        <p class="popup-producto" *ngIf="pedidoACancelar"><strong>{{ getResumenProductos(pedidoACancelar) }}</strong></p>
+        <p class="popup-warning">⚠️ Esta acción no se puede deshacer</p>
+        
+        <div class="popup-acciones">
+            <button class="btn-confirmar-cancelar" (click)="confirmarCancelacion()" [disabled]="cancelando">
+                {{ cancelando ? 'Cancelando...' : 'Sí, cancelar' }}
+            </button>
+            <button class="btn-volver" (click)="cerrarPopupCancelar()" [disabled]="cancelando">Volver</button>
+        </div>
+    </div>
+</div>

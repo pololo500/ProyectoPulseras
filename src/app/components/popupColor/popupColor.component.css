@@ -1,0 +1,134 @@
+:host {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 4, 71, 0.6);
+  z-index: 100;
+}
+
+.popup {
+  position: relative;
+  z-index: 101;
+  width: 90%;
+  max-width: 400px;
+  padding: 30px;
+}
+
+.btn-cerrar {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  font-size: 16px;
+  background-color: transparent;
+  border: none;
+  color: #000447;
+  cursor: pointer;
+}
+
+.btn-cerrar:hover {
+  background-color: rgba(0, 4, 71, 0.1);
+  box-shadow: none;
+}
+
+h2 {
+  color: #000447;
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 24px;
+}
+
+.color-picker-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.color-picker {
+  width: 60px;
+  height: 50px;
+  padding: 0;
+  border: 2px solid #000447;
+  border-radius: 10px;
+  cursor: pointer;
+  background-color: transparent;
+}
+
+.color-picker::-webkit-color-swatch-wrapper {
+  padding: 3px;
+}
+
+.color-picker::-webkit-color-swatch {
+  border-radius: 6px;
+  border: none;
+}
+
+.color-preview {
+  flex: 1;
+  height: 50px;
+  border-radius: 10px;
+  border: 2px solid #000447;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.color-preview span {
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 4px 10px;
+  border-radius: 5px;
+  color: #000447;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 14px;
+}
+
+.error {
+  color: #dc3545;
+  font-size: 14px;
+  text-align: center;
+  margin: 10px 0;
+}
+
+button[type="submit"] {
+  margin-top: 20px;
+}
+
+.botones-popup {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.botones-popup button[type="submit"] {
+  margin-top: 0;
+}
+
+.btn-importar {
+  background: linear-gradient(135deg, #3a3a6e, #2a2a5e) !important;
+  color: #D6B435 !important;
+  border: 1px solid rgba(214, 180, 53, 0.4) !important;
+}
+
+.btn-importar:hover {
+  background: linear-gradient(135deg, #4a4a7e, #3a3a6e) !important;
+  border-color: rgba(214, 180, 53, 0.7) !important;
+}

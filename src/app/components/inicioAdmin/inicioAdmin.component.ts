@@ -1,27 +1,41 @@
-import { AfterViewInit, Component, ElementRef, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, inject, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { ButtonComponent } from '../button/button.component';
 import { GlobalService } from '../../services/global.service';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
+import { CapitalizePipe } from '../../extras/capitalizePipe';
+
+interface Producto {
+  _id: string;
+  producto: string;
+  material: string;
+  nombre: string;
+  imagenUrl?: string;
+  imagenesUrls?: string[];
+}
+
+interface CarruselPorTipo {
+  tipo: string;
+  productos: Producto[];
+  currentIndex: number;
+  isHovered: boolean;
+}
 
 @Component({
     selector: 'app-inicioAdmin',
-    imports: [ButtonComponent, CommonModule],
+    imports: [ButtonComponent, CommonModule, CapitalizePipe],
     templateUrl: './inicioAdmin.component.html',
     styleUrl: './inicioAdmin.component.css'
 })
-export class InicioAdminComponent implements OnInit, AfterViewInit, OnDestroy{
-  @ViewChild('viewport') viewport!: ElementRef;
+export class InicioAdminComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChildren('viewport') viewports!: QueryList<ElementRef>;
   router = inject(Router);
-  urlsImagenes: string[] = [];
-  currentIndex = 0;
+  
+  carruseles: CarruselPorTipo[] = [];
   autoplayInterval: any;
   autoplayDelay = 3000; // 3 segundos
-  isHovered = false;
-  shouldAnimate = true;
   itemWidth = 0;
-
 
   constructor(private globalService: GlobalService, private http: HttpClient) {}
 
@@ -35,77 +49,108 @@ export class InicioAdminComponent implements OnInit, AfterViewInit, OnDestroy{
     this.calculateItemWidth();
     window.addEventListener('resize', this.calculateItemWidth.bind(this));
   }
+
   ngOnDestroy(): void {
     this.stopAutoplay();
+    window.removeEventListener('resize', this.calculateItemWidth.bind(this));
   }
 
   obtenerProductos() {
-    this.http.get<any[]>('http://localhost:5000/api/pulseras')
+    this.http.get<Producto[]>('http://localhost:5000/api/productos')
       .subscribe(data => {
-        this.urlsImagenes = data.map(p => p.imagenUrl);
-        this.currentIndex = 0;
+        // Agrupar productos por tipo
+        const productosPorTipo = new Map<string, Producto[]>();
+        
+        data.forEach(producto => {
+          const tipo = producto.producto;
+          if (!productosPorTipo.has(tipo)) {
+            productosPorTipo.set(tipo, []);
+          }
+          productosPorTipo.get(tipo)!.push(producto);
+        });
+        
+        // Crear carruseles por tipo
+        this.carruseles = [];
+        productosPorTipo.forEach((productos, tipo) => {
+          this.carruseles.push({
+            tipo: tipo,
+            productos: productos,
+            currentIndex: 0,
+            isHovered: false
+          });
+        });
       });
   }
 
   calculateItemWidth() {
-    if (this.viewport) {
-      const viewportWidth = this.viewport.nativeElement.clientWidth;
-      this.itemWidth = (viewportWidth / 3) - 20; // margen total 20px (10px a cada lado)
+    if (this.viewports && this.viewports.first) {
+      const viewportWidth = this.viewports.first.nativeElement.clientWidth;
+      this.itemWidth = (viewportWidth / 3) - 20;
     }
   }
 
-  previous() {
-    this.pauseAutoplay();
-    this.shouldAnimate = true;
-    if (this.currentIndex === 0) {
-      this.currentIndex = this.urlsImagenes.length - 1;
+  // Obtener la primera imagen de un producto
+  getPrimeraImagen(producto: Producto): string {
+    if (producto.imagenesUrls && producto.imagenesUrls.length > 0) {
+      return producto.imagenesUrls[0];
+    } else if (producto.imagenUrl) {
+      return producto.imagenUrl;
+    }
+    return '';
+  }
+
+  previous(carrusel: CarruselPorTipo) {
+    if (carrusel.currentIndex === 0) {
+      carrusel.currentIndex = carrusel.productos.length - 1;
     } else {
-      this.currentIndex--;
+      carrusel.currentIndex--;
     }
   }
 
-  next() {
-    this.pauseAutoplay();
-    this.shouldAnimate = true;
-    if (this.currentIndex === this.urlsImagenes.length - 1) {
-      this.currentIndex = 0;
+  next(carrusel: CarruselPorTipo) {
+    if (carrusel.currentIndex === carrusel.productos.length - 1) {
+      carrusel.currentIndex = 0;
     } else {
-      this.currentIndex++;
+      carrusel.currentIndex++;
     }
   }
 
   startAutoplay() {
     this.autoplayInterval = setInterval(() => {
-      if (!this.isHovered) {
-        this.next();
-      }
+      this.carruseles.forEach(carrusel => {
+        if (!carrusel.isHovered && carrusel.productos.length > 1) {
+          this.next(carrusel);
+        }
+      });
     }, this.autoplayDelay);
   }
 
   stopAutoplay() {
-    clearInterval(this.autoplayInterval);
+    if (this.autoplayInterval) {
+      clearInterval(this.autoplayInterval);
+    }
   }
 
-  pauseAutoplay() {
-    this.stopAutoplay();
-    // Reiniciar autoplay luego de 5 segundos sin interacción
-    setTimeout(() => this.startAutoplay(), 5000);
+  onMouseEnter(carrusel: CarruselPorTipo) {
+    carrusel.isHovered = true;
   }
 
-  onMouseEnter() {
-    this.isHovered = true;
-    this.pauseAutoplay();
+  onMouseLeave(carrusel: CarruselPorTipo) {
+    carrusel.isHovered = false;
   }
 
-  onMouseLeave() {
-    this.isHovered = false;
-  }
-
-  getTrackStyles(): any {
-    const offset = this.currentIndex * (this.itemWidth + 20); // ancho + margen total
+  getTrackStyles(carrusel: CarruselPorTipo): any {
+    const offset = carrusel.currentIndex * (this.itemWidth + 20);
     return {
       transform: `translateX(-${offset}px)`,
-      transition: this.shouldAnimate ? 'transform 1.2s ease-in-out' : 'none'
+      transition: 'transform 1.2s ease-in-out'
     };
+  }
+
+  // Navegar a modificar productos con filtro
+  irAModificarProductos(tipo: string) {
+    this.router.navigate(['/modificarProductos'], { 
+      queryParams: { filtroProducto: tipo } 
+    });
   }
 }

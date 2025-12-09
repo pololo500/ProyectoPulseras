@@ -1,0 +1,396 @@
+<div class="stock-page">
+  <div class="stock-header">
+    <h1>📦 Gestión de Stock</h1>
+    <button class="btn-cargar-stock" (click)="abrirModalCargar()">
+      ➕ Cargar Stock
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filtros-container">
+    <div class="filtro-group">
+      <label>Buscar por nombre</label>
+      <input type="text" [(ngModel)]="filtroNombre" placeholder="Nombre del producto...">
+    </div>
+    
+    <div class="filtro-group">
+      <label>Material</label>
+      <select [(ngModel)]="filtroMaterial">
+        <option value="">Todos</option>
+        <option *ngFor="let material of materialesUnicos" [value]="material">
+          {{ material | capitalize }}
+        </option>
+      </select>
+    </div>
+    
+    <div class="stock-count">
+      Total en stock: <strong>{{ stockFiltrado.length }}</strong> productos
+    </div>
+  </div>
+
+  <!-- Lista de productos en stock -->
+  <div class="stock-grid">
+    <div class="stock-card" *ngFor="let item of stockFiltrado">
+      <!-- Encabezado de la card -->
+      <div class="stock-header-card">
+        <img [src]="item.imagenUrl || 'images/placeholder.png'" [alt]="item.productoNombre" class="stock-img-header">
+        <div class="stock-info-header">
+          <h3>{{ item.productoNombre | capitalize }}</h3>
+          <p class="stock-tipo">{{ item.productoTipo | capitalize }}</p>
+          <p class="stock-material">{{ item.material | capitalize }}</p>
+          <p class="stock-cantidad-total">Total: <strong>{{ getCantidadTotal(item) }} unid.</strong></p>
+        </div>
+        <button class="btn-detalle" (click)="abrirModalDetalle(item)" title="Ver detalles completos">
+          👁️ Ver
+        </button>
+      </div>
+
+      <!-- Lista de variantes de color -->
+      <div class="stock-variantes">
+        <div class="variante-card" *ngFor="let variante of item.variantes">
+          <div class="variante-content">
+            <!-- Colores de la variante -->
+            <div class="variante-colores" *ngIf="esResina(item) && variante.coloresPorCapa && variante.coloresPorCapa.length > 0">
+              <div class="capas-preview">
+                <div class="capa-item-preview" *ngFor="let capa of variante.coloresPorCapa">
+                  <span class="color-chip" 
+                        [style.background-color]="capa.colorRgb"
+                        [title]="capa.capaNombre + ': ' + capa.colorNombre"></span>
+                  <span class="capa-nombre">{{ capa.capaNombre | capitalize }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cantidad y acciones -->
+            <div class="variante-acciones">
+              <div class="cantidad-display">
+                <span class="cantidad-label">Cantidad:</span>
+                <span class="cantidad-valor">{{ variante.cantidad }}</span>
+              </div>
+              <button class="btn-editar-cantidad" (click)="abrirModalEditarCantidad(item, variante)" title="Editar cantidad">
+                ✏️ Editar
+              </button>
+              <button class="btn-eliminar-variante" (click)="abrirModalEliminarVariante(item, variante)" title="Eliminar variante">
+                🗑️
+              </button>
+            </div>
+
+            <!-- Detalles de diseño si existen -->
+            <div class="variante-detalles" *ngIf="variante.detallesDiseno">
+              <p class="detalles-texto">{{ variante.detallesDiseno }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botones de acción principales -->
+      <div class="stock-acciones">
+        <button class="btn-vender" (click)="abrirModalVender(item)" title="Vender">
+          💰 Vender
+        </button>
+        <button class="btn-agregar-variante" (click)="abrirModalCargar()" title="Agregar variante de color">
+          ➕ Agregar Variante
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensaje si no hay productos -->
+  <div class="sin-stock" *ngIf="stockFiltrado.length === 0">
+    <p>📭 No hay productos en stock</p>
+    <button (click)="abrirModalCargar()">Cargar primer producto</button>
+  </div>
+</div>
+
+<!-- Modal para cargar stock -->
+<div class="modal-overlay" *ngIf="mostrarModalCargar" (click)="cerrarModalCargar()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>➕ Cargar Producto al Stock</h2>
+      <button class="btn-cerrar" (click)="cerrarModalCargar()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Seleccionar producto -->
+      <div class="form-group">
+        <label>Producto *</label>
+        <select [(ngModel)]="nuevoStock.productoId" (change)="onProductoSeleccionado()" required>
+          <option value="">Selecciona un producto...</option>
+          <option *ngFor="let prod of productos" [value]="prod._id">
+            {{ prod.nombre | capitalize }} - {{ prod.material | capitalize }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Mostrar variantes agregadas -->
+      <div class="variantes-agregadas" *ngIf="nuevoStock.variantes && nuevoStock.variantes.length > 0">
+        <h4>Variantes agregadas:</h4>
+        <div class="lista-variantes-temp">
+          <div class="variante-temp" *ngFor="let v of nuevoStock.variantes; let i = index">
+            <div class="variante-info">
+              <span class="variante-num">Variante {{ i + 1 }}</span>
+              <span class="variante-cant">{{ v.cantidad }} unid.</span>
+              <div class="colores-temp" *ngIf="v.coloresPorCapa && v.coloresPorCapa.length > 0">
+                <span class="color-chip-temp" 
+                      *ngFor="let capa of v.coloresPorCapa"
+                      [style.background-color]="capa.colorRgb"
+                      [title]="capa.colorNombre"></span>
+              </div>
+            </div>
+            <button class="btn-eliminar-variante-temp" (click)="nuevoStock.variantes.splice(i, 1)">✕</button>
+          </div>
+        </div>
+      </div>
+
+      <hr>
+      <h4>Agregar nueva variante:</h4>
+
+      <!-- Cantidad de la variante -->
+      <div class="form-group">
+        <label>Cantidad de esta variante *</label>
+        <input type="number" [(ngModel)]="nuevaVariante.cantidad" min="1" required>
+      </div>
+
+      <!-- Selección de colores por capa (si es resina) -->
+      <div class="form-group" *ngIf="esResina(nuevoStock) && nuevaVariante.coloresPorCapa && nuevaVariante.coloresPorCapa.length > 0">
+        <label>Colores por capa *</label>
+        <div class="capas-selector">
+          <div class="capa-selector" *ngFor="let capa of nuevaVariante.coloresPorCapa; let i = index">
+            <label>{{ capa.capaNombre | capitalize }}</label>
+            <select [(ngModel)]="capa.colorId" (change)="seleccionarColorCapa(i, capa.colorId)">
+              <option value="">Selecciona un color...</option>
+              <option *ngFor="let color of colores" [value]="color._id">
+                {{ color.nombre | capitalize }} ({{ color.categoria | capitalize }})
+              </option>
+            </select>
+            <span class="color-preview" 
+                  *ngIf="capa.colorRgb" 
+                  [style.background-color]="capa.colorRgb"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detalles de diseño de la variante -->
+      <div class="form-group">
+        <label>Detalles de diseño (opcional)</label>
+        <textarea [(ngModel)]="nuevaVariante.detallesDiseno" 
+                  rows="2" 
+                  placeholder="Ej: Con dijes dorados, cadena especial, etc."></textarea>
+      </div>
+
+      <button class="btn-agregar-variante-form" (click)="agregarVarianteAlModal()" *ngIf="nuevoStock.productoId">
+        ➕ Agregar esta variante
+      </button>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancelar" (click)="cerrarModalCargar()">Cancelar</button>
+      <button class="btn-guardar" (click)="guardarStock()" [disabled]="nuevoStock.variantes.length === 0">
+        Guardar en Stock
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para vender (seleccionar variante) -->
+<div class="modal-overlay" *ngIf="mostrarModalVender && stockSeleccionado" (click)="cerrarModalVender()">
+  <div class="modal-content modal-vender" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>💰 Vender Producto</h2>
+      <button class="btn-cerrar" (click)="cerrarModalVender()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="producto-resumen">
+        <h3>{{ stockSeleccionado.productoNombre | capitalize }}</h3>
+        <p>{{ stockSeleccionado.productoTipo | capitalize }} - {{ stockSeleccionado.material | capitalize }}</p>
+      </div>
+
+      <!-- Seleccionar variante -->
+      <div class="form-group">
+        <label>Selecciona la variante a vender: *</label>
+        <div class="variantes-selector">
+          <div class="variante-opcion" 
+               *ngFor="let variante of stockSeleccionado.variantes; let i = index"
+               [class.selected]="varianteSeleccionada === variante"
+               (click)="varianteSeleccionada = variante">
+            <div class="variante-opcion-content">
+              <span class="variante-numero">Variante {{ i + 1 }}</span>
+              <span class="variante-disponible">Disponible: {{ variante.cantidad }} unid.</span>
+              <div class="colores-selector" *ngIf="variante.coloresPorCapa && variante.coloresPorCapa.length > 0">
+                <span class="color-chip-selector" 
+                      *ngFor="let capa of variante.coloresPorCapa"
+                      [style.background-color]="capa.colorRgb"
+                      [title]="capa.capaNombre + ': ' + capa.colorNombre"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulario de venta (solo si hay variante seleccionada) -->
+      <div *ngIf="varianteSeleccionada" class="formulario-venta">
+        <div class="form-group">
+          <label>Cantidad a vender *</label>
+          <input type="number" 
+                 [(ngModel)]="ventaData.cantidadVendida" 
+                 [max]="varianteSeleccionada.cantidad" 
+                 min="1" 
+                 required>
+          <span class="info-disponible">(máximo: {{ varianteSeleccionada.cantidad }})</span>
+        </div>
+
+        <div class="form-group">
+          <label>Cliente</label>
+          <input type="text" 
+                 [(ngModel)]="ventaData.cliente" 
+                 placeholder="Nombre del cliente (opcional)">
+        </div>
+
+        <div class="form-group">
+          <label>Precio *</label>
+          <input type="number" 
+                 [(ngModel)]="ventaData.precio" 
+                 min="0" 
+                 step="0.01" 
+                 required>
+        </div>
+
+        <div class="form-group">
+          <label>Método de pago *</label>
+          <select [(ngModel)]="ventaData.metodoPago">
+            <option value="Efectivo">Efectivo</option>
+            <option value="Transferencia">Transferencia</option>
+            <option value="Débito">Débito</option>
+            <option value="Crédito">Crédito</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancelar" (click)="cerrarModalVender()">Cancelar</button>
+      <button class="btn-confirmar-venta" (click)="confirmarVenta()" [disabled]="!varianteSeleccionada">
+        Confirmar Venta
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para editar cantidad de variante -->
+<div class="modal-overlay" *ngIf="mostrarModalEditarCantidad" (click)="cerrarModalEditarCantidad()">
+  <div class="modal-content modal-pequeno" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>✏️ Editar Cantidad</h2>
+      <button class="btn-cerrar" (click)="cerrarModalEditarCantidad()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <p class="info-cantidad">Cantidad actual: <strong>{{ varianteAEditar?.cantidad }}</strong></p>
+      <div class="form-group">
+        <label>Nueva cantidad:</label>
+        <input type="number" [(ngModel)]="cantidadTemporal" min="0" required>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancelar" (click)="cerrarModalEditarCantidad()">Cancelar</button>
+      <button class="btn-guardar" (click)="guardarCantidad()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para eliminar variante -->
+<div class="modal-overlay" *ngIf="mostrarModalEliminarVariante" (click)="cerrarModalEliminarVariante()">
+  <div class="modal-content modal-pequeno" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>⚠️ Eliminar Variante</h2>
+      <button class="btn-cerrar" (click)="cerrarModalEliminarVariante()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <p>¿Estás seguro de eliminar esta variante?</p>
+      <p class="info-variante" *ngIf="varianteAEliminar">
+        Cantidad: <strong>{{ varianteAEliminar.cantidad }}</strong> unidades
+      </p>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancelar" (click)="cerrarModalEliminarVariante()">Cancelar</button>
+      <button class="btn-eliminar" (click)="confirmarEliminarVariante()">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de detalle del producto -->
+<div class="modal-overlay" *ngIf="mostrarModalDetalle && stockDetalle" (click)="cerrarModalDetalle()">
+  <div class="modal-content modal-detalle" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>📦 Detalle del Producto</h2>
+      <button class="btn-cerrar" (click)="cerrarModalDetalle()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Imagen grande -->
+      <div class="detalle-imagen">
+        <img [src]="stockDetalle.imagenUrl || 'images/placeholder.png'" [alt]="stockDetalle.productoNombre">
+      </div>
+
+      <!-- Información completa -->
+      <div class="detalle-info">
+        <h3>{{ stockDetalle.productoNombre | capitalize }}</h3>
+        
+        <div class="info-row">
+          <span class="info-label">Tipo:</span>
+          <span class="info-value">{{ stockDetalle.productoTipo | capitalize }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">Material:</span>
+          <span class="info-value">{{ stockDetalle.material | capitalize }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">Cantidad total:</span>
+          <span class="info-value"><strong>{{ getCantidadTotal(stockDetalle) }}</strong> unidades</span>
+        </div>
+
+        <div class="info-row" *ngIf="stockDetalle.moldeNombre">
+          <span class="info-label">Molde:</span>
+          <span class="info-value">{{ stockDetalle.moldeNombre | capitalize }}</span>
+        </div>
+
+        <!-- Lista de variantes en detalle -->
+        <div class="detalle-variantes" *ngIf="stockDetalle.variantes && stockDetalle.variantes.length > 0">
+          <h4>Variantes registradas:</h4>
+          <div class="variantes-detalle-lista">
+            <div class="variante-detalle" *ngFor="let variante of stockDetalle.variantes; let i = index">
+              <div class="variante-detalle-header">
+                <span class="variante-numero">Variante {{ i + 1 }}</span>
+                <span class="variante-cant-detalle">{{ variante.cantidad }} unid.</span>
+              </div>
+              
+              <div class="colores-detalle" *ngIf="variante.coloresPorCapa && variante.coloresPorCapa.length > 0">
+                <div class="capa-detalle" *ngFor="let capa of variante.coloresPorCapa">
+                  <span class="color-muestra-detalle" [style.background-color]="capa.colorRgb"></span>
+                  <span class="capa-info">{{ capa.capaNombre | capitalize }}: {{ capa.colorNombre | capitalize }}</span>
+                </div>
+              </div>
+
+              <p class="variante-detalles-detalle" *ngIf="variante.detallesDiseno">
+                {{ variante.detallesDiseno }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-vender" (click)="cerrarModalDetalle(); abrirModalVender(stockDetalle)">
+        💰 Vender
+      </button>
+      <button class="btn-cancelar" (click)="cerrarModalDetalle()">Cerrar</button>
+    </div>
+  </div>
+</div>

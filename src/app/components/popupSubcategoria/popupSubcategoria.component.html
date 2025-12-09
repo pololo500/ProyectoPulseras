@@ -1,0 +1,26 @@
+<div class="overlay" (click)="cerrarPopup()"></div>
+<div class="card popup">
+  <button class="btn-cerrar" (click)="cerrarPopup()">✕</button>
+  
+  <h2>Agregar Sub-Categoría</h2>
+  
+  <form (ngSubmit)="guardarSubcategoria()">
+    <label for="nombreSubcategoria">Nombre de la Sub-Categoría</label>
+    <input 
+      type="text" 
+      id="nombreSubcategoria" 
+      [(ngModel)]="nombreSubcategoria" 
+      name="nombreSubcategoria"
+      placeholder="Ej: Navidad, Verano, Deportes..."
+      [class.filled]="nombreSubcategoria"
+    >
+
+    <p class="error" *ngIf="error">{{ error }}</p>
+
+    <div class="botones-popup">
+      <button type="submit" [disabled]="!formularioValido()">
+        Agregar Sub-Categoría
+      </button>
+    </div>
+  </form>
+</div>

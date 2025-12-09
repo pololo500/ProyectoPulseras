@@ -14,6 +14,9 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
   validRoute = true;
   color='blanco';
   isMobile: boolean = false;
+  isAdmin: boolean = false;
+  cantidadCarrito: number = 0;
+  cantidadFavoritos: number = 0;
   
   private particleEffectCircle!: ParticleEffectCircle;
   private particleEffectSquare!: ParticleEffectSquare;
@@ -41,17 +44,66 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
       return this.validRoute = true;
   }
 
+  checkUserType() {
+    const tipoUsuario = sessionStorage.getItem('tipoUsuario');
+    this.isAdmin = tipoUsuario === 'Administrador';
+  }
+
   constructor(private router: Router) {};
 
   ngOnInit() {
     this.checkScreenSize();
+    this.checkUserType();
+    this.actualizarCarrito();
+    this.actualizarFavoritos();
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe(() => {
         this.comprobarRuta();
+        this.checkUserType();
+        this.actualizarCarrito();
+        this.actualizarFavoritos();
       });
 
+    // Escuchar eventos de actualización del carrito
+    window.addEventListener('carritoActualizado', () => {
+      this.actualizarCarrito();
+    });
+
+    // Escuchar eventos de actualización de favoritos
+    window.addEventListener('favoritosActualizado', () => {
+      this.actualizarFavoritos();
+    });
+
     this.comprobarRuta();
+  }
+
+  actualizarCarrito() {
+    const carrito = sessionStorage.getItem('carrito');
+    if (carrito) {
+      try {
+        const items = JSON.parse(carrito);
+        this.cantidadCarrito = items.reduce((total: number, item: any) => total + (item.cantidad || 1), 0);
+      } catch {
+        this.cantidadCarrito = 0;
+      }
+    } else {
+      this.cantidadCarrito = 0;
+    }
+  }
+
+  actualizarFavoritos() {
+    const favoritos = sessionStorage.getItem('favoritos');
+    if (favoritos) {
+      try {
+        const items = JSON.parse(favoritos);
+        this.cantidadFavoritos = items.length;
+      } catch {
+        this.cantidadFavoritos = 0;
+      }
+    } else {
+      this.cantidadFavoritos = 0;
+    }
   }
 
   // Escucha los cambios de tamaño de la ventana

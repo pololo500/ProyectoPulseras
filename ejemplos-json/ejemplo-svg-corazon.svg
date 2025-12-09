@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- Ejemplo de SVG para un molde de corazón con 3 capas -->
+  
+  <!-- Capa Base (la más externa) -->
+  <path id="capa-base" 
+        d="M50 88 C20 60, 10 40, 10 30 C10 15, 25 10, 35 10 C45 10, 50 20, 50 25 C50 20, 55 10, 65 10 C75 10, 90 15, 90 30 C90 40, 80 60, 50 88 Z"
+        fill="#cccccc" />
+  
+  <!-- Capa Relleno (intermedia) -->
+  <path id="capa-relleno" 
+        d="M50 78 C25 55, 18 40, 18 32 C18 20, 30 16, 38 16 C46 16, 50 24, 50 28 C50 24, 54 16, 62 16 C70 16, 82 20, 82 32 C82 40, 75 55, 50 78 Z"
+        fill="#aaaaaa" />
+  
+  <!-- Capa Tapa (la más interna) -->
+  <path id="capa-tapa" 
+        d="M50 65 C32 50, 28 42, 28 36 C28 28, 36 25, 42 25 C47 25, 50 30, 50 33 C50 30, 53 25, 58 25 C64 25, 72 28, 72 36 C72 42, 68 50, 50 65 Z"
+        fill="#888888" />
+</svg>

@@ -172,3 +172,64 @@ a {
     height: 30px;
   }
 }
+
+/* Carrito badge */
+.carrito-link {
+  position: relative;
+}
+
+.carrito-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: #000447;
+  color: #D6B435;
+  font-size: 11px;
+  font-weight: bold;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #D6B435;
+}
+
+.active .carrito-badge {
+  background-color: #D6B435;
+  color: #000447;
+  border-color: #000447;
+}
+
+/* Favoritos badge */
+.favoritos-link {
+  position: relative;
+}
+
+.favoritos-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: #000447;
+  color: #D6B435;
+  font-size: 11px;
+  font-weight: bold;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #D6B435;
+}
+
+.active .favoritos-badge {
+  background-color: #D6B435;
+  color: #000447;
+  border-color: #000447;
+}
+
+/* Iconos de navegación móvil */
+.nav-icon {
+  font-size: 20px;
+}

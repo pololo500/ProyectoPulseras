@@ -1,0 +1,25 @@
+{
+  "moldes": [
+    {
+      "nombre": "Corazón Grande",
+      "capas": [
+        { "nombre": "Base", "volumen": 15 },
+        { "nombre": "Relleno", "volumen": 25 },
+        { "nombre": "Tapa", "volumen": 10 }
+      ]
+    },
+    {
+      "nombre": "Estrella Mediana",
+      "capas": [
+        { "nombre": "Base", "volumen": 10 },
+        { "nombre": "Capa Superior", "volumen": 12 }
+      ]
+    },
+    {
+      "nombre": "Círculo Simple",
+      "capas": [
+        { "nombre": "Única", "volumen": 20 }
+      ]
+    }
+  ]
+}

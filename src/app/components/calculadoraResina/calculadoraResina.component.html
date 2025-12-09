@@ -1,0 +1,204 @@
+<div class="container">
+  <h1>Calculadora de Resina</h1>
+
+  <!-- Botones principales -->
+  <div class="botones-principales">
+    <button class="btn-accion" (click)="abrirPopupMolde()">
+      <span class="icon">📐</span> Agregar Molde
+    </button>
+    <button class="btn-accion" (click)="abrirPopupColor()">
+      <span class="icon">🎨</span> Agregar Color
+    </button>
+  </div>
+
+  <!-- Tabla de productos -->
+  <div class="tabla-container">
+    <div class="tabla-header">
+      <h2>Productos a Realizar</h2>
+      <button class="btn-agregar" (click)="agregarProducto()">+ Agregar Producto</button>
+    </div>
+
+    <table class="tabla-productos" *ngIf="productos.length > 0">
+      <thead>
+        <tr>
+          <th>Molde</th>
+          <th>Cantidad</th>
+          <th>Capas / Colores / Fases / Notas</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let producto of productos">
+          <td>
+            <select [(ngModel)]="producto.moldeId" (change)="onMoldeChange(producto)" [class.filled]="producto.moldeId">
+              <option value="">Seleccionar molde</option>
+              <option *ngFor="let molde of moldes" [value]="molde._id">{{ molde.nombre }}</option>
+            </select>
+          </td>
+          <td>
+            <input type="number" [(ngModel)]="producto.cantidad" min="1" (change)="onCantidadChange()" class="input-cantidad">
+          </td>
+          <td class="capas-cell">
+            <div class="capas-container" *ngIf="producto.capas.length > 0">
+              <div class="capa-item" *ngFor="let capa of producto.capas">
+                <div class="capa-header">
+                  <span class="capa-nombre">{{ capa.capaNombre }} ({{ capa.volumenTotal }}ml)</span>
+                  <button class="btn-add-color" (click)="agregarColorACapa(capa)" title="Agregar otro color">+</button>
+                </div>
+                
+                <!-- Diseño simple: un solo color -->
+                <div class="color-simple" *ngIf="capa.colores.length === 1">
+                  <div class="color-simple-row">
+                    <select [(ngModel)]="capa.colores[0].colorId" (change)="onColorChange(capa.colores[0])" 
+                            (focus)="recargarColores()"
+                            [class.filled]="capa.colores[0].colorId"
+                            [style.background-color]="capa.colores[0].colorRgb || 'rgba(255,255,255,0.1)'"
+                            [style.color]="capa.colores[0].colorRgb ? getTextColor(capa.colores[0].colorRgb) : '#fff'">
+                      <option value="">Color</option>
+                      <optgroup label="Translúcidos">
+                        <option *ngFor="let color of colores | filterByCategoria:'translucido'" [value]="color._id">
+                          {{ color.nombre }}
+                        </option>
+                      </optgroup>
+                      <optgroup label="Polvo">
+                        <option *ngFor="let color of colores | filterByCategoria:'polvo'" [value]="color._id">
+                          {{ color.nombre }}
+                        </option>
+                      </optgroup>
+                    </select>
+                    <select [(ngModel)]="capa.colores[0].fase" (change)="onFaseChange()" [class.filled]="capa.colores[0].fase">
+                      <option *ngFor="let fase of fases" [value]="fase">Fase {{ fase }}</option>
+                    </select>
+                  </div>
+                  <input type="text" [(ngModel)]="capa.colores[0].nota" placeholder="Nota..." class="input-nota" (blur)="onNotaChange()">
+                </div>
+
+                <!-- Diseño múltiple: varios colores -->
+                <div class="colores-capa" *ngIf="capa.colores.length > 1">
+                  <div class="color-capa-item" *ngFor="let colorCapa of capa.colores; let i = index" [class.principal]="i === 0">
+                    <div class="color-capa-row">
+                      <select [(ngModel)]="colorCapa.colorId" (change)="onColorChange(colorCapa)" 
+                              (focus)="recargarColores()"
+                              [class.filled]="colorCapa.colorId"
+                              [style.background-color]="colorCapa.colorRgb || 'rgba(255,255,255,0.1)'"
+                              [style.color]="colorCapa.colorRgb ? getTextColor(colorCapa.colorRgb) : '#fff'">
+                        <option value="">Color</option>
+                        <optgroup label="Translúcidos">
+                          <option *ngFor="let color of colores | filterByCategoria:'translucido'" [value]="color._id">
+                            {{ color.nombre }}
+                          </option>
+                        </optgroup>
+                        <optgroup label="Polvo">
+                          <option *ngFor="let color of colores | filterByCategoria:'polvo'" [value]="color._id">
+                            {{ color.nombre }}
+                          </option>
+                        </optgroup>
+                      </select>
+                      <span class="volumen-display" *ngIf="i === 0">{{ colorCapa.volumen }}ml</span>
+                      <input type="number" *ngIf="i > 0" [(ngModel)]="colorCapa.volumen" (change)="onVolumenChange(capa, colorCapa, i)" 
+                             class="input-volumen" min="0" [max]="capa.volumenTotal" placeholder="ml">
+                      <select [(ngModel)]="colorCapa.fase" (change)="onFaseChange()" [class.filled]="colorCapa.fase">
+                        <option *ngFor="let fase of fases" [value]="fase">F{{ fase }}</option>
+                      </select>
+                      <button class="btn-remove-color" (click)="eliminarColorDeCapa(capa, i)" *ngIf="i > 0">×</button>
+                    </div>
+                    <input type="text" [(ngModel)]="colorCapa.nota" placeholder="Nota..." class="input-nota" (blur)="onNotaChange()">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <span class="sin-capas" *ngIf="producto.capas.length === 0">Seleccione un molde</span>
+          </td>
+          <td>
+            <div class="acciones-producto">
+              <button class="btn-stock" 
+                      (click)="pasarAStock(producto)" 
+                      title="Pasar a Stock"
+                      [disabled]="producto.capas.length === 0">
+                📦 Stock
+              </button>
+              <button class="btn-eliminar" (click)="eliminarProducto(producto.id)">🗑️</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="sin-productos" *ngIf="productos.length === 0">
+      <p>No hay productos agregados. Haz clic en "Agregar Producto" para comenzar.</p>
+    </div>
+  </div>
+
+  <!-- Tabla resumen -->
+  <div class="resumen-container" *ngIf="resumenColores.length > 0">
+    <h2>Resumen por Fase</h2>
+    
+    <div class="fases-grid">
+      <div class="fase-card" *ngFor="let fase of getFasesUnicas()">
+        <h3>Fase {{ fase }}</h3>
+        <div class="colores-lista">
+          <div 
+            class="color-resumen" 
+            *ngFor="let resumen of getResumenPorFase(fase)"
+            (mouseenter)="mostrarTooltip(getResumenKey(resumen))"
+            (mouseleave)="ocultarTooltip()"
+          >
+            <div class="color-muestra" [style.background-color]="resumen.colorRgb"></div>
+            <div class="color-info">
+              <span class="color-nombre">{{ resumen.colorNombre }}</span>
+              <span class="color-volumen">{{ resumen.volumenTotal }} ml</span>
+            </div>
+            
+            <!-- Tooltip con detalles -->
+            <div class="tooltip" *ngIf="tooltipVisible === getResumenKey(resumen)">
+              <div class="tooltip-titulo">Detalles:</div>
+              <div class="tooltip-item" *ngFor="let detalle of resumen.detalles">
+                <strong>{{ detalle.moldeNombre }}</strong> - {{ detalle.capaNombre }}
+                <br>
+                {{ detalle.cantidad }} unid. × {{ detalle.volumenUnitario }}ml = {{ detalle.cantidad * detalle.volumenUnitario }}ml
+                <span class="tooltip-nota" *ngIf="detalle.nota"><br>📝 {{ detalle.nota }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botón generar informe -->
+  <div class="informe-container" *ngIf="resumenColores.length > 0">
+    <button class="btn-informe" (click)="generarInformePDF()">
+      <span class="icon">📄</span> Generar Informe PDF
+    </button>
+  </div>
+
+  <!-- Botón limpiar -->
+  <div class="memoria-container">
+    <button class="btn-limpiar" (click)="limpiarCalculadora()">
+      <span class="icon">🗑️</span> Limpiar Todo
+    </button>
+  </div>
+</div>
+
+<!-- Popups -->
+<app-popup-molde 
+  *ngIf="mostrarPopupMolde" 
+  (cerrar)="cerrarPopupMolde()" 
+  (moldeGuardado)="onMoldeGuardado($event)"
+  (moldesImportados)="onMoldesImportados($event)">
+</app-popup-molde>
+
+<app-popup-color 
+  *ngIf="mostrarPopupColor" 
+  (cerrar)="cerrarPopupColor()" 
+  (colorGuardado)="onColorGuardado($event)"
+  (coloresImportados)="onColoresImportados($event)">
+</app-popup-color>
+
+<app-popup-confirm
+  *ngIf="mostrarPopupConfirm"
+  titulo="¿Eliminar todo?"
+  mensaje="Se eliminará todo el contenido de la calculadora. Esta acción no se puede deshacer."
+  (confirmar)="confirmarLimpiar()"
+  (cancelar)="cancelarLimpiar()">
+</app-popup-confirm>

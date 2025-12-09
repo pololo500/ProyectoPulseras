@@ -1,5 +1,6 @@
 <div class="card" id="popup">
-    <p id="bienvenido">BIENVENIDO</p>
+    <p id="bienvenido">¡BIENVENIDO{{ nombre ? ', ' + nombre : '' }}!</p>
     <p id="lm">LM Pulseras</p>
-    <app-button etiqueta="A editar!" link="{{url}}"></app-button>
+    <p id="tipo" *ngIf="tipoUsuario">{{ tipoUsuario }}</p>
+    <app-button [etiqueta]="tipoUsuario === 'Administrador' ? '¡A trabajar!' : '¡Explorar!'" link="{{url}}"></app-button>
 </div>

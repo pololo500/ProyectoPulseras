@@ -1,0 +1,146 @@
+:host {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 4, 71, 0.6);
+  z-index: 100;
+}
+
+.popup {
+  position: relative;
+  z-index: 101;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 30px;
+}
+
+.btn-cerrar {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  font-size: 16px;
+  background-color: transparent;
+  border: none;
+  color: #000447;
+  cursor: pointer;
+}
+
+.btn-cerrar:hover {
+  background-color: rgba(0, 4, 71, 0.1);
+  box-shadow: none;
+}
+
+h2 {
+  color: #000447;
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 24px;
+}
+
+.capas-section {
+  margin-top: 15px;
+}
+
+.capas-section > label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.capa-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.capa-inputs {
+  display: flex;
+  flex: 1;
+  gap: 10px;
+}
+
+.capa-inputs input {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.capa-inputs input[type="number"] {
+  max-width: 120px;
+}
+
+.btn-eliminar-capa {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  font-size: 16px;
+  background-color: #dc3545;
+  border-color: #dc3545;
+  border-radius: 50%;
+}
+
+.btn-eliminar-capa:hover {
+  background-color: #c82333;
+  border-color: #c82333;
+}
+
+.error {
+  color: #dc3545;
+  font-size: 14px;
+  text-align: center;
+  margin: 10px 0;
+}
+
+button[type="submit"] {
+  margin-top: 20px;
+}
+
+.botones-popup {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.botones-popup button[type="submit"] {
+  margin-top: 0;
+}
+
+.btn-importar {
+  background: linear-gradient(135deg, #3a3a6e, #2a2a5e) !important;
+  color: #D6B435 !important;
+  border: 1px solid rgba(214, 180, 53, 0.4) !important;
+}
+
+.btn-importar:hover {
+  background: linear-gradient(135deg, #4a4a7e, #3a3a6e) !important;
+  border-color: rgba(214, 180, 53, 0.7) !important;
+}
+
+@media (max-width: 600px) {
+  .capa-inputs {
+    flex-direction: column;
+  }
+  .capa-inputs input[type="number"] {
+    max-width: 100%;
+  }
+}

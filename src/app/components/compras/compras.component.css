@@ -1,0 +1,414 @@
+.container {
+  padding: 120px 20px 20px 20px;
+  min-height: 100vh;
+  background-color: #1a1a2e;
+  color: #D6B435;
+}
+
+h1 {
+  font-size: 2rem;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Botones de acción superiores */
+.acciones-top {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.btn-agregar {
+  padding: 12px 25px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.btn-agregar:hover {
+  background-color: #218838;
+}
+
+.btn-importar {
+  padding: 12px 25px;
+  background-color: #17a2b8;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.btn-importar:hover {
+  background-color: #138496;
+}
+
+/* Tabla */
+.tabla-container {
+  overflow-x: auto;
+}
+
+.compras-table {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  border-collapse: collapse;
+  background-color: #000447;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.compras-table th,
+.compras-table td {
+  padding: 12px 10px;
+  text-align: center;
+  border-bottom: 1px solid #D6B435;
+}
+
+.compras-table th {
+  background-color: #D6B435;
+  color: #000447;
+  font-weight: bold;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.compras-table td {
+  color: #fff;
+  font-size: 14px;
+}
+
+.costo-total {
+  font-weight: bold;
+  color: #28a745 !important;
+}
+
+.acciones-cell {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+.acciones-cell button {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-editar {
+  background-color: #ffc107;
+}
+
+.btn-editar:hover {
+  background-color: #e0a800;
+}
+
+.btn-eliminar {
+  background-color: #dc3545;
+}
+
+.btn-eliminar:hover {
+  background-color: #c82333;
+}
+
+.empty-message {
+  color: #888;
+  font-style: italic;
+}
+
+/* Footer tabla */
+.compras-table tfoot td {
+  background-color: #0a0a4a;
+  border-top: 2px solid #D6B435;
+}
+
+.total-label {
+  text-align: right !important;
+  font-weight: bold;
+  color: #D6B435 !important;
+}
+
+.total-valor {
+  font-weight: bold;
+  font-size: 16px;
+  color: #28a745 !important;
+}
+
+/* Popup overlay */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.popup-content {
+  background: #1a1a2e;
+  padding: 30px;
+  border-radius: 12px;
+  max-width: 600px;
+  width: 90%;
+  border: 2px solid #D6B435;
+}
+
+.popup-content h2, .popup-content h3 {
+  color: #D6B435;
+  margin-top: 0;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Formulario grid */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.form-group label {
+  color: #D6B435;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.form-group input,
+.form-group select {
+  padding: 10px;
+  border: 2px solid #444;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: #2a2a4e;
+  color: #fff;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #D6B435;
+  outline: none;
+}
+
+.form-group input.filled,
+.form-group select.filled {
+  border-color: #D6B435;
+}
+
+.campo-calculado {
+  background-color: #3a3a5e !important;
+  color: #28a745 !important;
+  font-weight: bold;
+}
+
+.nuevo-input-container {
+  display: flex;
+  flex-direction: row !important;
+  gap: 8px;
+  width: 100%;
+}
+
+.nuevo-input-container input {
+  flex: 1;
+  min-width: 0;
+}
+
+.btn-cancelar-input {
+  padding: 10px 15px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  flex-shrink: 0;
+  width: auto !important;
+  min-width: 40px;
+}
+
+.btn-cancelar-input:hover {
+  background-color: #c82333;
+}
+
+/* Acciones formulario */
+.form-acciones {
+  display: flex;
+  gap: 15px;
+  margin-top: 25px;
+  justify-content: center;
+}
+
+.btn-guardar {
+  padding: 12px 30px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.btn-guardar:hover {
+  background-color: #218838;
+}
+
+.btn-cancelar {
+  padding: 12px 30px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.btn-cancelar:hover {
+  background-color: #5a6268;
+}
+
+/* Popup eliminar */
+.popup-eliminar {
+  text-align: center;
+  max-width: 400px;
+}
+
+.popup-eliminar p {
+  color: #fff;
+  margin: 10px 0;
+}
+
+.popup-warning {
+  color: #dc3545 !important;
+  font-size: 14px;
+  font-style: italic;
+}
+
+.popup-acciones {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.btn-confirmar-eliminar {
+  padding: 10px 25px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-confirmar-eliminar:hover {
+  background-color: #c82333;
+}
+
+.btn-cancelar-popup {
+  padding: 10px 25px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-cancelar-popup:hover {
+  background-color: #5a6268;
+}
+
+/* Popup importar */
+.popup-importar {
+  max-width: 500px;
+}
+
+.popup-importar p {
+  color: #fff;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.file-input-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+.btn-seleccionar-archivo {
+  display: inline-block;
+  padding: 15px 30px;
+  background-color: #2a2a4e;
+  color: #D6B435;
+  border: 2px dashed #D6B435;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.btn-seleccionar-archivo:hover {
+  background-color: #3a3a5e;
+  border-style: solid;
+}
+
+.archivo-info {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.archivo-nombre {
+  color: #28a745;
+  font-size: 14px;
+}
+
+.btn-importar-confirmar {
+  padding: 10px 25px;
+  background-color: #17a2b8;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-importar-confirmar:hover {
+  background-color: #138496;
+}
+
+.btn-importar-confirmar:disabled {
+  background-color: #555;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .compras-table th,
+  .compras-table td {
+    padding: 8px 5px;
+    font-size: 12px;
+  }
+}

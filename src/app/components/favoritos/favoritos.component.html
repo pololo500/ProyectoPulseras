@@ -1,0 +1,39 @@
+<div class="favoritos-page">
+    <h1>Mis Favoritos</h1>
+    
+    <div class="favoritos-container" *ngIf="favoritos.length > 0">
+        <div class="favorito-card" *ngFor="let producto of favoritos">
+            <button class="btn-eliminar" (click)="eliminarFavorito(producto._id)" title="Quitar de favoritos">
+                <span class="sparkle-icon active">✦</span>
+            </button>
+            
+            <div class="favorito-imagen">
+                <img [src]="producto.imagen" [alt]="producto.nombre">
+            </div>
+            
+            <div class="favorito-info">
+                <h3>{{ producto.nombre }}</h3>
+                <p class="tipo">{{ producto.producto | capitalize }}</p>
+                <p class="precio">${{ producto.precio }}</p>
+            </div>
+            
+            <div class="favorito-acciones">
+                <div class="selector-cantidad">
+                    <button class="btn-cantidad" (click)="decrementarCantidad(producto)">-</button>
+                    <span class="cantidad">{{ producto.cantidad }}</span>
+                    <button class="btn-cantidad" (click)="incrementarCantidad(producto)">+</button>
+                </div>
+                <button class="btn-agregar-carrito" (click)="agregarAlCarrito(producto)">
+                    🛒 Agregar
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="sin-favoritos" *ngIf="favoritos.length === 0">
+        <div class="icono-vacio">✦</div>
+        <h2>No tienes productos favoritos</h2>
+        <p>Explora nuestros productos y marca tus favoritos para verlos aquí</p>
+        <a routerLink="/productos" class="btn-explorar">Ver productos</a>
+    </div>
+</div>

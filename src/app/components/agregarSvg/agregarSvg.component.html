@@ -1,0 +1,150 @@
+<div class="agregar-svg-page">
+    <h1>Gestionar SVGs de Moldes</h1>
+    
+    <!-- Instrucciones -->
+    <div class="instrucciones">
+        <h3>📋 Instrucciones para subir un SVG</h3>
+        <div class="instrucciones-contenido">
+            <p><strong>El SVG debe estar preparado de la siguiente manera:</strong></p>
+            <ol>
+                <li>
+                    <strong>Cada área coloreable debe tener un ID único</strong><br>
+                    <code>&lt;path id="capa-base" d="..."&gt;</code>
+                </li>
+                <li>
+                    <strong>Nombra los IDs de forma descriptiva</strong><br>
+                    Ejemplo: <code>layer-base</code>, <code>layer-relleno</code>, <code>layer-tapa</code>
+                </li>
+                <li>
+                    <strong>Agrupa elementos relacionados con &lt;g&gt;</strong><br>
+                    <code>&lt;g id="area-decoracion"&gt;...paths...&lt;/g&gt;</code>
+                </li>
+                <li>
+                    <strong>Evita estilos inline de fill</strong><br>
+                    Los colores se aplicarán dinámicamente
+                </li>
+            </ol>
+            <p class="ejemplo-svg">
+                <strong>Ejemplo de SVG válido:</strong><br>
+                <code>
+                    &lt;svg viewBox="0 0 100 100"&gt;<br>
+                    &nbsp;&nbsp;&lt;path id="base" d="M10,50 Q50,10 90,50 Q50,90 10,50" /&gt;<br>
+                    &nbsp;&nbsp;&lt;circle id="centro" cx="50" cy="50" r="15" /&gt;<br>
+                    &lt;/svg&gt;
+                </code>
+            </p>
+        </div>
+    </div>
+    
+    <div class="contenido-principal">
+        <!-- Lista de moldes -->
+        <div class="panel-moldes">
+            <h2>Moldes Disponibles</h2>
+            
+            <div class="lista-moldes" *ngIf="!cargando">
+                <div class="molde-card" 
+                     *ngFor="let molde of moldes" 
+                     [class.seleccionado]="moldeSeleccionado?._id === molde._id"
+                     [class.con-svg]="tieneSvg(molde)"
+                     (click)="seleccionarMolde(molde)">
+                    <div class="molde-info">
+                        <h3>{{ molde.nombre | capitalize }}</h3>
+                        <p>{{ molde.capas.length }} capa(s)</p>
+                        <span class="badge" *ngIf="tieneSvg(molde)">✓ SVG</span>
+                    </div>
+                    <div class="molde-capas">
+                        <span class="capa-tag" *ngFor="let capa of molde.capas">
+                            {{ capa.nombre | capitalize }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="cargando" *ngIf="cargando">
+                <p>Cargando moldes...</p>
+            </div>
+            
+            <div class="sin-moldes" *ngIf="!cargando && moldes.length === 0">
+                <p>No hay moldes registrados</p>
+            </div>
+        </div>
+        
+        <!-- Panel de edición SVG -->
+        <div class="panel-svg" *ngIf="moldeSeleccionado">
+            <div class="panel-header">
+                <h2>{{ moldeSeleccionado.nombre | capitalize }}</h2>
+                <button class="btn-cerrar" (click)="limpiarSeleccion()">✕</button>
+            </div>
+            
+            <!-- Cargar SVG -->
+            <div class="seccion-cargar">
+                <label class="btn-cargar" for="inputSvg">
+                    📁 {{ svgContent ? 'Cambiar SVG' : 'Cargar SVG' }}
+                </label>
+                <input type="file" id="inputSvg" accept=".svg" (change)="onFileSelected($event)" hidden>
+                
+                <button class="btn-eliminar" *ngIf="svgContent" (click)="eliminarSvg()">
+                    🗑️ Eliminar SVG
+                </button>
+            </div>
+            
+            <!-- Preview SVG -->
+            <div class="seccion-preview" *ngIf="svgPreview">
+                <h3>Vista Previa</h3>
+                <div class="svg-preview-container" [innerHTML]="svgPreview"></div>
+                <p class="preview-nota">Los colores son de ejemplo. En el producto real se mostrarán los colores seleccionados.</p>
+            </div>
+            
+            <!-- Elementos detectados -->
+            <div class="seccion-elementos" *ngIf="svgElementIds.length > 0">
+                <h3>Elementos SVG Detectados</h3>
+                <div class="elementos-lista">
+                    <span class="elemento-tag" *ngFor="let id of svgElementIds">{{ id }}</span>
+                </div>
+            </div>
+            
+            <!-- Mapeo de capas -->
+            <div class="seccion-mapeo" *ngIf="svgContent && areaMappings.length > 0">
+                <h3>Asignar Capas a Elementos SVG</h3>
+                <p class="mapeo-descripcion">Selecciona qué elemento del SVG corresponde a cada capa del molde:</p>
+                
+                <div class="mapeo-lista">
+                    <div class="mapeo-item" *ngFor="let mapping of areaMappings; let i = index">
+                        <div class="mapeo-capa">
+                            <span class="color-preview" [style.background-color]="coloresPreview[i % coloresPreview.length]"></span>
+                            <span class="capa-nombre">{{ mapping.capaNombre | capitalize }}</span>
+                        </div>
+                        <select [(ngModel)]="mapping.svgElementId" 
+                                (ngModelChange)="onMappingChange()"
+                                [class.asignado]="mapping.svgElementId">
+                            <option value="">-- Seleccionar elemento --</option>
+                            <option *ngFor="let id of svgElementIds" [value]="id">{{ id }}</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mensaje -->
+            <div class="mensaje" *ngIf="mensaje" [class.exito]="tipoMensaje === 'exito'" [class.error]="tipoMensaje === 'error'">
+                {{ mensaje }}
+            </div>
+            
+            <!-- Botón guardar -->
+            <div class="acciones" *ngIf="svgContent">
+                <button class="btn-guardar" 
+                        (click)="guardarSvg()" 
+                        [disabled]="guardando || !todosLosMapeosCompletos()">
+                    {{ guardando ? 'Guardando...' : '💾 Guardar SVG' }}
+                </button>
+            </div>
+        </div>
+        
+        <!-- Placeholder cuando no hay molde seleccionado -->
+        <div class="panel-placeholder" *ngIf="!moldeSeleccionado">
+            <div class="placeholder-content">
+                <span class="icon">🎨</span>
+                <p>Selecciona un molde para gestionar su SVG</p>
+            </div>
+        </div>
+    </div>
+</div>

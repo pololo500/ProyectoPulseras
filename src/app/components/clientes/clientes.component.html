@@ -1,0 +1,209 @@
+<div class="clientes-page">
+    <div class="header">
+        <h1>Clientes</h1>
+        <div class="stats">
+            <div class="stat">
+                <span class="stat-numero">{{ getTotalClientes() }}</span>
+                <span class="stat-label">Total clientes</span>
+            </div>
+            <div class="stat">
+                <span class="stat-numero">{{ getClientesConPedidos() }}</span>
+                <span class="stat-label">Con pedidos pendientes</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filtros-container">
+        <div class="filtro-grupo">
+            <label>Nombre</label>
+            <input type="text" [(ngModel)]="filtroNombre" (ngModelChange)="aplicarFiltros()" placeholder="Buscar por nombre...">
+        </div>
+        <div class="filtro-grupo">
+            <label>Email</label>
+            <input type="text" [(ngModel)]="filtroEmail" (ngModelChange)="aplicarFiltros()" placeholder="Buscar por email...">
+        </div>
+        <div class="filtro-grupo">
+            <label>Pedidos</label>
+            <select [(ngModel)]="filtroPendientes" (ngModelChange)="aplicarFiltros()">
+                <option value="todos">Todos</option>
+                <option value="conPedidos">Con pedidos pendientes</option>
+                <option value="sinPedidos">Sin pedidos pendientes</option>
+            </select>
+        </div>
+        <button class="btn-limpiar" (click)="limpiarFiltros()">Limpiar</button>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading" *ngIf="cargando">
+        <span>Cargando clientes...</span>
+    </div>
+
+    <!-- Tabla de clientes -->
+    <div class="tabla-container" *ngIf="!cargando">
+        <table class="clientes-table">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Teléfono</th>
+                    <th>Pedidos Pendientes</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngIf="clientesFiltrados.length === 0">
+                    <td colspan="5" class="empty-message">No se encontraron clientes</td>
+                </tr>
+                <tr *ngFor="let cliente of clientesFiltrados" (click)="verDetalle(cliente)" class="fila-cliente">
+                    <td class="nombre-cell">
+                        <span class="nombre">{{ cliente.nombre | capitalize }}</span>
+                    </td>
+                    <td class="email-cell">
+                        <span class="email">{{ cliente.email }}</span>
+                    </td>
+                    <td class="telefono-cell">
+                        <span *ngIf="cliente.telefono" class="telefono">{{ cliente.telefono }}</span>
+                        <span *ngIf="!cliente.telefono" class="sin-telefono">Sin teléfono</span>
+                    </td>
+                    <td class="pedidos-cell">
+                        <span class="badge-pedidos" [class.con-pedidos]="cliente.pedidosPendientes > 0">
+                            {{ cliente.pedidosPendientes }}
+                        </span>
+                    </td>
+                    <td class="acciones-cell" (click)="$event.stopPropagation()">
+                        <button class="btn-accion btn-email" (click)="copiarEmail(cliente.email)" title="Copiar email">
+                            📧
+                        </button>
+                        <button class="btn-accion btn-whatsapp" (click)="abrirWhatsApp(cliente.telefono)" title="Abrir WhatsApp" [disabled]="!cliente.telefono">
+                            💬
+                        </button>
+                        <button class="btn-accion btn-ver" (click)="verDetalle(cliente)" title="Ver detalle">
+                            👁️
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Detalle Cliente -->
+<div class="modal-overlay" *ngIf="mostrarDetalle" (click)="cerrarDetalle()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+        <button class="btn-cerrar" (click)="cerrarDetalle()">✕</button>
+        
+        <div *ngIf="clienteSeleccionado">
+            <h2>{{ clienteSeleccionado.nombre | capitalize }}</h2>
+            
+            <div class="detalle-seccion">
+                <h3>Información de Contacto</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="label">Email</span>
+                        <div class="value-con-accion">
+                            <span class="value">{{ clienteSeleccionado.email }}</span>
+                            <button class="btn-mini" (click)="copiarEmail(clienteSeleccionado.email)" title="Copiar">📋</button>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Teléfono</span>
+                        <div class="value-con-accion" *ngIf="clienteSeleccionado.telefono">
+                            <span class="value">{{ clienteSeleccionado.telefono }}</span>
+                            <button class="btn-mini" (click)="copiarTelefono(clienteSeleccionado.telefono)" title="Copiar">📋</button>
+                            <button class="btn-mini btn-whatsapp-mini" (click)="abrirWhatsApp(clienteSeleccionado.telefono)" title="WhatsApp">💬</button>
+                        </div>
+                        <span class="value sin-dato" *ngIf="!clienteSeleccionado.telefono">No registrado</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="detalle-seccion">
+                <h3>Pedidos Pendientes ({{ clienteSeleccionado.pedidosPendientes }})</h3>
+                
+                <div class="pedidos-lista" *ngIf="clienteSeleccionado.pedidos.length > 0">
+                    <div class="pedido-card" *ngFor="let pedido of clienteSeleccionado.pedidos" 
+                         [class.expandido]="isPedidoExpandido(pedido._id)">
+                        
+                        <!-- Header del pedido (clickeable) -->
+                        <div class="pedido-header-card" (click)="togglePedido(pedido._id)">
+                            <div class="pedido-info">
+                                <span class="pedido-producto">{{ getResumenProductos(pedido) }}</span>
+                                <span class="pedido-fecha">{{ formatearFecha(pedido.fecha) }}</span>
+                            </div>
+                            <div class="pedido-resumen">
+                                <span class="pedido-cantidad">x{{ getCantidadItems(pedido) }}</span>
+                                <span class="pedido-estado" [ngClass]="getEstadoClass(pedido.estado)">{{ pedido.estado }}</span>
+                                <span class="expand-icon">{{ isPedidoExpandido(pedido._id) ? '▲' : '▼' }}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Detalle expandido del pedido -->
+                        <div class="pedido-detalle-expandido" *ngIf="isPedidoExpandido(pedido._id)">
+                            
+                            <!-- Lista de items/productos -->
+                            <div class="items-pedido" *ngIf="pedido.items && pedido.items.length > 0">
+                                <div class="item-pedido-detalle" *ngFor="let item of pedido.items">
+                                    <div class="item-header">
+                                        <span class="item-nombre">{{ item.productoNombre | capitalize }}</span>
+                                        <span class="item-precio">${{ (item.precio || 0) * (item.cantidad || 1) }}</span>
+                                    </div>
+                                    <div class="item-info-row">
+                                        <span class="item-tipo">{{ item.productoTipo | capitalize }}</span>
+                                        <span class="item-material" *ngIf="item.material">• {{ item.material | capitalize }}</span>
+                                        <span class="item-cantidad">x{{ item.cantidad }}</span>
+                                    </div>
+                                    <div class="item-molde" *ngIf="item.moldeNombre">
+                                        <span class="molde-label">Molde:</span> {{ item.moldeNombre | capitalize }}
+                                    </div>
+                                    <div class="item-colores" *ngIf="item.coloresPorCapa && item.coloresPorCapa.length > 0">
+                                        <span class="colores-label">Colores:</span>
+                                        <div class="colores-lista">
+                                            <div class="color-capa" *ngFor="let color of item.coloresPorCapa">
+                                                <span class="color-dot" [style.background-color]="color.colorRgb"></span>
+                                                <span class="color-info">{{ color.capaNombre }}: {{ color.colorNombre | capitalize }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="item-estado-individual">
+                                        <span class="estado-badge" [ngClass]="getEstadoClass(item.estado || 'A confirmar')">
+                                            {{ item.estado || 'A confirmar' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Pedido legacy (sin items array) -->
+                            <div class="items-pedido" *ngIf="!pedido.items || pedido.items.length === 0">
+                                <div class="item-pedido-detalle">
+                                    <div class="item-header">
+                                        <span class="item-nombre">{{ (pedido.productoNombre || 'Producto') | capitalize }}</span>
+                                    </div>
+                                    <div class="item-info-row">
+                                        <span class="item-cantidad">Cantidad: {{ pedido.cantidad || 1 }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Resumen del pedido -->
+                            <div class="pedido-resumen-total">
+                                <div class="resumen-row">
+                                    <span>Total productos:</span>
+                                    <span>{{ getCantidadItems(pedido) }}</span>
+                                </div>
+                                <div class="resumen-row total">
+                                    <span>Total:</span>
+                                    <span>${{ getTotalPedido(pedido) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sin-pedidos" *ngIf="clienteSeleccionado.pedidos.length === 0">
+                    <p>Este cliente no tiene pedidos pendientes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

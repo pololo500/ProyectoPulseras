@@ -1,27 +1,66 @@
 <div class="card">
   <h1>Agregá tu producto!</h1>
-  <!--
-    <ul>
-      <li *ngFor="let pulsera of pulseras">
-        <strong>Nombre:</strong> {{ pulsera.nombre }} <br>
-        <strong>Dijes:</strong> {{ pulsera.dijes.join(', ') }}<br>
-        <img [src]="pulsera.imagenUrl" width="200" /><br>
-      </li>
-    </ul>
-  -->
   <form [formGroup]="addProductForm" (ngSubmit)="submit()">
     <div class="form">
       <div>
         <label for="producto">Producto</label>
-        <select formControlName="producto" id="producto" [ngClass]="{ 'filled': addProductForm.get('producto')?.value }">
-          <option *ngFor="let prod of productos" [value]="prod">{{ prod | capitalize }}</option>
+        <select formControlName="producto" id="producto" [ngClass]="{ 'filled': addProductForm.get('producto')?.value }" *ngIf="!mostrarInputNuevoProducto">
+          <option value="" disabled>Seleccionar tipo</option>
+          <option *ngFor="let tipo of tiposProducto" [value]="tipo">{{ tipo | capitalize }}</option>
+          <option value="__nuevo__">+ Agregar nuevo tipo</option>
         </select>
+        <div class="nuevo-input-container" *ngIf="mostrarInputNuevoProducto">
+          <input type="text" [(ngModel)]="nuevoProductoNombre" [ngModelOptions]="{standalone: true}" placeholder="Nombre del nuevo tipo" class="filled"/>
+          <button type="button" class="btn-cancelar" (click)="cancelarNuevoProducto()">✕</button>
+        </div>
       </div>
       <div>
         <label for="material">Material</label>
-        <select formControlName="material" id="material" [ngClass]="{ 'filled': addProductForm.get('material')?.value }">
-          <option *ngFor="let mat of materiales" [value]="mat">{{ mat }}</option>
+        <select formControlName="material" id="material" [ngClass]="{ 'filled': addProductForm.get('material')?.value }" [disabled]="!addProductForm.get('producto')?.value || mostrarInputNuevoProducto" *ngIf="!mostrarInputNuevoMaterial">
+          <option value="" disabled>Seleccionar material</option>
+          <option *ngFor="let mat of materiales" [value]="mat">{{ mat | capitalize }}</option>
+          <option value="__nuevo__">+ Agregar nuevo material</option>
         </select>
+        <div class="nuevo-input-container" *ngIf="mostrarInputNuevoMaterial">
+          <input type="text" [(ngModel)]="nuevoMaterialNombre" [ngModelOptions]="{standalone: true}" placeholder="Nombre del nuevo material" class="filled" (ngModelChange)="onNuevoMaterialChange()"/>
+          <button type="button" class="btn-cancelar" (click)="cancelarNuevoMaterial()">✕</button>
+        </div>
+      </div>
+      <div *ngIf="esResina">
+        <label for="molde">Molde</label>
+        <select formControlName="molde" id="molde" [ngClass]="{ 'filled': addProductForm.get('molde')?.value }">
+          <option value="" disabled>Seleccionar molde</option>
+          <option *ngFor="let molde of moldes" [value]="molde.nombre">{{ molde.nombre | capitalize }}</option>
+        </select>
+      </div>
+      <div class="subcategorias-container">
+        <label>Sub-Categorías</label>
+        <div class="subcategorias-selector">
+          <div class="subcategorias-display" (click)="toggleDropdownSubcategorias()">
+            <div class="subcategorias-tags" *ngIf="subcategoriasSeleccionadas.length > 0">
+              <span class="tag" *ngFor="let sub of subcategoriasSeleccionadas">
+                {{ sub | capitalize }}
+                <button type="button" class="tag-remove" (click)="eliminarSubcategoria(sub); $event.stopPropagation()">✕</button>
+              </span>
+            </div>
+            <span class="placeholder" *ngIf="subcategoriasSeleccionadas.length === 0">Seleccionar sub-categorías</span>
+            <span class="dropdown-arrow">▼</span>
+          </div>
+          <div class="subcategorias-dropdown" *ngIf="mostrarDropdownSubcategorias">
+            <div class="dropdown-item" *ngFor="let subcategoria of subcategorias" 
+                 (click)="toggleSubcategoria(subcategoria)"
+                 [ngClass]="{ 'selected': isSubcategoriaSeleccionada(subcategoria) }">
+              <span class="checkbox">{{ isSubcategoriaSeleccionada(subcategoria) ? '☑' : '☐' }}</span>
+              {{ subcategoria | capitalize }}
+            </div>
+            <div class="dropdown-divider"></div>
+            <div class="nuevo-subcategoria-container">
+              <button type="button" class="btn-agregar-subcategoria" (click)="abrirPopupSubcategoria(); $event.stopPropagation()">
+                + Agregar nueva sub-categoría
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
       <div>
         <label for="nombre">Nombre</label>
@@ -30,41 +69,61 @@
     </div>
     <div class="form">
       <div>
-        <label for="mostacillas">Mostacillas</label>
-        <input type="text" formControlName="mostacillas" name="mostacillas" id="mostacillas" placeholder="Mostacillas separadas por coma" [ngClass]="{ 'filled': addProductForm.get('mostacillas')?.value?.length > 0 }"/>
-      </div>
-      <div>
-        <label for="dijes">Dijes</label>
-        <input type="text" formControlName="dijes" name="dijes" id="dijes" placeholder="Dijes separados por coma" [ngClass]="{ 'filled': addProductForm.get('dijes')?.value?.length > 0 }"/>
-      </div>
-      <div>
         <label for="descripcion">Descripción</label>
         <input type="text" formControlName="descripcion" name="descripcion" id="descripcion" [ngClass]="{ 'filled': addProductForm.get('descripcion')?.value?.length > 0 }"/>
-      </div>
-    </div>
-    <div class="form">
-      <div>
-        <label for="cant">Cantidad</label>
-        <input type="number" formControlName="cant" name="cant" id="cant" [ngClass]="{ 'filled': addProductForm.get('cant')?.value > 0 }"/>
       </div>
       <div>
         <label for="precio">Precio</label>
         <input type="number" formControlName="precio" name="precio" id="precio" placeholder="$" [ngClass]="{ 'filled': addProductForm.get('precio')?.value > 0 }" required/>
       </div>
-      <div>
-        <label for="addImagen" id="imagen">Foto</label>
-        <input type="file" name="imagen" id="addImagen" (change)="onFileSelected($event)" accept=".jpg, .jpeg, .png" [ngClass]="{ 'filled': addProductForm.get('imagen')?.value }" required/>
+      <div class="imagen-container">
+        <label for="addImagen" id="imagen">+ Agregar Fotos</label>
+        <input type="file" name="imagen" id="addImagen" (change)="onFilesSelected($event)" accept=".jpg, .jpeg, .png" multiple/>
+        
+        <!-- Carrusel cuando hay más de 1 imagen -->
+        <div class="carrusel-container" *ngIf="imagenesPreview.length > 1">
+          <button type="button" class="carrusel-btn carrusel-prev" (click)="anteriorImagen()" [disabled]="imagenCarruselIndex === 0">❮</button>
+          
+          <div class="carrusel-imagen-wrapper">
+            <img [src]="imagenActual" alt="Preview" class="carrusel-imagen"/>
+            <button type="button" class="btn-eliminar-imagen-carrusel" (click)="eliminarImagenCarrusel()" title="Eliminar imagen">✕</button>
+            <div class="carrusel-orden-btns">
+              <button type="button" class="btn-orden" (click)="moverImagenIzquierda(imagenCarruselIndex)" [disabled]="imagenCarruselIndex === 0" title="Mover a la izquierda">◀</button>
+              <button type="button" class="btn-orden" (click)="moverImagenDerecha(imagenCarruselIndex)" [disabled]="imagenCarruselIndex === imagenesPreview.length - 1" title="Mover a la derecha">▶</button>
+            </div>
+          </div>
+          
+          <button type="button" class="carrusel-btn carrusel-next" (click)="siguienteImagen()" [disabled]="imagenCarruselIndex >= imagenesPreview.length - 1">❯</button>
+        </div>
+        
+        <div class="carrusel-indicadores" *ngIf="imagenesPreview.length > 1">
+          <span class="indicador" *ngFor="let img of imagenesPreview; let i = index" 
+                [class.activo]="i === imagenCarruselIndex" 
+                (click)="irAImagen(i)"></span>
+        </div>
+        
+        <p class="carrusel-contador" *ngIf="imagenesPreview.length > 1">{{ imagenCarruselIndex + 1 }} / {{ imagenesPreview.length }} imagen(es)</p>
+        
+        <!-- Vista simple cuando hay 1 imagen -->
+        <div class="imagenes-preview-container" *ngIf="imagenesPreview.length === 1">
+          <div class="imagen-preview-item">
+            <img [src]="imagenesPreview[0]" alt="Preview"/>
+            <button type="button" class="btn-eliminar-imagen" (click)="eliminarImagen(0)">✕</button>
+          </div>
+        </div>
+        
+        <span class="imagenes-count" *ngIf="archivosImagenes.length > 0">{{ archivosImagenes.length }} foto(s) seleccionada(s)</span>
       </div>
     </div>
-    <button type="submit" [disabled]="addProductForm.invalid">Agregar Producto</button>
+    <button type="submit">Agregar Producto</button>
   </form>
-
-  <!--
-    <div *ngIf="imagenUrl">
-      <p>Imagen subida:</p>
-      <img [src]="imagenUrl" width="200" />
-    </div>
-    -->
 </div>
 
 <app-button buttonClass="modificarProductos" etiqueta="Modificar Productos" link="/modificarProductos"></app-button>
+
+<!-- Popup para agregar nueva sub-categoría -->
+<app-popup-subcategoria 
+  *ngIf="mostrarPopupSubcategoria"
+  (cerrar)="cerrarPopupSubcategoria()"
+  (subcategoriaGuardada)="onSubcategoriaGuardada($event)">
+</app-popup-subcategoria>

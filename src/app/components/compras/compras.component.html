@@ -1,0 +1,153 @@
+<div class="container">
+  <h1>Historial de Compras</h1>
+  
+  <!-- Botones de acción -->
+  <div class="acciones-top">
+    <button class="btn-agregar" (click)="abrirFormulario()">+ Agregar Compra</button>
+    <button class="btn-importar" (click)="abrirImportarJson()">Importar JSON</button>
+  </div>
+
+  <!-- Tabla de compras -->
+  <div class="tabla-container">
+    <table class="compras-table">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th>Cantidad</th>
+          <th>Costo Unidad</th>
+          <th>Costo Total</th>
+          <th>Lugar</th>
+          <th>Fecha Compra</th>
+          <th>Cant. Individual</th>
+          <th>Costo Individual</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let compra of compras">
+          <td>{{ compra.producto | capitalize }}</td>
+          <td>{{ compra.cantidad }}</td>
+          <td>${{ compra.costoUnidad | number:'1.2-2' }}</td>
+          <td class="costo-total">${{ compra.costoTotal | number:'1.2-2' }}</td>
+          <td>{{ compra.lugar | capitalize }}</td>
+          <td>{{ formatearFecha(compra.fechaCompra) }}</td>
+          <td>{{ compra.cantidadIndividual }}</td>
+          <td>${{ compra.costoIndividual | number:'1.2-2' }}</td>
+          <td class="acciones-cell">
+            <button class="btn-editar" (click)="editarCompra(compra)">✏️</button>
+            <button class="btn-eliminar" (click)="confirmarEliminar(compra)">🗑️</button>
+          </td>
+        </tr>
+        <tr *ngIf="compras.length === 0">
+          <td colspan="9" class="empty-message">No hay compras registradas</td>
+        </tr>
+      </tbody>
+      <tfoot *ngIf="compras.length > 0">
+        <tr>
+          <td colspan="3" class="total-label">TOTAL GENERAL:</td>
+          <td class="total-valor">${{ getTotalGeneral() | number:'1.2-2' }}</td>
+          <td colspan="5"></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+
+<!-- Popup Formulario -->
+<div class="popup-overlay" *ngIf="mostrarFormulario" (click)="cerrarFormulario()">
+  <div class="popup-content formulario-popup" (click)="$event.stopPropagation()">
+    <h2>{{ compraEditando ? 'Editar Compra' : 'Nueva Compra' }}</h2>
+    
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Producto</label>
+        <input type="text" [(ngModel)]="nuevaCompra.producto" placeholder="Nombre del producto" class="filled"/>
+      </div>
+      
+      <div class="form-group">
+        <label>Lugar</label>
+        <select [(ngModel)]="nuevaCompra.lugar" (change)="onLugarChange()" [ngClass]="{ 'filled': nuevaCompra.lugar }" *ngIf="!mostrarInputNuevoLugar">
+          <option value="" disabled>Seleccionar lugar</option>
+          <option *ngFor="let lug of lugares" [value]="lug">{{ lug | capitalize }}</option>
+          <option value="__nuevo__">+ Agregar nuevo lugar</option>
+        </select>
+        <div class="nuevo-input-container" *ngIf="mostrarInputNuevoLugar">
+          <input type="text" [(ngModel)]="nuevoLugarNombre" placeholder="Nombre del nuevo lugar" class="filled"/>
+          <button type="button" class="btn-cancelar-input" (click)="cancelarNuevoLugar()">✕</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Cantidad</label>
+        <input type="number" [(ngModel)]="nuevaCompra.cantidad" min="0"/>
+      </div>
+
+      <div class="form-group">
+        <label>Costo Unidad ($)</label>
+        <input type="number" [(ngModel)]="nuevaCompra.costoUnidad" min="0" step="0.01"/>
+      </div>
+
+      <div class="form-group">
+        <label>Costo Total ($)</label>
+        <input type="text" [value]="'$' + (calcularCostoTotal() | number:'1.2-2')" disabled class="campo-calculado"/>
+      </div>
+
+      <div class="form-group">
+        <label>Fecha Compra</label>
+        <input type="date" [(ngModel)]="nuevaCompra.fechaCompra"/>
+      </div>
+
+      <div class="form-group">
+        <label>Cantidad Individual</label>
+        <input type="number" [(ngModel)]="nuevaCompra.cantidadIndividual" min="1"/>
+      </div>
+
+      <div class="form-group">
+        <label>Costo Individual ($)</label>
+        <input type="text" [value]="'$' + (calcularCostoIndividual() | number:'1.2-2')" disabled class="campo-calculado"/>
+      </div>
+    </div>
+
+    <div class="form-acciones">
+      <button class="btn-guardar" (click)="guardarCompra()">💾 {{ compraEditando ? 'Guardar Cambios' : 'Agregar Compra' }}</button>
+      <button class="btn-cancelar" (click)="cerrarFormulario()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Popup Eliminar -->
+<div class="popup-overlay" *ngIf="mostrarPopupEliminar" (click)="cancelarEliminar()">
+  <div class="popup-content popup-eliminar" (click)="$event.stopPropagation()">
+    <h3>¿Eliminar compra?</h3>
+    <p>¿Estás seguro de que deseas eliminar la compra de <strong>{{ compraAEliminar?.producto }}</strong>?</p>
+    <p class="popup-warning">Esta acción no se puede deshacer.</p>
+    <div class="popup-acciones">
+      <button class="btn-confirmar-eliminar" (click)="eliminarCompra()">Sí, eliminar</button>
+      <button class="btn-cancelar-popup" (click)="cancelarEliminar()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Popup Importar JSON -->
+<div class="popup-overlay" *ngIf="mostrarImportarJson" (click)="cerrarImportarJson()">
+  <div class="popup-content popup-importar" (click)="$event.stopPropagation()">
+    <h3>Importar Compras desde JSON</h3>
+    <p>Selecciona un archivo .json con las compras.</p>
+    
+    <div class="file-input-container">
+      <label for="jsonFileInput" class="btn-seleccionar-archivo">
+        {{ archivoSeleccionado ? archivoSeleccionado.name : 'Seleccionar archivo .json' }}
+      </label>
+      <input type="file" id="jsonFileInput" accept=".json" (change)="onArchivoJsonSeleccionado($event)" hidden/>
+    </div>
+    
+    <div class="archivo-info" *ngIf="archivoSeleccionado">
+      <span class="archivo-nombre">✅ {{ archivoSeleccionado.name }}</span>
+    </div>
+    
+    <div class="popup-acciones">
+      <button class="btn-importar-confirmar" (click)="importarJson()" [disabled]="!archivoSeleccionado">Importar</button>
+      <button class="btn-cancelar-popup" (click)="cerrarImportarJson()">Cancelar</button>
+    </div>
+  </div>
+</div>

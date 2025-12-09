@@ -1,35 +1,44 @@
 <div class="agregar">
     <app-button buttonClass="degrade" etiqueta="Agregar Producto" link="agregarProducto"></app-button>
     <app-button buttonClass="degrade" etiqueta="Agregar Dije" link="agregarDije"></app-button>
+    <app-button buttonClass="degrade" etiqueta="Gestionar SVGs" link="agregarSvg"></app-button>
 </div>
-<div class="agregar" id="productos">
-    <div class="card">
-        
-        <div class="carrusel-wrapper">
-            <p class="arrow left" (click)="previous()"><</p>
 
-            <div class="carrusel-viewport">
-                <div class="carrusel-track" [ngStyle]="getTrackStyles()" (mouseenter)="onMouseEnter()" (mouseleave)="onMouseLeave()">
-                    <div class="carrusel-item" *ngFor="let img of urlsImagenes; let i = index" [class.center]="i === currentIndex" [class.side]="i !== currentIndex">
-                        <img [src]="img" alt="Pulsera" />
+<div class="productos-container">
+    <div class="card" *ngFor="let carrusel of carruseles" (click)="irAModificarProductos(carrusel.tipo)">
+        <h2 class="tipo-titulo">{{ carrusel.tipo | capitalize }}</h2>
+        
+        <div class="carrusel-wrapper" *ngIf="carrusel.productos.length > 0">
+            <button class="arrow left" (click)="previous(carrusel); $event.stopPropagation()" *ngIf="carrusel.productos.length > 1">❮</button>
+
+            <div class="carrusel-viewport" #viewport>
+                <div class="carrusel-track" 
+                     [ngStyle]="getTrackStyles(carrusel)" 
+                     (mouseenter)="onMouseEnter(carrusel)" 
+                     (mouseleave)="onMouseLeave(carrusel)">
+                    <div class="carrusel-item" 
+                         *ngFor="let producto of carrusel.productos; let i = index" 
+                         [class.center]="i === carrusel.currentIndex" 
+                         [class.side]="i !== carrusel.currentIndex">
+                        <img [src]="getPrimeraImagen(producto)" [alt]="producto.nombre" />
                     </div>
                 </div>
             </div>
 
-            <p class="arrow right" (click)="next()">></p>
+            <button class="arrow right" (click)="next(carrusel); $event.stopPropagation()" *ngIf="carrusel.productos.length > 1">❯</button>
         </div>
-
-        <p>Pulseras</p>
+        
+        <div class="carrusel-indicadores" *ngIf="carrusel.productos.length > 1">
+            <span class="indicador" 
+                  *ngFor="let producto of carrusel.productos; let i = index" 
+                  [class.activo]="i === carrusel.currentIndex"
+                  (click)="carrusel.currentIndex = i; $event.stopPropagation()"></span>
+        </div>
+        
+        <p class="producto-count">{{ carrusel.productos.length }} producto(s)</p>
     </div>
-
-
-    <div class="card">
-        <p>Pulseras</p>
-    </div>
-    <div class="card">
-        <p>Pulseras</p>
-    </div>
-    <div class="card">
-        <p>Pulseras</p>
+    
+    <div class="sin-productos" *ngIf="carruseles.length === 0">
+        <p>No hay productos cargados aún.</p>
     </div>
 </div>

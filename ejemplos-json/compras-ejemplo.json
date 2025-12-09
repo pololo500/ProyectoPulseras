@@ -1,0 +1,34 @@
+[
+  {
+    "producto": "Hilo encerado",
+    "cantidad": 10,
+    "costoUnidad": 250,
+    "lugar": "Mercado Central",
+    "fechaCompra": "2025-11-15",
+    "cantidadIndividual": 50
+  },
+  {
+    "producto": "Mostacillas colores",
+    "cantidad": 5,
+    "costoUnidad": 180,
+    "lugar": "Once",
+    "fechaCompra": "2025-11-20",
+    "cantidadIndividual": 100
+  },
+  {
+    "producto": "Dijes metálicos",
+    "cantidad": 20,
+    "costoUnidad": 50,
+    "lugar": "MercadoLibre",
+    "fechaCompra": "2025-11-25",
+    "cantidadIndividual": 1
+  },
+  {
+    "producto": "Resina epoxi",
+    "cantidad": 2,
+    "costoUnidad": 3500,
+    "lugar": "Ferretería Industrial",
+    "fechaCompra": "2025-12-01",
+    "cantidadIndividual": 1
+  }
+]

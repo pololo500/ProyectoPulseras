@@ -1,0 +1,165 @@
+:host {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.contacto-page {
+    width: 90%;
+    max-width: 800px;
+    padding: 20px;
+    text-align: center;
+}
+
+h1 {
+    font-family: 'Dancing Script', cursive;
+    font-size: 48px;
+    color: #000447;
+    margin-bottom: 10px;
+}
+
+.subtitulo {
+    font-size: 18px;
+    color: #666;
+    margin-bottom: 40px;
+}
+
+.contacto-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.contacto-card {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: white;
+    border-radius: 16px;
+    padding: 25px 30px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.contacto-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0, 4, 71, 0.2);
+}
+
+.icono {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.icono svg {
+    width: 36px;
+    height: 36px;
+}
+
+.icono.instagram {
+    background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+    color: white;
+}
+
+.icono.whatsapp {
+    background: #25D366;
+    color: white;
+}
+
+.contacto-info {
+    flex: 1;
+    text-align: left;
+}
+
+.contacto-info h2 {
+    font-size: 22px;
+    color: #000447;
+    margin: 0 0 5px 0;
+}
+
+.contacto-info .handle {
+    font-size: 18px;
+    font-weight: bold;
+    color: #D6B435;
+    margin: 0 0 8px 0;
+}
+
+.contacto-info .descripcion {
+    font-size: 14px;
+    color: #888;
+    margin: 0;
+}
+
+.flecha {
+    font-size: 24px;
+    color: #D6B435;
+    transition: transform 0.3s;
+}
+
+.contacto-card:hover .flecha {
+    transform: translateX(5px);
+}
+
+.mensaje-final {
+    margin-top: 50px;
+    padding: 30px;
+    background: linear-gradient(135deg, #000447, #080e81);
+    border-radius: 16px;
+    color: white;
+}
+
+.mensaje-final p {
+    margin: 0;
+    font-size: 24px;
+}
+
+.mensaje-final .small {
+    font-size: 14px;
+    opacity: 0.8;
+    margin-top: 10px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    h1 {
+        font-size: 36px;
+    }
+    
+    .contacto-card {
+        padding: 20px;
+        gap: 15px;
+    }
+    
+    .icono {
+        width: 55px;
+        height: 55px;
+    }
+    
+    .icono svg {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .contacto-info h2 {
+        font-size: 18px;
+    }
+    
+    .contacto-info .handle {
+        font-size: 16px;
+    }
+    
+    .contacto-info .descripcion {
+        font-size: 12px;
+    }
+    
+    .mensaje-final p {
+        font-size: 20px;
+    }
+}

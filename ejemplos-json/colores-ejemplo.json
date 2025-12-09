@@ -1,0 +1,34 @@
+{
+  "colores": [
+    {
+      "nombre": "Rojo Rubí",
+      "rgb": "#E53935",
+      "categoria": "translucido"
+    },
+    {
+      "nombre": "Azul Zafiro",
+      "rgb": "#1E88E5",
+      "categoria": "translucido"
+    },
+    {
+      "nombre": "Verde Esmeralda",
+      "rgb": "#43A047",
+      "categoria": "translucido"
+    },
+    {
+      "nombre": "Dorado Brillante",
+      "rgb": "#FFD700",
+      "categoria": "polvo"
+    },
+    {
+      "nombre": "Plateado Perla",
+      "rgb": "#C0C0C0",
+      "categoria": "polvo"
+    },
+    {
+      "nombre": "Rosa Chicle",
+      "rgb": "#FF69B4",
+      "categoria": "translucido"
+    }
+  ]
+}

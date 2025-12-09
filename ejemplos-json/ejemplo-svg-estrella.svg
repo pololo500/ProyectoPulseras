@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- Ejemplo de SVG para un molde de estrella con 2 capas -->
+  
+  <!-- Capa Base (exterior) -->
+  <polygon id="layer-base" 
+           points="50,5 61,40 97,40 68,62 79,97 50,75 21,97 32,62 3,40 39,40"
+           fill="#cccccc" />
+  
+  <!-- Capa Superior (interior) -->
+  <polygon id="layer-superior" 
+           points="50,18 57,42 82,42 62,56 69,80 50,66 31,80 38,56 18,42 43,42"
+           fill="#888888" />
+</svg>

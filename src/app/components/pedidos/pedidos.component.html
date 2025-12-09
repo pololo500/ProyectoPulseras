@@ -1,0 +1,275 @@
+<div class="container">
+  <div class="header">
+    <h1>Pedidos Pendientes</h1>
+    <button class="btn-agregar" (click)="abrirFormulario()">+ Nuevo Pedido</button>
+  </div>
+
+  <!-- Tabla de pedidos -->
+  <div class="tabla-container">
+    <table class="pedidos-table">
+      <thead>
+        <tr>
+          <th>Cliente</th>
+          <th>Productos</th>
+          <th>Fecha</th>
+          <th>Cantidad</th>
+          <th>Total</th>
+          <th>Método Pago</th>
+          <th>Pagado</th>
+          <th>Nota</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngIf="pedidos.length === 0">
+          <td colspan="9" class="empty-message">No hay pedidos pendientes</td>
+        </tr>
+        <tr *ngFor="let pedido of pedidos">
+          <td>{{ pedido.cliente }}</td>
+          <td class="productos-cell">
+            <div class="items-list">
+              <div class="item-row" *ngFor="let item of getItemsPedido(pedido); let i = index">
+                <div class="item-header">
+                  <div class="item-info">
+                    <span class="producto-nombre">{{ item.productoNombre | capitalize }}</span>
+                    <span class="producto-detalle">{{ item.productoTipo | capitalize }} - {{ item.material | capitalize }} x{{ item.cantidad }}</span>
+                  </div>
+                  <div class="item-controls">
+                    <button 
+                      *ngIf="esItemResina(item)" 
+                      class="btn-mini-calc" 
+                      (click)="agregarACalculadora(pedido, item)"
+                      title="Agregar a calculadora">
+                      🧮
+                    </button>
+                    <select 
+                      class="estado-select-mini" 
+                      [ngClass]="getEstadoClass(item.estado)"
+                      [ngModel]="item.estado" 
+                      (ngModelChange)="cambiarEstadoItem(pedido, i, $event)">
+                      <option *ngFor="let est of estados" [value]="est">{{ est }}</option>
+                    </select>
+                  </div>
+                </div>
+                <div *ngIf="item.moldeNombre" class="producto-molde">
+                  <small>Molde: {{ item.moldeNombre | capitalize }}</small>
+                </div>
+                <div *ngIf="item.coloresPorCapa?.length" class="producto-colores">
+                  <div *ngFor="let cc of item.coloresPorCapa" class="color-capa-mini">
+                    <span class="color-dot" [style.background-color]="cc.colorRgb"></span>
+                    <small>{{ cc.capaNombre }}: {{ cc.colorNombre }}</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td>{{ formatearFecha(pedido.fecha) }}</td>
+          <td>{{ getCantidadTotal(pedido) }}</td>
+          <td>${{ getPrecioTotal(pedido) }}</td>
+          <td>{{ pedido.metodoPago }}</td>
+          <td>
+            <input 
+              type="checkbox" 
+              [checked]="pedido.pagado" 
+              (change)="cambiarPagado(pedido)"
+              class="pagado-check">
+          </td>
+          <td class="nota-cell">{{ pedido.nota || '-' }}</td>
+          <td class="acciones-cell">
+            <button class="btn-accion btn-editar" (click)="editarPedido(pedido)" title="Editar">
+              <span class="btn-icon">✏️</span>
+            </button>
+            <button 
+              class="btn-accion btn-entregar" 
+              (click)="confirmarAccion(pedido, 'entregar')" 
+              title="Marcar como entregado"
+              [disabled]="!todosListosParaEntregar(pedido)"
+              [class.btn-disabled]="!todosListosParaEntregar(pedido)">
+              <span class="btn-icon">✅</span>
+              <span class="btn-text">Entregar</span>
+            </button>
+            <button class="btn-accion btn-cancelar-pedido" (click)="confirmarAccion(pedido, 'cancelar')" title="Cancelar pedido">
+              <span class="btn-icon">❌</span>
+              <span class="btn-text">Cancelar</span>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Formulario para agregar/editar pedido -->
+  <div class="popup-overlay" *ngIf="mostrarFormulario" (click)="cerrarFormulario()">
+    <div class="popup-form popup-form-large" (click)="$event.stopPropagation()">
+      <h2>{{ pedidoEditando ? 'Editar Pedido' : 'Nuevo Pedido' }}</h2>
+      
+      <!-- Datos del pedido -->
+      <div class="form-section">
+        <h3>Datos del Pedido</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Cliente *</label>
+            <input type="text" [(ngModel)]="nuevoPedido.cliente" placeholder="Nombre del cliente">
+          </div>
+
+          <div class="form-group">
+            <label>Fecha</label>
+            <input type="date" [(ngModel)]="nuevoPedido.fecha">
+          </div>
+
+          <div class="form-group">
+            <label>Método de Pago</label>
+            <select [(ngModel)]="nuevoPedido.metodoPago">
+              <option *ngFor="let metodo of metodosPago" [value]="metodo">{{ metodo }}</option>
+            </select>
+          </div>
+
+          <div class="form-group form-group-checkbox">
+            <label>
+              <input type="checkbox" [(ngModel)]="nuevoPedido.pagado">
+              Pagado
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Agregar productos -->
+      <div class="form-section">
+        <h3>Agregar Producto</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Tipo de Producto</label>
+            <select [(ngModel)]="tipoSeleccionado" (ngModelChange)="onTipoChange()">
+              <option value="">Seleccionar tipo...</option>
+              <option *ngFor="let tipo of productosTipo" [value]="tipo">{{ tipo | capitalize }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Producto</label>
+            <select [(ngModel)]="itemActual.productoId" (ngModelChange)="onProductoChange()" [disabled]="!tipoSeleccionado">
+              <option value="">Seleccionar producto...</option>
+              <option *ngFor="let prod of productosDisponibles" [value]="prod._id">
+                {{ prod.nombre | capitalize }} - {{ prod.material | capitalize }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Cantidad</label>
+            <input type="number" [(ngModel)]="itemActual.cantidad" min="1">
+          </div>
+
+          <div class="form-group">
+            <label>Precio unitario</label>
+            <input type="number" [(ngModel)]="itemActual.precio" min="0">
+          </div>
+
+          <div class="form-group">
+            <label>Estado</label>
+            <select [(ngModel)]="itemActual.estado">
+              <option *ngFor="let est of estados" [value]="est">{{ est }}</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Sección Resina -->
+        <div class="resina-section" *ngIf="esResina">
+          <h4>Configuración de Resina</h4>
+          
+          <div class="form-group">
+            <label>Molde *</label>
+            <select [(ngModel)]="itemActual.moldeId" (ngModelChange)="onMoldeChange()">
+              <option value="">Seleccionar molde...</option>
+              <option *ngFor="let molde of moldes" [value]="molde._id">{{ molde.nombre | capitalize }}</option>
+            </select>
+          </div>
+
+          <div class="capas-container" *ngIf="moldeSeleccionado">
+            <h5>Colores por Capa</h5>
+            <div class="capa-row" *ngFor="let capa of moldeSeleccionado.capas; let i = index">
+              <label>{{ capa.nombre | capitalize }}</label>
+              <select [(ngModel)]="coloresPorCapa[i]" (ngModelChange)="onColorCapaChange(i, $event)">
+                <option value="">Sin color</option>
+                <option *ngFor="let color of colores" [value]="color._id">
+                  {{ color.nombre | capitalize }}
+                </option>
+              </select>
+              <span 
+                class="color-preview" 
+                *ngIf="coloresPorCapa[i] && getColorById(coloresPorCapa[i])"
+                [style.background-color]="getColorById(coloresPorCapa[i])?.rgb">
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-agregar-item" (click)="agregarItem()" [disabled]="!itemActual.productoId">
+          + Agregar al pedido
+        </button>
+      </div>
+
+      <!-- Lista de productos agregados -->
+      <div class="form-section" *ngIf="itemsPedido.length > 0">
+        <h3>Productos en el Pedido ({{ itemsPedido.length }})</h3>
+        <div class="items-agregados">
+          <div class="item-agregado" *ngFor="let item of itemsPedido; let i = index">
+            <div class="item-agregado-info">
+              <div class="item-header-form">
+                <span class="item-nombre">{{ item.productoNombre | capitalize }}</span>
+                <select 
+                  class="estado-select-form" 
+                  [ngClass]="getEstadoClass(item.estado)"
+                  [(ngModel)]="item.estado">
+                  <option *ngFor="let est of estados" [value]="est">{{ est }}</option>
+                </select>
+              </div>
+              <span class="item-detalle">{{ item.productoTipo | capitalize }} - {{ item.material | capitalize }}</span>
+              <span class="item-cantidad">x{{ item.cantidad }} - ${{ item.precio * item.cantidad }}</span>
+              <div *ngIf="item.moldeNombre" class="item-molde">
+                <small>Molde: {{ item.moldeNombre }}</small>
+              </div>
+              <div *ngIf="item.coloresPorCapa?.length" class="item-colores">
+                <span *ngFor="let cc of item.coloresPorCapa" class="color-mini" [style.background-color]="cc.colorRgb" [title]="cc.capaNombre + ': ' + cc.colorNombre"></span>
+              </div>
+            </div>
+            <button class="btn-eliminar-item" (click)="eliminarItem(i)" title="Eliminar">✕</button>
+          </div>
+        </div>
+        <div class="total-pedido">
+          <strong>Total: ${{ getTotalItems() }}</strong>
+        </div>
+      </div>
+
+      <div class="form-group form-group-full">
+        <label>Nota / Observaciones</label>
+        <textarea [(ngModel)]="nuevoPedido.nota" rows="3" placeholder="Detalles adicionales del pedido..."></textarea>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-cancelar-form" (click)="cerrarFormulario()">Cancelar</button>
+        <button class="btn-guardar" (click)="guardarPedido()" [disabled]="itemsPedido.length === 0">
+          {{ pedidoEditando ? 'Actualizar' : 'Guardar' }} Pedido
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Popup de confirmación -->
+  <div class="popup-overlay" *ngIf="mostrarPopupConfirmar" (click)="cancelarAccion()">
+    <div class="popup-confirmar" (click)="$event.stopPropagation()">
+      <h3 *ngIf="accionPendiente === 'entregar'">¿Marcar como entregado?</h3>
+      <h3 *ngIf="accionPendiente === 'cancelar'">¿Cancelar este pedido?</h3>
+      <p>El pedido de <strong>{{ pedidoAccion?.cliente }}</strong> será movido a ventas.</p>
+      <div class="popup-actions">
+        <button class="btn-cancelar-form" (click)="cancelarAccion()">No</button>
+        <button 
+          class="btn-confirmar" 
+          [ngClass]="{'btn-entregar': accionPendiente === 'entregar', 'btn-cancelar-red': accionPendiente === 'cancelar'}"
+          (click)="ejecutarAccion()">
+          Sí, {{ accionPendiente === 'entregar' ? 'entregar' : 'cancelar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,35 +1,110 @@
 <div id="container">
-    <h1>Iniciar Sesión</h1>
-    <div class="card">
+    <!-- Tabs para cambiar entre Login y Registro -->
+    <div class="tabs">
+        <button [class.active]="modo === 'login'" (click)="cambiarModo('login')">Iniciar Sesión</button>
+        <button [class.active]="modo === 'registro'" (click)="cambiarModo('registro')">Registrarse</button>
+    </div>
+    
+    <!-- Formulario de Login -->
+    <div class="card" *ngIf="modo === 'login'">
+        <h2>Iniciar Sesión</h2>
         <div id="form">
-            <form id="loginForm" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+            <form id="loginForm" [formGroup]="loginForm" (ngSubmit)="onSubmitLogin()">
                 <div>
-                    <label for="dni" id="dni">DNI</label>
-                    <input type="text" name="dni" id="dni" formControlName="dni" required>
-                    <div *ngIf="loginForm.get('dni')?.invalid && loginForm.get('dni')?.touched" id="error">
-                        El DNI es obligatorio
+                    <label for="email">Email</label>
+                    <input type="email" name="email" id="email" formControlName="email" placeholder="ejemplo@correo.com" required>
+                    <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" class="error">
+                        <span *ngIf="loginForm.get('email')?.errors?.['required']">El email es obligatorio</span>
+                        <span *ngIf="loginForm.get('email')?.errors?.['email']">Ingrese un email válido</span>
                     </div>
                 </div>
                 <div>
-                    <label for="password" id="password">Contraseña</label>
-                    <input type="password"  name="password" id="password" formControlName="password" required>
-                    <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" id="error">
+                    <label for="password">Contraseña</label>
+                    <input type="password" name="password" id="password" formControlName="password" required>
+                    <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" class="error">
                         La contraseña es obligatoria
                     </div>
                 </div>
                 <button type="submit" [disabled]="loginForm.invalid">Iniciar Sesión</button>
             </form>
         </div>
+        <p class="link-texto">¿No tienes cuenta? <a (click)="cambiarModo('registro')">Regístrate aquí</a></p>
+    </div>
+    
+    <!-- Formulario de Registro -->
+    <div class="card" *ngIf="modo === 'registro'">
+        <h2>Crear Cuenta</h2>
+        <div id="form">
+            <form id="registroForm" [formGroup]="registroForm" (ngSubmit)="onSubmitRegistro()">
+                <div>
+                    <label for="regEmail">Email *</label>
+                    <input type="email" name="regEmail" id="regEmail" formControlName="email" placeholder="ejemplo@correo.com" required>
+                    <div *ngIf="registroForm.get('email')?.invalid && registroForm.get('email')?.touched" class="error">
+                        <span *ngIf="registroForm.get('email')?.errors?.['required']">El email es obligatorio</span>
+                        <span *ngIf="registroForm.get('email')?.errors?.['email']">Ingrese un email válido</span>
+                    </div>
+                </div>
+                <div>
+                    <label for="nombre">Nombre *</label>
+                    <input type="text" name="nombre" id="nombre" formControlName="nombre" placeholder="Tu nombre" required>
+                    <div *ngIf="registroForm.get('nombre')?.invalid && registroForm.get('nombre')?.touched" class="error">
+                        El nombre es obligatorio
+                    </div>
+                </div>
+                <div>
+                    <label for="telefono">Teléfono (opcional)</label>
+                    <input type="tel" name="telefono" id="telefono" formControlName="telefono" placeholder="11-1234-5678">
+                </div>
+                <div>
+                    <label for="regPassword">Contraseña *</label>
+                    <input type="password" name="regPassword" id="regPassword" formControlName="password" required>
+                    <div *ngIf="registroForm.get('password')?.invalid && registroForm.get('password')?.touched" class="error">
+                        <span *ngIf="registroForm.get('password')?.errors?.['required']">La contraseña es obligatoria</span>
+                        <span *ngIf="registroForm.get('password')?.errors?.['minlength']">Mínimo 6 caracteres</span>
+                    </div>
+                </div>
+                <div>
+                    <label for="confirmarPassword">Confirmar Contraseña *</label>
+                    <input type="password" name="confirmarPassword" id="confirmarPassword" formControlName="confirmarPassword" required>
+                    <div *ngIf="registroForm.get('confirmarPassword')?.touched && !passwordsCoinciden" class="error">
+                        Las contraseñas no coinciden
+                    </div>
+                </div>
+                <button type="submit" [disabled]="registroForm.invalid || !passwordsCoinciden">Registrarse</button>
+            </form>
+        </div>
+        <p class="link-texto">¿Ya tienes cuenta? <a (click)="cambiarModo('login')">Inicia sesión</a></p>
     </div>
 </div>
 
 <canvas id="particle-canvas-square-inicio"></canvas>
 
-<!--El usuario se registra correctamente-->
+<!--El usuario inicia sesión correctamente-->
 <app-popupLogin *ngIf="popup == 'success'"></app-popupLogin>
 
 <!--Contraseña incorrecta-->
 <app-popupError *ngIf="popup == 'contraseñaIncorrecta'" text="Contraseña incorrecta" textAux="Por favor ingrese la contraseña nuevamente" [closePopup]="close.bind(this)"></app-popupError>
 
-<!--DNI no registrado-->
-<app-popupError *ngIf="popup == 'fail'" text="El DNI no se encuentra registrado" textAux="Por favor verifique el DNI o registrelo" [closePopup]="close.bind(this)"></app-popupError>
+<!--Email no registrado-->
+<app-popupError *ngIf="popup == 'emailNoRegistrado'" text="El email no se encuentra registrado" textAux="Por favor verifique el email o regístrese" [closePopup]="close.bind(this)"></app-popupError>
+
+<!--Registro exitoso-->
+<div class="popup-overlay" *ngIf="popup == 'registroExitoso'">
+    <div class="popup-success">
+        <h3>¡Registro Exitoso!</h3>
+        <p>Tu cuenta ha sido creada correctamente.</p>
+        <p>Redirigiendo...</p>
+    </div>
+</div>
+
+<!--Usuario ya existe-->
+<app-popupError *ngIf="popup == 'usuarioExistente'" text="El email ya está registrado" textAux="Por favor inicie sesión o use otro email" [closePopup]="close.bind(this)"></app-popupError>
+
+<!--Email inválido-->
+<app-popupError *ngIf="popup == 'emailInvalido'" text="Email inválido" textAux="Por favor ingrese un email válido" [closePopup]="close.bind(this)"></app-popupError>
+
+<!--Passwords no coinciden-->
+<app-popupError *ngIf="popup == 'passwordsNoCoinciden'" text="Las contraseñas no coinciden" textAux="Por favor verifique que ambas contraseñas sean iguales" [closePopup]="close.bind(this)"></app-popupError>
+
+<!--Error general de registro-->
+<app-popupError *ngIf="popup == 'errorRegistro'" text="Error al registrar" textAux="Por favor intente nuevamente" [closePopup]="close.bind(this)"></app-popupError>

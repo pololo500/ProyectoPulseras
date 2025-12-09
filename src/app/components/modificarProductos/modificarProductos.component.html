@@ -1,0 +1,195 @@
+<div class="container">
+  <h1>Modificar Productos</h1>
+  
+  <!-- Filtros -->
+  <div class="filtros">
+    <div class="filtro-grupo">
+      <label for="filtroProducto">Filtrar por Producto</label>
+      <select id="filtroProducto" [(ngModel)]="filtroProducto" (change)="onFiltroProductoChange()" [ngClass]="{ 'filled': filtroProducto }">
+        <option value="">Todos los productos</option>
+        <option *ngFor="let tipo of tiposProducto" [value]="tipo">{{ tipo | capitalize }}</option>
+      </select>
+    </div>
+    <div class="filtro-grupo">
+      <label for="filtroMaterial">Filtrar por Material</label>
+      <select id="filtroMaterial" [(ngModel)]="filtroMaterial" (change)="aplicarFiltros()" [disabled]="!filtroProducto" [ngClass]="{ 'filled': filtroMaterial }">
+        <option value="">Todos los materiales</option>
+        <option *ngFor="let mat of materiales" [value]="mat">{{ mat | capitalize }}</option>
+      </select>
+    </div>
+    <button class="btn-limpiar" (click)="limpiarFiltros()" *ngIf="filtroProducto || filtroMaterial">Limpiar filtros</button>
+  </div>
+
+  <!-- Lista de productos -->
+  <div class="productos-grid" *ngIf="!productoEditando">
+    <div class="producto-card" *ngFor="let producto of productosFiltrados">
+      <div class="producto-imagen-container">
+        <img [src]="getPrimeraImagen(producto)" [alt]="producto.nombre" class="producto-imagen"/>
+        <span class="badge-imagenes" *ngIf="getImagenesProducto(producto).length > 1">
+          {{ getImagenesProducto(producto).length }} fotos
+        </span>
+      </div>
+      <div class="producto-info">
+        <h3>{{ producto.nombre }}</h3>
+        <p class="producto-tipo">{{ producto.producto | capitalize }} - {{ producto.material | capitalize }}</p>
+        <p class="producto-descripcion" *ngIf="producto.descripcion">{{ producto.descripcion }}</p>
+        <p class="producto-precio">${{ producto.precio }}</p>
+      </div>
+      <div class="producto-acciones">
+        <button class="btn-editar" (click)="editarProducto(producto)">✏️ Editar</button>
+        <button class="btn-eliminar" (click)="confirmarEliminar(producto)">🗑️ Eliminar</button>
+      </div>
+    </div>
+
+    <div class="sin-productos" *ngIf="productosFiltrados.length === 0">
+      <p>No se encontraron productos con los filtros seleccionados.</p>
+    </div>
+  </div>
+
+  <!-- Formulario de edición -->
+  <div class="editar-form" *ngIf="productoEditando">
+    <h2>Editando: {{ productoEditando.nombre }}</h2>
+    
+    <div class="form-row">
+      <div class="form-group">
+        <label for="editProducto">Producto</label>
+        <input type="text" id="editProducto" [(ngModel)]="editForm.producto" class="filled"/>
+      </div>
+      <div class="form-group">
+        <label for="editMaterial">Material</label>
+        <input type="text" id="editMaterial" [(ngModel)]="editForm.material" (ngModelChange)="onMaterialChange()" class="filled"/>
+      </div>
+    </div>
+
+    <!-- Molde (solo si es resina) -->
+    <div class="form-row" *ngIf="esResina">
+      <div class="form-group full-width">
+        <label for="editMolde">Molde</label>
+        <select id="editMolde" [(ngModel)]="editForm.moldeNombre" [ngClass]="{ 'filled': editForm.moldeNombre }">
+          <option value="" disabled>Seleccionar molde</option>
+          <option *ngFor="let molde of moldes" [value]="molde.nombre">{{ molde.nombre | capitalize }}</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Subcategorías -->
+    <div class="form-row">
+      <div class="form-group full-width subcategorias-container">
+        <label>Sub-Categorías</label>
+        <div class="subcategorias-selector">
+          <div class="subcategorias-display" (click)="toggleDropdownSubcategorias()">
+            <div class="subcategorias-tags" *ngIf="subcategoriasSeleccionadas.length > 0">
+              <span class="tag" *ngFor="let sub of subcategoriasSeleccionadas">
+                {{ sub | capitalize }}
+                <button type="button" class="tag-remove" (click)="eliminarSubcategoria(sub); $event.stopPropagation()">✕</button>
+              </span>
+            </div>
+            <span class="placeholder" *ngIf="subcategoriasSeleccionadas.length === 0">Seleccionar sub-categorías</span>
+            <span class="dropdown-arrow">▼</span>
+          </div>
+          <div class="subcategorias-dropdown" *ngIf="mostrarDropdownSubcategorias">
+            <div class="dropdown-item" *ngFor="let subcategoria of subcategoriasDisponibles" 
+                 (click)="toggleSubcategoria(subcategoria)"
+                 [ngClass]="{ 'selected': isSubcategoriaSeleccionada(subcategoria) }">
+              <span class="checkbox">{{ isSubcategoriaSeleccionada(subcategoria) ? '☑' : '☐' }}</span>
+              {{ subcategoria | capitalize }}
+            </div>
+            <div class="dropdown-divider" *ngIf="subcategoriasDisponibles.length > 0"></div>
+            <div class="nuevo-subcategoria-container">
+              <button type="button" class="btn-agregar-subcategoria" (click)="abrirPopupSubcategoria(); $event.stopPropagation()">
+                + Agregar nueva sub-categoría
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="editNombre">Nombre</label>
+        <input type="text" id="editNombre" [(ngModel)]="editForm.nombre" class="filled"/>
+      </div>
+      <div class="form-group">
+        <label for="editPrecio">Precio</label>
+        <input type="number" id="editPrecio" [(ngModel)]="editForm.precio" class="filled"/>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group full-width">
+        <label for="editDescripcion">Descripción</label>
+        <input type="text" id="editDescripcion" [(ngModel)]="editForm.descripcion" [ngClass]="{ 'filled': editForm.descripcion }"/>
+      </div>
+    </div>
+
+    <!-- Carrusel de imágenes -->
+    <div class="imagenes-section">
+      <label>Imágenes del producto</label>
+      <div class="carrusel-container" *ngIf="totalImagenes > 0">
+        <button class="carrusel-btn carrusel-prev" (click)="anteriorImagen()" [disabled]="imagenCarruselIndex === 0">❮</button>
+        
+        <div class="carrusel-imagen-wrapper">
+          <img [src]="imagenActual" alt="Imagen del producto" class="carrusel-imagen"/>
+          <button class="btn-eliminar-imagen-carrusel" (click)="eliminarImagenActual()" title="Eliminar imagen">✕</button>
+          <span class="carrusel-badge-nueva" *ngIf="esImagenNueva">Nueva</span>
+          <div class="carrusel-orden-btns">
+            <button type="button" class="btn-orden" (click)="moverImagenIzquierda()" [disabled]="!puedeIzquierda" title="Mover a la izquierda">◀</button>
+            <button type="button" class="btn-orden" (click)="moverImagenDerecha()" [disabled]="!puedeDerecha" title="Mover a la derecha">▶</button>
+          </div>
+        </div>
+        
+        <button class="carrusel-btn carrusel-next" (click)="siguienteImagen()" [disabled]="imagenCarruselIndex >= totalImagenes - 1">❯</button>
+      </div>
+      
+      <div class="carrusel-indicadores" *ngIf="totalImagenes > 1">
+        <span class="indicador" *ngFor="let img of imagenesExistentesVisibles; let i = index" 
+              [class.activo]="i === imagenCarruselIndex" 
+              (click)="imagenCarruselIndex = i"></span>
+        <span class="indicador nueva" *ngFor="let img of imagenesNuevasVisibles; let i = index" 
+              [class.activo]="(i + imagenesExistentesVisibles.length) === imagenCarruselIndex" 
+              (click)="imagenCarruselIndex = i + imagenesExistentesVisibles.length"></span>
+      </div>
+      
+      <p class="carrusel-contador">{{ imagenCarruselIndex + 1 }} / {{ totalImagenes }} imagen(es)</p>
+      
+      <p class="imagenes-eliminadas-info" *ngIf="imagenesEliminadas.size > 0 || imagenesNuevasEliminadas.size > 0">
+        🗑️ {{ imagenesEliminadas.size + imagenesNuevasEliminadas.size }} imagen(es) marcada(s) para eliminar
+      </p>
+      
+      <div class="agregar-imagenes">
+        <label for="editImagenes" class="btn-agregar-imagen">+ Agregar más fotos</label>
+        <input type="file" id="editImagenes" (change)="onImagenesSeleccionadas($event)" accept=".jpg, .jpeg, .png" multiple/>
+      </div>
+      
+      <p class="imagenes-warning" *ngIf="totalImagenes === 0">⚠️ El producto debe tener al menos una imagen</p>
+    </div>
+
+    <div class="form-acciones">
+      <button class="btn-guardar" (click)="guardarCambios()">💾 Guardar Cambios</button>
+      <button class="btn-cancelar-edit" (click)="cancelarEdicion()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Popup confirmar eliminar -->
+<div class="popup-overlay" *ngIf="mostrarPopupEliminar" (click)="cancelarEliminar()">
+  <div class="popup-content" (click)="$event.stopPropagation()">
+    <h3>¿Eliminar producto?</h3>
+    <p>¿Estás seguro de que deseas eliminar <strong>{{ productoAEliminar?.nombre }}</strong>?</p>
+    <p class="popup-warning">Esta acción no se puede deshacer.</p>
+    <div class="popup-acciones">
+      <button class="btn-confirmar-eliminar" (click)="eliminarProducto()">Sí, eliminar</button>
+      <button class="btn-cancelar-popup" (click)="cancelarEliminar()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<app-button buttonClass="modificarProductos" etiqueta="Agregar Producto" link="/agregarProducto"></app-button>
+
+<!-- Popup para agregar nueva sub-categoría -->
+<app-popup-subcategoria 
+  *ngIf="mostrarPopupSubcategoria"
+  (cerrar)="cerrarPopupSubcategoria()"
+  (subcategoriaGuardada)="onSubcategoriaGuardada($event)">
+</app-popup-subcategoria>

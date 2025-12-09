@@ -1,0 +1,56 @@
+<div class="overlay" (click)="cerrarPopup()"></div>
+<div class="card popup">
+  <button class="btn-cerrar" (click)="cerrarPopup()">✕</button>
+  
+  <h2>Agregar Color</h2>
+  
+  <form (ngSubmit)="guardarColor()">
+    <label for="nombreColor">Nombre del Color</label>
+    <input 
+      type="text" 
+      id="nombreColor" 
+      [(ngModel)]="nombreColor" 
+      name="nombreColor"
+      placeholder="Ej: Azul Océano"
+      [class.filled]="nombreColor"
+    >
+
+    <label for="rgbColor">Color (RGB)</label>
+    <div class="color-picker-container">
+      <input 
+        type="color" 
+        id="rgbColor" 
+        [(ngModel)]="rgbColor" 
+        name="rgbColor"
+        class="color-picker"
+      >
+      <div class="color-preview" [style.background-color]="rgbColor">
+        <span>{{ rgbColor }}</span>
+      </div>
+    </div>
+
+    <label for="categoria">Categoría</label>
+    <select 
+      id="categoria" 
+      [(ngModel)]="categoria" 
+      name="categoria"
+      [class.filled]="categoria"
+    >
+      <option value="" disabled>Seleccione una categoría</option>
+      <option value="translucido">Translúcido</option>
+      <option value="polvo">Polvo</option>
+    </select>
+
+    <p class="error" *ngIf="error">{{ error }}</p>
+
+    <div class="botones-popup">
+      <button type="submit" [disabled]="!formularioValido() || guardando">
+        {{ guardando ? 'Guardando...' : 'Guardar Color' }}
+      </button>
+      <button type="button" class="btn-importar" (click)="inputColoresJson.click()">
+        📁 Importar desde JSON
+      </button>
+      <input #inputColoresJson type="file" accept=".json" (change)="importarColoresJson($event)" style="display: none;">
+    </div>
+  </form>
+</div>

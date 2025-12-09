@@ -12,19 +12,24 @@ import { GlobalService } from '../../services/global.service';
     styleUrl: './popupLogin.component.css'
 })
 export class PopupLoginComponent implements OnInit {
-  dni = '';
+  nombre = '';
   router = inject(Router);
   url = '';
+  tipoUsuario = '';
 
   constructor(private globalService: GlobalService, private routerP: Router) {}
 
   ngOnInit(): void {
-    this.dni = sessionStorage.getItem("dni")??'';
+    this.nombre = this.globalService.getNombreUsuario();
+    this.tipoUsuario = this.globalService.getTipoUsuario();
+    
     this.globalService.url$.subscribe(url => {
       if (url != "") {
+        // Si hay una URL guardada, verificar que el usuario tenga acceso
         this.url = url;
       } else {
-          this.url = "/agregarProducto";
+        // Redirigir según el tipo de usuario
+        this.url = this.globalService.getUrlInicio();
       }
     });
   }
