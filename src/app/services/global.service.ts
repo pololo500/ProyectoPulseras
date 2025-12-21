@@ -6,7 +6,6 @@ import { BehaviorSubject } from 'rxjs';
 const RUTAS_ADMIN = [
   '/inicioAdministrador',
   '/agregarProducto',
-  '/agregarDije',
   '/modificarProductos',
   '/calculadoraResina',
   '/compras',

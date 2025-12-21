@@ -73,17 +73,6 @@ const UsuarioSchema = new mongoose.Schema({
 const Usuario = mongoose.model('Usuario', UsuarioSchema);
 module.exports = Usuario;
 
-const DijeSchema = new mongoose.Schema({
-    nombre: String,
-    categoria: [String],
-    color: String,
-    precio: Number,
-    imagenUrl: String
-}, { versionKey: false });
-
-const Dijes = mongoose.model('Dijes', DijeSchema);
-module.exports = Dijes;
-
 // Esquema para Moldes (Calculadora de Resina)
 const CapaSchema = new mongoose.Schema({
     nombre: String,
@@ -573,23 +562,6 @@ app.put('/api/usuarios/:email/favoritos', async (req, res) => {
     } catch (error) {
         console.error('Error al actualizar favoritos:', error);
         res.status(500).json({ error: 'Error del servidor' });
-    }
-});
-
-
-// Agregar dije a la colección
-app.post('/api/dijes', async (req, res) => {
-    const datos = req.body;
-
-    try {
-        const nuevoDije = new Dijes(datos);
-        const result = await nuevoDije.save();
-    
-        res.status(201).json({ mensaje: 'Dije guardado', id: result._id });
-    
-    } catch (error) {
-        console.error('Error al guardar dije:', error);
-        res.status(500).json({ mensaje: 'Error al guardar dije' });
     }
 });
 
@@ -1209,18 +1181,11 @@ app.post('/api/:coleccion', async (req, res) => {
     if (coleccion.toLowerCase() === 'stock') {
         return res.status(404).json({ mensaje: 'Endpoint no válido. Use /api/stock' });
     }
-
-    // Alertar para colecciones con endpoint dedicado
-    if (coleccion.toLowerCase() === 'dijes') {
-        return res.status(400).json({ mensaje: 'Utilice el endpoint correcto para dijes' });
-    }
     
     try {
         const schema = new mongoose.Schema({
             material: String,
             nombre: String,
-            mostacillas: [String],
-            dijes: [String],
             descripcion: String,
             cant: Number,
             precio: Number,
@@ -1253,8 +1218,6 @@ app.get('/api/:coleccion', async (req, res) => {
         const schema = new mongoose.Schema({
             material: String,
             nombre: String,
-            mostacillas: [String],
-            dijes: [String],
             descripcion: String,
             cant: Number,
             precio: Number,

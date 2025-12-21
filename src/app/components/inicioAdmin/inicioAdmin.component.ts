@@ -153,4 +153,9 @@ export class InicioAdminComponent implements OnInit, AfterViewInit, OnDestroy {
       queryParams: { filtroProducto: tipo } 
     });
   }
+
+  // Cerrar sesión
+  cerrarSesion() {
+    this.globalService.logout();
+  }
 }

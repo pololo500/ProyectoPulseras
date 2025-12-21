@@ -534,24 +534,28 @@ export class CalculadoraResinaComponent implements OnInit {
           return;
         }
 
-        // Construir el objeto para Stock
+        // Construir el objeto para Stock con el formato de variantes
+        const varianteId = `var-${Date.now()}`;
         const stockData = {
           productoId: productoBase._id,
           productoNombre: productoBase.nombre,
           productoTipo: productoBase.producto,
           material: productoBase.material,
-          cantidad: producto.cantidad,
           moldeId: producto.moldeId,
           moldeNombre: producto.moldeNombre,
-          coloresPorCapa: producto.capas.map(capa => ({
-            capaIndex: capa.capaIndex,
-            capaNombre: capa.capaNombre,
-            colorId: capa.colores[0].colorId,
-            colorNombre: capa.colores[0].colorNombre,
-            colorRgb: capa.colores[0].colorRgb
-          })),
-          detallesDiseno: this.generarDetallesDiseno(producto),
-          imagenUrl: productoBase.imagenesUrls?.[0] || productoBase.imagenUrl || ''
+          imagenUrl: productoBase.imagenesUrls?.[0] || productoBase.imagenUrl || '',
+          variantes: [{
+            _id: varianteId,
+            coloresPorCapa: producto.capas.map(capa => ({
+              capaIndex: capa.capaIndex,
+              capaNombre: capa.capaNombre,
+              colorId: capa.colores[0].colorId,
+              colorNombre: capa.colores[0].colorNombre,
+              colorRgb: capa.colores[0].colorRgb
+            })),
+            cantidad: producto.cantidad,
+            detallesDiseno: this.generarDetallesDiseno(producto)
+          }]
         };
 
         console.log('📤 Enviando desde calculadora a stock:', stockData);
