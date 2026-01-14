@@ -18,4 +18,3 @@ echo.
 echo - Node Server: Revisa la ventana "Node Server"
 echo - Angular: Revisa la ventana "Angular Dev Server"
 echo.
-pause
