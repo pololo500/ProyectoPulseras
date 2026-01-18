@@ -1,7 +1,14 @@
 <div class="productos-page">
     <h1>Nuestros Productos</h1>
     
-    <!-- Filtros -->
+    <!-- Botón filtros móvil -->
+    <div class="filtros-mobile-header">
+        <button class="btn-filtros-mobile" (click)="abrirFiltrosMobile()">Filtros
+            <span class="filtros-activos" *ngIf="tieneFiltrosActivos()">●</span>
+        </button>
+    </div>
+    
+    <!-- Filtros Desktop -->
     <div class="card" id="filtros-card">
         <div class="filtros">
             <div class="filtro-group">
@@ -106,6 +113,51 @@
     <div class="sin-productos" *ngIf="productosFiltrados.length === 0">
         <p>No se encontraron productos con los filtros seleccionados.</p>
         <button (click)="limpiarFiltros()">Ver todos los productos</button>
+    </div>
+</div>
+
+<!-- Popup de Filtros Mobile -->
+<div class="popup-overlay" *ngIf="mostrarFiltrosMobile" (click)="cerrarFiltrosMobile()">
+    <div class="card popup-filtros-mobile" (click)="$event.stopPropagation()">
+        <button class="btn-cerrar-popup" (click)="cerrarFiltrosMobile()">✕</button>
+        <h2>Filtros</h2>
+        
+        <div class="filtros-mobile-contenido">
+            <div class="filtro-group">
+                <label>Buscar</label>
+                <input type="text" [(ngModel)]="filtroNombre" (input)="aplicarFiltros()" placeholder="Nombre del producto...">
+            </div>
+            
+            <div class="filtro-group">
+                <label>Tipo</label>
+                <select [(ngModel)]="filtroTipo" (change)="aplicarFiltros()">
+                    <option value="">Todos</option>
+                    <option *ngFor="let tipo of tiposUnicos" [value]="tipo">{{ tipo | capitalize }}</option>
+                </select>
+            </div>
+            
+            <div class="filtro-group">
+                <label>Material</label>
+                <select [(ngModel)]="filtroMaterial" (change)="aplicarFiltros()">
+                    <option value="">Todos</option>
+                    <option *ngFor="let material of materialesUnicos" [value]="material">{{ material | capitalize }}</option>
+                </select>
+            </div>
+            
+            <div class="filtro-group filtro-precio">
+                <label>Precio</label>
+                <div class="precio-inputs">
+                    <input type="number" [(ngModel)]="filtroPrecioMin" (input)="aplicarFiltros()" placeholder="Mín">
+                    <span>-</span>
+                    <input type="number" [(ngModel)]="filtroPrecioMax" (input)="aplicarFiltros()" placeholder="Máx">
+                </div>
+            </div>
+            
+            <div class="filtros-mobile-acciones">
+                <button class="btn-limpiar" (click)="limpiarFiltros()">Limpiar filtros</button>
+                <button class="btn-aplicar" (click)="cerrarFiltrosMobile()">Aplicar</button>
+            </div>
+        </div>
     </div>
 </div>
 

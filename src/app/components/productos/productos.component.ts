@@ -89,6 +89,9 @@ export class ProductosComponent implements OnInit {
   filtroPrecioMin: number | null = null;
   filtroPrecioMax: number | null = null;
   
+  // Filtros mobile
+  mostrarFiltrosMobile = false;
+  
   // Opciones para los selects
   tiposUnicos: string[] = [];
   materialesUnicos: string[] = [];
@@ -751,5 +754,19 @@ export class ProductosComponent implements OnInit {
     this.mostrarPopupExito = false;
     this.mensajeExito = '';
     this.coloresExito = [];
+  }
+
+  // Filtros mobile
+  abrirFiltrosMobile(): void {
+    this.mostrarFiltrosMobile = true;
+  }
+
+  cerrarFiltrosMobile(): void {
+    this.mostrarFiltrosMobile = false;
+  }
+
+  tieneFiltrosActivos(): boolean {
+    return !!(this.filtroTipo || this.filtroMaterial || this.filtroNombre || 
+              this.filtroPrecioMin !== null || this.filtroPrecioMax !== null);
   }
 }
