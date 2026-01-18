@@ -1,0 +1,167 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 4, 71, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.card {
+  background: linear-gradient(135deg, #ffffff, #f8f9fa);
+  border-radius: 20px;
+  padding: 40px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.icono {
+  width: 70px;
+  height: 70px;
+  background: linear-gradient(135deg, #28a745, #20c997);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  font-size: 40px;
+  color: white;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+}
+
+p {
+  color: #000447;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 15px 0;
+  line-height: 1.4;
+}
+
+.mensaje-principal {
+  margin-bottom: 15px;
+}
+
+/* Estilos para colores por capa */
+.colores-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: rgba(0, 4, 71, 0.05);
+  border-radius: 12px;
+}
+
+.color-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.color-circulo {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid #000447;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+}
+
+.color-texto {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.capa-nombre {
+  color: #000447;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.color-nombre {
+  color: #555;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.btn-aceptar {
+  padding: 12px 40px;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-image: radial-gradient(#080e81, #000447);
+  color: #D6B435;
+  box-shadow: 0 4px 15px rgba(0, 4, 71, 0.4);
+}
+
+.btn-aceptar:hover {
+  background-image: radial-gradient(#f0ea4c, #D6B435);
+  color: #000447;
+}
+
+@media (max-width: 600px) {
+  .card {
+    padding: 30px 20px;
+  }
+
+  .icono {
+    width: 60px;
+    height: 60px;
+    font-size: 35px;
+  }
+
+  p {
+    font-size: 16px;
+  }
+
+  .btn-aceptar {
+    padding: 10px 30px;
+    font-size: 14px;
+  }
+
+  .colores-container {
+    gap: 8px;
+  }
+
+  .color-circulo {
+    width: 20px;
+    height: 20px;
+  }
+
+  .capa-nombre {
+    font-size: 12px;
+  }
+
+  .color-nombre {
+    font-size: 12px;
+  }
+}

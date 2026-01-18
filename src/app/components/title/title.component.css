@@ -3,15 +3,16 @@
   position: relative;
   z-index: 35;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   margin-bottom: 20px;
-  margin-top: 120px;
+  margin-top: 20px;
 }
 
 h1 { 
   color: #d6b435;
-  margin-bottom: 0px;
+  margin: 0px;
+  text-align: center;
 }
 
 img {
@@ -47,29 +48,12 @@ img {
 
 /* Para pantallas de móviles (máximo 600px de ancho) */
 @media (max-width: 600px) {
-  ul {
-    justify-content: center;
-  }
-
-  .logo {
-    height: 42px;
-  }
-
-  li a {
-    padding: 5px;
-  }
-
-  .user {
-    margin-left: 0px;
-  }
-
-  .userLogo {
-    height: 40px;
-    width: 40px;
-    margin-left: 0px;
+  h1 {
+    font-size: 50px;
   }
 
   img {
-    height: 30px;
+    height: 0px;
+    width: 0px;
   }
 }

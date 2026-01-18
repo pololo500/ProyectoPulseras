@@ -2,7 +2,7 @@
     <h1>Nuestros Productos</h1>
     
     <!-- Filtros -->
-    <div class="filtros-container">
+    <div class="card" id="filtros-card">
         <div class="filtros">
             <div class="filtro-group">
                 <label>Buscar</label>
@@ -43,11 +43,9 @@
         </div>
     </div>
     
-    <p class="resultados-count">{{ productosFiltrados.length }} producto(s) encontrado(s)</p>
-    
     <!-- Productos Grid -->
     <div class="productos-grid" *ngIf="vistaGrid">
-        <div class="producto-card" *ngFor="let producto of productosFiltrados" (click)="abrirDetalle(producto, $event)">
+        <div class="card producto-card" *ngFor="let producto of productosFiltrados" (click)="abrirDetalle(producto, $event)">
             <!-- Botón favorito -->
             <button class="btn-favorito" (click)="toggleFavorito(producto); $event.stopPropagation()" [class.activo]="esFavorito(producto._id)" title="Agregar a favoritos">
                 <span class="sparkle-icon">✦</span>
@@ -58,8 +56,7 @@
             </div>
             <div class="producto-info">
                 <h3>{{ producto.nombre }}</h3>
-                <p class="tipo">{{ producto.producto | capitalize }}</p>
-                <p class="material">{{ producto.material | capitalize }}</p>
+                <p class="tipo">{{ producto.producto | capitalize }} - {{ producto.material | capitalize }}</p>
                 <p class="precio" *ngIf="producto.precio">${{ producto.precio }}</p>
                 
                 <!-- Selector de cantidad y botón agregar -->
@@ -77,30 +74,30 @@
     
     <!-- Productos Lista -->
     <div class="productos-lista" *ngIf="!vistaGrid">
-        <div class="producto-row" *ngFor="let producto of productosFiltrados" (click)="abrirDetalle(producto, $event)">
+        <div class="card producto-row" *ngFor="let producto of productosFiltrados" (click)="abrirDetalle(producto, $event)">
             <!-- Botón favorito -->
-            <button class="btn-favorito-lista" (click)="toggleFavorito(producto); $event.stopPropagation()" [class.activo]="esFavorito(producto._id)" title="Agregar a favoritos">
+            <button class="btn-favorito" id="btn-favorito-lista" (click)="toggleFavorito(producto); $event.stopPropagation()" [class.activo]="esFavorito(producto._id)" title="Agregar a favoritos">
                 <span class="sparkle-icon">✦</span>
             </button>
             
-            <div class="producto-imagen-lista">
+            <div class="producto-imagen" id="producto-imagen-lista">
                 <img [src]="getPrimeraImagen(producto)" [alt]="producto.nombre">
             </div>
             <div class="producto-info-lista">
-                <h3>{{ producto.nombre }}</h3>
-                <p><strong>Tipo:</strong> {{ producto.producto | capitalize }}</p>
-                <p><strong>Material:</strong> {{ producto.material | capitalize }}</p>
+                <div class="info">
+                    <h3>{{ producto.nombre }}</h3>
+                    <p><strong>Tipo:</strong> {{ producto.producto | capitalize }}</p>
+                    <p><strong>Material:</strong> {{ producto.material | capitalize }}</p>
+                </div>
+                <p class="precio" *ngIf="producto.precio">${{ producto.precio }}</p>
             </div>
             <div class="producto-acciones-lista" (click)="$event.stopPropagation()">
-                <p class="precio" *ngIf="producto.precio">${{ producto.precio }}</p>
-                <div class="acciones-carrito-lista">
-                    <div class="selector-cantidad">
-                        <button class="btn-cantidad" (click)="decrementarCantidad(producto)">-</button>
-                        <span class="cantidad">{{ producto.cantidad }}</span>
-                        <button class="btn-cantidad" (click)="incrementarCantidad(producto)">+</button>
-                    </div>
-                    <button class="btn-agregar" (click)="agregarAlCarrito(producto)">Agregar</button>
+                <div class="selector-cantidad">
+                    <button class="btn-cantidad" (click)="decrementarCantidad(producto)">-</button>
+                    <span class="cantidad">{{ producto.cantidad }}</span>
+                    <button class="btn-cantidad" (click)="incrementarCantidad(producto)">+</button>
                 </div>
+                <button class="btn-agregar" (click)="agregarAlCarrito(producto)">Agregar</button>
             </div>
         </div>
     </div>
@@ -112,16 +109,16 @@
     </div>
 </div>
 
-<!-- Modal Detalle del Producto -->
+<!-- Mostrar Detalle del Producto -->
 <div class="popup-overlay" *ngIf="mostrarDetalle && productoDetalle" (click)="cerrarDetalle()">
-    <div class="popup-detalle" [class.con-svg]="esResina(productoDetalle) && moldeTieneSvg(moldeDetalle)" (click)="$event.stopPropagation()">
+    <div class="card popup-detalle" (click)="$event.stopPropagation()">
         <button class="btn-cerrar-popup" (click)="cerrarDetalle()">✕</button>
         
-        <div class="popup-contenido" [class.layout-horizontal]="esResina(productoDetalle) && moldeTieneSvg(moldeDetalle)">
+        <div class="popup-contenido layout-horizontal" [class.foto-svg]="esResina(productoDetalle) && moldeTieneSvg(moldeDetalle)">
             <!-- Panel izquierdo: Imagen/SVG -->
             <div class="popup-panel-izquierdo">
                 <!-- Carrusel de imágenes (cuando no hay SVG o no es resina) -->
-                <div class="popup-imagen-container" *ngIf="!esResina(productoDetalle) || !moldeTieneSvg(moldeDetalle)">
+                <div class="popup-imagen-container">
                     <div class="popup-carrusel">
                         <button class="popup-nav prev" (click)="imagenAnterior()" *ngIf="getImagenes(productoDetalle).length > 1">❮</button>
                         <img [src]="getImagenes(productoDetalle)[imagenActualIndex]" [alt]="productoDetalle.nombre" class="popup-imagen">
@@ -147,13 +144,12 @@
             <!-- Panel derecho: Info y selector de colores -->
             <div class="popup-panel-derecho">
                 <div class="popup-info">
-                    <h2>{{ productoDetalle.nombre }}</h2>
-                    <p class="popup-tipo">{{ productoDetalle.producto | capitalize }} - {{ productoDetalle.material | capitalize }}</p>
-                    <p class="popup-precio">${{ productoDetalle.precio }}</p>
-                    
-                    <div class="popup-descripcion" *ngIf="productoDetalle.descripcion">
-                        <p>{{ productoDetalle.descripcion }}</p>
+                    <div class="popup-info-columnas">
+                        <h2>{{ productoDetalle.nombre }}</h2>
+                        <p class="popup-tipo">{{ productoDetalle.producto | capitalize }} - {{ productoDetalle.material | capitalize }}</p>
+                        <p class="popup-descripcion" *ngIf="productoDetalle.descripcion">{{ productoDetalle.descripcion }}</p>
                     </div>
+                    <p class="popup-precio">${{ productoDetalle.precio }}</p>
                 </div>
 
                 <!-- Selector de color por capa para productos de resina -->
@@ -191,7 +187,7 @@
                                              [class.seleccionado]="coloresPorCapaDetalle[i]?._id === color._id"
                                              (click)="seleccionarColorCapaDetalle(i, color); $event.stopPropagation()"
                                              [title]="color.nombre">
-                                            <span class="color-dot-nuevo" [style.background-color]="color.rgb"></span>
+                                            <span class="color-dot-nuevo translucido" [style.background-color]="color.rgb"></span>
                                             <span class="color-nombre-nuevo">{{ color.nombre | capitalize }}</span>
                                         </div>
                                     </div>
@@ -222,13 +218,10 @@
                         <span>{{ cantidadDetalle }}</span>
                         <button (click)="incrementarCantidadDetalle()">+</button>
                     </div>
-                    <button class="btn-favorito-popup" 
-                            (click)="toggleFavoritoDetalle()" 
-                            [class.activo]="esFavorito(productoDetalle._id)">✦</button>
                     <button class="btn-agregar-popup" 
                             (click)="agregarDesdeDetalle()"
                             [disabled]="esResina(productoDetalle) && moldeDetalle && !todasCapasConColorDetalle()">
-                        🛒 Agregar
+                        Agregar
                     </button>
                 </div>
             </div>
@@ -236,88 +229,10 @@
     </div>
 </div>
 
-<!-- Popup Selección de Color por Capas (desde grid/lista) -->
-<div class="popup-overlay" *ngIf="mostrarPopupColor && productoParaColor && moldeParaColor" (click)="cerrarPopupColor()">
-    <div class="popup-color-nuevo" (click)="$event.stopPropagation()">
-        <button class="btn-cerrar-popup" (click)="cerrarPopupColor()">✕</button>
-        
-        <div class="popup-header-color">
-            <h2>Selecciona colores</h2>
-            <p class="popup-producto-info">
-                {{ productoParaColor.nombre | capitalize }} - {{ cantidadParaColor }} unidad(es)
-            </p>
-        </div>
-        
-        <div class="popup-color-contenido">
-            <!-- SVG a la izquierda -->
-            <div class="svg-panel" *ngIf="moldeTieneSvg(moldeParaColor)">
-                <div class="svg-preview-interactivo" 
-                     [innerHTML]="svgPreviewPopup"
-                     (click)="onSvgClickPopup($event)"></div>
-                <p class="svg-instruccion">Haz clic en una capa del SVG para seleccionar su color</p>
-            </div>
-            
-            <!-- Selector de capas a la derecha -->
-            <div class="capas-panel">
-                <div class="capa-accordion" *ngFor="let capa of moldeParaColor.capas; let i = index">
-                    <!-- Header de la capa (clickeable) -->
-                    <div class="capa-accordion-header" 
-                         [class.abierto]="capaAbiertaPopup === i"
-                         [class.completado]="coloresPorCapaPopup[i]"
-                         (click)="toggleCapaPopup(i)">
-                        <div class="capa-header-info">
-                            <span class="capa-numero">{{ i + 1 }}</span>
-                            <span class="capa-nombre">{{ capa.nombre | capitalize }}</span>
-                        </div>
-                        <div class="capa-header-derecha">
-                            <span class="capa-color-seleccionado" *ngIf="coloresPorCapaPopup[i]">
-                                <span class="color-dot-mini" [style.background-color]="coloresPorCapaPopup[i]?.rgb"></span>
-                                {{ (coloresPorCapaPopup[i]?.nombre || '') | capitalize }}
-                            </span>
-                            <span class="capa-toggle-icon">{{ capaAbiertaPopup === i ? '▲' : '▼' }}</span>
-                        </div>
-                    </div>
-                    
-                    <!-- Contenido desplegable -->
-                    <div class="capa-accordion-contenido" *ngIf="capaAbiertaPopup === i">
-                        <!-- Colores Translúcidos -->
-                        <div class="categoria-colores" *ngIf="getColoresPorCategoria('translucido').length > 0">
-                            <h5 class="categoria-titulo">✨ Translúcidos</h5>
-                            <div class="colores-grid-nuevo">
-                                <div class="color-opcion-nuevo" 
-                                     *ngFor="let color of getColoresPorCategoria('translucido')" 
-                                     [class.seleccionado]="coloresPorCapaPopup[i]?._id === color._id"
-                                     (click)="seleccionarColorCapaPopup(i, color); $event.stopPropagation()"
-                                     [title]="color.nombre">
-                                    <span class="color-dot-nuevo" [style.background-color]="color.rgb"></span>
-                                    <span class="color-nombre-nuevo">{{ color.nombre | capitalize }}</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Colores Polvo -->
-                        <div class="categoria-colores" *ngIf="getColoresPorCategoria('polvo').length > 0">
-                            <h5 class="categoria-titulo">🌟 Polvo / Brillos</h5>
-                            <div class="colores-grid-nuevo">
-                                <div class="color-opcion-nuevo" 
-                                     *ngFor="let color of getColoresPorCategoria('polvo')" 
-                                     [class.seleccionado]="coloresPorCapaPopup[i]?._id === color._id"
-                                     (click)="seleccionarColorCapaPopup(i, color); $event.stopPropagation()"
-                                     [title]="color.nombre">
-                                    <span class="color-dot-nuevo polvo" [style.background-color]="color.rgb"></span>
-                                    <span class="color-nombre-nuevo">{{ color.nombre | capitalize }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <button class="btn-confirmar-colores" 
-                (click)="confirmarColoresPopup()"
-                [disabled]="!todasCapasConColorPopup()">
-            🛒 Agregar al carrito
-        </button>
-    </div>
-</div>
+<!-- Popup de éxito al agregar al carrito -->
+<app-popup-exito 
+    *ngIf="mostrarPopupExito"
+    [mensaje]="mensajeExito"
+    [colores]="coloresExito"
+    (cerrar)="cerrarPopupExito()">
+</app-popup-exito>

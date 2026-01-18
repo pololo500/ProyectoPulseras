@@ -1,0 +1,19 @@
+<div class="overlay" (click)="onCerrar()">
+  <div class="card" (click)="$event.stopPropagation()">
+    <div class="icono">✓</div>
+    <p class="mensaje-principal">{{ mensaje }}</p>
+    
+    <!-- Mostrar colores por capa si hay -->
+    <div class="colores-container" *ngIf="colores.length > 0">
+      <div class="color-item" *ngFor="let color of colores">
+        <span class="color-circulo" [style.background-color]="color.colorRgb"></span>
+        <span class="color-texto">
+          <span class="capa-nombre">{{ color.capaNombre }}:</span>
+          <span class="color-nombre">{{ color.colorNombre }}</span>
+        </span>
+      </div>
+    </div>
+    
+    <button class="btn-aceptar" (click)="onCerrar()">Aceptar</button>
+  </div>
+</div>

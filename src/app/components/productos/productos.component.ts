@@ -3,9 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { ActivatedRoute } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { CapitalizePipe } from '../../extras/capitalizePipe';
 import { CarritoService, ColorPorCapa } from '../../services/carrito.service';
 import { FavoritosService } from '../../services/favoritos.service';
+import { PopupExitoComponent, ColorInfo } from '../popupExito/popupExito.component';
 
 interface Color {
   _id: string;
@@ -50,7 +53,7 @@ interface Producto {
 @Component({
   selector: 'app-productos',
   standalone: true,
-  imports: [CommonModule, FormsModule, CapitalizePipe],
+  imports: [CommonModule, FormsModule, CapitalizePipe, PopupExitoComponent],
   templateUrl: './productos.component.html',
   styleUrl: './productos.component.css'
 })
@@ -92,18 +95,74 @@ export class ProductosComponent implements OnInit {
   
   // Vista
   vistaGrid: boolean = true;
+  
+  // Query params para abrir producto específico
+  private productoIdPendiente: string | null = null;
+
+  // Popup de éxito
+  mostrarPopupExito = false;
+  mensajeExito = '';
+  coloresExito: ColorInfo[] = [];
 
   constructor(
     private http: HttpClient, 
     private carritoService: CarritoService,
     private favoritosService: FavoritosService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
-    this.cargarProductos();
-    this.cargarColores();
-    this.cargarMoldes();
+    // Leer query params
+    this.route.queryParams.subscribe(params => {
+      if (params['tipo']) {
+        this.filtroTipo = params['tipo'];
+      }
+      if (params['productoId']) {
+        this.productoIdPendiente = params['productoId'];
+      }
+    });
+    
+    this.cargarDatos();
+  }
+
+  cargarDatos(): void {
+    // Cargar productos, colores y moldes en paralelo
+    forkJoin({
+      productos: this.http.get<Producto[]>('http://localhost:5000/api/productos'),
+      colores: this.http.get<Color[]>('http://localhost:5000/api/colores'),
+      moldes: this.http.get<Molde[]>('http://localhost:5000/api/moldes')
+    }).subscribe({
+      next: (data) => {
+        // Cargar colores
+        this.colores = data.colores;
+        
+        // Cargar moldes
+        this.moldes = data.moldes;
+        
+        // Cargar productos
+        this.productos = data.productos.map(p => ({ ...p, cantidad: 1 }));
+        this.productosFiltrados = [...this.productos];
+        this.extraerFiltros();
+        
+        // Aplicar filtro si viene de query params
+        if (this.filtroTipo) {
+          this.aplicarFiltros();
+        }
+        
+        // Abrir producto si viene de query params (ahora los moldes ya están cargados)
+        if (this.productoIdPendiente) {
+          const producto = this.productos.find(p => p._id === this.productoIdPendiente);
+          if (producto) {
+            setTimeout(() => {
+              this.abrirDetalle(producto, new Event('click'));
+            }, 100);
+          }
+          this.productoIdPendiente = null;
+        }
+      },
+      error: (err) => console.error('Error al cargar datos:', err)
+    });
   }
 
   cargarColores(): void {
@@ -213,22 +272,10 @@ export class ProductosComponent implements OnInit {
   agregarAlCarrito(producto: Producto): void {
     const cantidad = producto.cantidad || 1;
     
-    // Si es resina, mostrar popup de selección de color por capas
+    // Si es resina, abrir popup de detalle para seleccionar colores
     if (this.esResina(producto) && producto.moldeNombre) {
-      this.productoParaColor = producto;
-      this.cantidadParaColor = cantidad;
-      this.moldeParaColor = this.getMoldeByNombre(producto.moldeNombre);
-      
-      // Inicializar array de colores por capa
-      if (this.moldeParaColor) {
-        this.coloresPorCapaPopup = new Array(this.moldeParaColor.capas.length).fill(null);
-        // Inicializar SVG en blanco con bordes negros
-        if (this.moldeTieneSvg(this.moldeParaColor)) {
-          this.svgPreviewPopup = this.getSvgInicial(this.moldeParaColor);
-        }
-      }
-      
-      this.mostrarPopupColor = true;
+      this.abrirDetalle(producto, new Event('click'));
+      this.cantidadDetalle = cantidad;
       return;
     }
     
@@ -243,7 +290,7 @@ export class ProductosComponent implements OnInit {
       moldeNombre: producto.moldeNombre
     }, cantidad);
     
-    alert(`${cantidad} x ${producto.nombre} agregado al carrito`);
+    this.mostrarMensajeExito(`${cantidad} x ${producto.nombre} agregado al carrito`);
     producto.cantidad = 1;
   }
 
@@ -466,7 +513,6 @@ export class ProductosComponent implements OnInit {
   confirmarColoresPopup(): void {
     if (!this.productoParaColor || !this.moldeParaColor) return;
     if (!this.todasCapasConColorPopup()) {
-      alert('Por favor selecciona un color para cada capa');
       return;
     }
     
@@ -493,11 +539,14 @@ export class ProductosComponent implements OnInit {
       coloresPorCapa: coloresPorCapa
     }, this.cantidadParaColor);
     
-    const resumenColores = coloresPorCapa.map(c => c.colorNombre).join(', ');
-    alert(`${this.cantidadParaColor} x ${this.productoParaColor.nombre} (${resumenColores}) agregado al carrito`);
+    const nombreProducto = this.productoParaColor.nombre;
+    const cantidad = this.cantidadParaColor;
+    const coloresGuardados = [...coloresPorCapa];
     
     this.productoParaColor.cantidad = 1;
     this.cerrarPopupColor();
+    
+    this.mostrarMensajeExito(`${cantidad} x ${nombreProducto} agregado al carrito`, coloresGuardados);
   }
 
   cerrarPopupColor(): void {
@@ -628,7 +677,6 @@ export class ProductosComponent implements OnInit {
     // Si es resina, verificar que todas las capas tengan color
     if (this.esResina(this.productoDetalle) && this.moldeDetalle) {
       if (!this.todasCapasConColorDetalle()) {
-        alert('Por favor selecciona un color para cada capa');
         return;
       }
       
@@ -655,8 +703,10 @@ export class ProductosComponent implements OnInit {
         coloresPorCapa: coloresPorCapa
       }, this.cantidadDetalle);
       
-      const resumenColores = coloresPorCapa.map(c => c.colorNombre).join(', ');
-      alert(`${this.cantidadDetalle} x ${this.productoDetalle.nombre} (${resumenColores}) agregado al carrito`);
+      const mensaje = `${this.cantidadDetalle} x ${this.productoDetalle.nombre} agregado al carrito`;
+      const coloresGuardados = [...coloresPorCapa];
+      this.cerrarDetalle();
+      this.mostrarMensajeExito(mensaje, coloresGuardados);
     } else {
       // Producto sin resina
       this.carritoService.agregarProducto({
@@ -669,15 +719,37 @@ export class ProductosComponent implements OnInit {
         moldeNombre: this.productoDetalle.moldeNombre
       }, this.cantidadDetalle);
       
-      alert(`${this.cantidadDetalle} x ${this.productoDetalle.nombre} agregado al carrito`);
+      const mensaje = `${this.cantidadDetalle} x ${this.productoDetalle.nombre} agregado al carrito`;
+      this.cerrarDetalle();
+      this.mostrarMensajeExito(mensaje);
     }
-    
-    this.cerrarDetalle();
   }
 
   toggleFavoritoDetalle(): void {
     if (this.productoDetalle) {
       this.toggleFavorito(this.productoDetalle);
     }
+  }
+
+  // Popup de éxito
+  mostrarMensajeExito(mensaje: string, coloresPorCapa?: ColorPorCapa[]): void {
+    this.mensajeExito = mensaje;
+    // Convertir coloresPorCapa a ColorInfo si existe
+    if (coloresPorCapa && coloresPorCapa.length > 0) {
+      this.coloresExito = coloresPorCapa.map(c => ({
+        capaNombre: c.capaNombre,
+        colorNombre: c.colorNombre,
+        colorRgb: c.colorRgb
+      }));
+    } else {
+      this.coloresExito = [];
+    }
+    this.mostrarPopupExito = true;
+  }
+
+  cerrarPopupExito(): void {
+    this.mostrarPopupExito = false;
+    this.mensajeExito = '';
+    this.coloresExito = [];
   }
 }

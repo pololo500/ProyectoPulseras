@@ -1,9 +1,10 @@
-import { AfterViewInit, Component, ElementRef, inject, OnDestroy, OnInit, QueryList, ViewChildren } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { CapitalizePipe } from '../../extras/capitalizePipe';
 import { GlobalService } from '../../services/global.service';
+import { TitleComponent } from '../title/title.component';
 
 interface Producto {
   _id: string;
@@ -23,18 +24,16 @@ interface CarruselPorTipo {
 
 @Component({
     selector: 'app-inicio',
-    imports: [CommonModule, CapitalizePipe],
+    imports: [CommonModule, CapitalizePipe, TitleComponent],
     templateUrl: './inicio.component.html',
     styleUrl: './inicio.component.css'
 })
-export class InicioComponent implements OnInit, AfterViewInit, OnDestroy {
-  @ViewChildren('viewport') viewports!: QueryList<ElementRef>;
+export class InicioComponent implements OnInit, OnDestroy {
   router = inject(Router);
   
   carruseles: CarruselPorTipo[] = [];
   autoplayInterval: any;
   autoplayDelay = 3000;
-  itemWidth = 0;
   nombreUsuario = '';
 
   constructor(private globalService: GlobalService, private http: HttpClient) {}
@@ -51,14 +50,8 @@ export class InicioComponent implements OnInit, AfterViewInit, OnDestroy {
     this.startAutoplay();
   }
 
-  ngAfterViewInit() {
-    this.calculateItemWidth();
-    window.addEventListener('resize', this.calculateItemWidth.bind(this));
-  }
-
   ngOnDestroy(): void {
     this.stopAutoplay();
-    window.removeEventListener('resize', this.calculateItemWidth.bind(this));
   }
 
   obtenerProductos() {
@@ -86,10 +79,29 @@ export class InicioComponent implements OnInit, AfterViewInit, OnDestroy {
       });
   }
 
-  calculateItemWidth() {
-    if (this.viewports && this.viewports.first) {
-      const viewportWidth = this.viewports.first.nativeElement.clientWidth;
-      this.itemWidth = (viewportWidth / 3) - 20;
+  // Calcula la clase CSS según la posición relativa al índice actual
+  getItemClass(carrusel: CarruselPorTipo, index: number): string {
+    const len = carrusel.productos.length;
+    const current = carrusel.currentIndex;
+    
+    // Calcular la distancia considerando que es circular
+    let diff = index - current;
+    
+    // Ajustar para el comportamiento circular
+    if (diff > len / 2) {
+      diff -= len;
+    } else if (diff < -len / 2) {
+      diff += len;
+    }
+    
+    if (diff === 0) {
+      return 'carrusel-item center';
+    } else if (diff === -1 || (diff === len - 1)) {
+      return 'carrusel-item prev';
+    } else if (diff === 1 || (diff === -(len - 1))) {
+      return 'carrusel-item next';
+    } else {
+      return 'carrusel-item hidden';
     }
   }
 
@@ -142,17 +154,19 @@ export class InicioComponent implements OnInit, AfterViewInit, OnDestroy {
     carrusel.isHovered = false;
   }
 
-  getTrackStyles(carrusel: CarruselPorTipo): any {
-    const offset = carrusel.currentIndex * (this.itemWidth + 20);
-    return {
-      transform: `translateX(-${offset}px)`,
-      transition: 'transform 1.2s ease-in-out'
-    };
+  // Ir a productos con filtro por tipo
+  irAProductos(tipo: string) {
+    this.router.navigate(['/productos'], { queryParams: { tipo: tipo } });
   }
 
-  // Ver detalle del producto (para futuro uso)
-  verProducto(producto: Producto) {
-    // Por ahora solo mostrar info, se puede expandir después
-    console.log('Ver producto:', producto);
+  // Ver detalle del producto - navega a productos con filtro y abre el producto
+  verProducto(producto: Producto, tipo: string, event: Event) {
+    event.stopPropagation();
+    this.router.navigate(['/productos'], { 
+      queryParams: { 
+        tipo: tipo, 
+        productoId: producto._id 
+      } 
+    });
   }
 }

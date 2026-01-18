@@ -4,34 +4,34 @@
 </div>
 
 <div class="bienvenida" *ngIf="!nombreUsuario">
-    <h1>¡Bienvenido a LMPulseras!</h1>
+    <h1>Bienvenido a</h1>
+    <app-title></app-title>
     <p>Descubre nuestras creaciones únicas</p>
 </div>
 
 <div class="productos-container">
-    <div class="card" *ngFor="let carrusel of carruseles">
+    <div class="card" *ngFor="let carrusel of carruseles" (click)="irAProductos(carrusel.tipo)">
         <h2 class="tipo-titulo">{{ carrusel.tipo | capitalize }}</h2>
         
-        <div class="carrusel-wrapper" *ngIf="carrusel.productos.length > 0">
-            <button class="arrow left" (click)="previous(carrusel)" *ngIf="carrusel.productos.length > 1">❮</button>
+        <div class="carrusel-wrapper" *ngIf="carrusel.productos.length > 0"
+             (mouseenter)="onMouseEnter(carrusel)" 
+             (mouseleave)="onMouseLeave(carrusel)"
+             (click)="$event.stopPropagation()">
+            <button class="arrow left" (click)="previous(carrusel); $event.stopPropagation()" *ngIf="carrusel.productos.length > 1">❮</button>
 
-            <div class="carrusel-viewport" #viewport>
-                <div class="carrusel-track" 
-                     [ngStyle]="getTrackStyles(carrusel)" 
-                     (mouseenter)="onMouseEnter(carrusel)" 
-                     (mouseleave)="onMouseLeave(carrusel)">
+            <div class="carrusel-viewport">
+                <div class="carrusel-track">
                     <div class="carrusel-item" 
-                         *ngFor="let producto of carrusel.productos; let i = index" 
-                         [class.center]="i === carrusel.currentIndex" 
-                         [class.side]="i !== carrusel.currentIndex"
-                         (click)="verProducto(producto)">
+                         *ngFor="let producto of carrusel.productos; let i = index"
+                         [class]="getItemClass(carrusel, i)"
+                         (click)="verProducto(producto, carrusel.tipo, $event)">
                         <img [src]="getPrimeraImagen(producto)" [alt]="producto.nombre" />
                         <div class="producto-nombre">{{ producto.nombre }}</div>
                     </div>
                 </div>
             </div>
 
-            <button class="arrow right" (click)="next(carrusel)" *ngIf="carrusel.productos.length > 1">❯</button>
+            <button class="arrow right" (click)="next(carrusel); $event.stopPropagation()" *ngIf="carrusel.productos.length > 1">❯</button>
         </div>
         
         <div class="carrusel-indicadores" *ngIf="carrusel.productos.length > 1">
@@ -41,7 +41,8 @@
                   (click)="carrusel.currentIndex = i"></span>
         </div>
         
-        <p class="producto-count">{{ carrusel.productos.length }} producto(s)</p>
+        <p class="producto-count" *ngIf="carrusel.productos.length === 1">{{ carrusel.productos.length }} producto</p>
+        <p class="producto-count" *ngIf="carrusel.productos.length > 1">{{ carrusel.productos.length }} productos</p>
     </div>
     
     <div class="sin-productos" *ngIf="carruseles.length === 0">
