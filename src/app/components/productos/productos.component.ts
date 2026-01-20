@@ -1,13 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormControl, FormGroup, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { CapitalizePipe } from '../../extras/capitalizePipe';
 import { CarritoService, ColorPorCapa } from '../../services/carrito.service';
-import { FavoritosService } from '../../services/favoritos.service';
+import { FavoritosService, ItemFavorito } from '../../services/favoritos.service';
 import { PopupExitoComponent, ColorInfo } from '../popupExito/popupExito.component';
 
 interface Color {
@@ -53,7 +53,7 @@ interface Producto {
 @Component({
   selector: 'app-productos',
   standalone: true,
-  imports: [CommonModule, FormsModule, CapitalizePipe, PopupExitoComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, CapitalizePipe, PopupExitoComponent],
   templateUrl: './productos.component.html',
   styleUrl: './productos.component.css'
 })
@@ -106,6 +106,30 @@ export class ProductosComponent implements OnInit {
   mostrarPopupExito = false;
   mensajeExito = '';
   coloresExito: ColorInfo[] = [];
+
+  // Lightbox de imágenes
+  mostrarLightbox = false;
+  imagenLightboxIndex = 0;
+
+  // Popup de Login/Registro para favoritos
+  mostrarPopupLoginFavoritos = false;
+  modoLoginFavoritos: 'login' | 'registro' = 'login';
+  popupLoginError = '';
+  
+  // Formulario de login
+  loginForm = new FormGroup({
+    email: new FormControl('', [Validators.required, Validators.email]),
+    password: new FormControl('', Validators.required),
+  });
+  
+  // Formulario de registro
+  registroForm = new FormGroup({
+    email: new FormControl('', [Validators.required, Validators.email]),
+    nombre: new FormControl('', Validators.required),
+    telefono: new FormControl(''),
+    password: new FormControl('', [Validators.required, Validators.minLength(6)]),
+    confirmarPassword: new FormControl('', Validators.required),
+  });
 
   constructor(
     private http: HttpClient, 
@@ -563,13 +587,31 @@ export class ProductosComponent implements OnInit {
   }
 
   toggleFavorito(producto: Producto): void {
-    this.favoritosService.toggleFavorito({
+    const itemFavorito: ItemFavorito = {
       _id: producto._id,
       nombre: producto.nombre,
       producto: producto.producto,
       precio: producto.precio || 0,
       imagen: this.getPrimeraImagen(producto)
-    });
+    };
+
+    // Verificar si el usuario está logueado
+    if (!this.favoritosService.isLoggedIn()) {
+      // Si ya es favorito (guardado localmente), permitir quitarlo
+      if (this.favoritosService.esFavorito(producto._id)) {
+        this.favoritosService.toggleFavorito(itemFavorito);
+        return;
+      }
+      // Si no está logueado, guardar producto pendiente y mostrar popup de login
+      this.favoritosService.setProductoPendiente(itemFavorito);
+      this.mostrarPopupLoginFavoritos = true;
+      this.modoLoginFavoritos = 'login';
+      this.popupLoginError = '';
+      return;
+    }
+
+    // Si está logueado, toggle normal
+    this.favoritosService.toggleFavorito(itemFavorito);
   }
 
   esFavorito(productoId: string): boolean {
@@ -623,6 +665,8 @@ export class ProductosComponent implements OnInit {
     this.coloresPorCapaDetalle = [];
     this.svgPreviewDetalle = null;
     this.capaAbiertaDetalle = null;
+    this.mostrarLightbox = false;
+    this.imagenLightboxIndex = 0;
   }
 
   getImagenes(producto: Producto): string[] {
@@ -650,6 +694,34 @@ export class ProductosComponent implements OnInit {
 
   seleccionarImagen(index: number): void {
     this.imagenActualIndex = index;
+  }
+
+  // Métodos del Lightbox
+  abrirLightbox(index: number): void {
+    this.imagenLightboxIndex = index;
+    this.mostrarLightbox = true;
+  }
+
+  cerrarLightbox(): void {
+    this.mostrarLightbox = false;
+  }
+
+  lightboxAnterior(): void {
+    if (this.productoDetalle) {
+      const imagenes = this.getImagenes(this.productoDetalle);
+      this.imagenLightboxIndex = (this.imagenLightboxIndex - 1 + imagenes.length) % imagenes.length;
+    }
+  }
+
+  lightboxSiguiente(): void {
+    if (this.productoDetalle) {
+      const imagenes = this.getImagenes(this.productoDetalle);
+      this.imagenLightboxIndex = (this.imagenLightboxIndex + 1) % imagenes.length;
+    }
+  }
+
+  seleccionarImagenLightbox(index: number): void {
+    this.imagenLightboxIndex = index;
   }
 
   incrementarCantidadDetalle(): void {
@@ -768,5 +840,121 @@ export class ProductosComponent implements OnInit {
   tieneFiltrosActivos(): boolean {
     return !!(this.filtroTipo || this.filtroMaterial || this.filtroNombre || 
               this.filtroPrecioMin !== null || this.filtroPrecioMax !== null);
+  }
+
+  // ========== POPUP LOGIN/REGISTRO PARA FAVORITOS ==========
+  
+  cerrarPopupLoginFavoritos(): void {
+    this.mostrarPopupLoginFavoritos = false;
+    this.popupLoginError = '';
+    this.loginForm.reset();
+    this.registroForm.reset();
+    // Limpiar producto pendiente si se cierra sin loguearse
+    this.favoritosService.getProductoPendiente();
+  }
+
+  cambiarModoLoginFavoritos(modo: 'login' | 'registro'): void {
+    this.modoLoginFavoritos = modo;
+    this.popupLoginError = '';
+    this.loginForm.reset();
+    this.registroForm.reset();
+  }
+
+  get passwordsCoinciden(): boolean {
+    return this.registroForm.get('password')?.value === this.registroForm.get('confirmarPassword')?.value;
+  }
+
+  onSubmitLoginFavoritos(): void {
+    const formData = {
+      email: this.loginForm.value.email,
+      password: this.loginForm.value.password
+    };
+  
+    this.http.post<any>(`http://localhost:5000/api/login`, formData)
+      .subscribe({
+        next: (res) => {
+          if (res.success) {
+            // Guardar sesión
+            sessionStorage.setItem("email", formData.email as string);
+            sessionStorage.setItem("isLoggedIn", "true");
+            sessionStorage.setItem("tipoUsuario", res.tipoUsuario);
+            sessionStorage.setItem("nombreUsuario", res.nombre);
+            
+            // Sincronizar favoritos con la base de datos
+            this.favoritosService.sincronizarAlLogin(formData.email as string);
+            
+            // Agregar el producto pendiente a favoritos
+            setTimeout(() => {
+              this.favoritosService.agregarProductoPendiente();
+            }, 500);
+            
+            // Cerrar popup
+            this.mostrarPopupLoginFavoritos = false;
+            this.popupLoginError = '';
+            this.loginForm.reset();
+            
+            // Mostrar mensaje de éxito
+            this.mostrarMensajeExito('¡Bienvenido! Producto agregado a favoritos');
+          }
+        },
+        error: (err) => {
+          const errorMessage = err?.error?.error;
+          if (errorMessage === "contraseñaIncorrecta") {
+            this.popupLoginError = 'Contraseña incorrecta';
+          } else {
+            this.popupLoginError = 'El email no está registrado';
+          }
+        }
+      });
+  }
+
+  onSubmitRegistroFavoritos(): void {
+    if (!this.passwordsCoinciden) {
+      this.popupLoginError = 'Las contraseñas no coinciden';
+      return;
+    }
+    
+    const formData = {
+      email: this.registroForm.value.email,
+      nombre: this.registroForm.value.nombre,
+      telefono: this.registroForm.value.telefono || '',
+      password: this.registroForm.value.password
+    };
+  
+    this.http.post<any>(`http://localhost:5000/api/usuarios/registro`, formData)
+      .subscribe({
+        next: (res) => {
+          if (res.success) {
+            // Auto-login: guardar sesión
+            sessionStorage.setItem("email", formData.email as string);
+            sessionStorage.setItem("isLoggedIn", "true");
+            sessionStorage.setItem("tipoUsuario", "Cliente");
+            sessionStorage.setItem("nombreUsuario", formData.nombre as string);
+            
+            // Agregar el producto pendiente a favoritos
+            setTimeout(() => {
+              this.favoritosService.agregarProductoPendiente();
+            }, 300);
+            
+            // Cerrar popup
+            this.mostrarPopupLoginFavoritos = false;
+            this.popupLoginError = '';
+            this.registroForm.reset();
+            
+            // Mostrar mensaje de éxito
+            this.mostrarMensajeExito(`¡Bienvenido ${formData.nombre}! Producto agregado a favoritos`);
+          }
+        },
+        error: (err) => {
+          const errorMessage = err?.error?.error;
+          if (errorMessage === "usuarioExistente") {
+            this.popupLoginError = 'El email ya está registrado';
+          } else if (errorMessage === "emailInvalido") {
+            this.popupLoginError = 'Email inválido';
+          } else {
+            this.popupLoginError = 'Error al registrar. Intente nuevamente';
+          }
+        }
+      });
   }
 }

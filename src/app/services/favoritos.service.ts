@@ -18,6 +18,9 @@ export class FavoritosService {
     private favoritosSubject = new BehaviorSubject<ItemFavorito[]>([]);
     public favoritos$ = this.favoritosSubject.asObservable();
 
+    // Producto pendiente para agregar después del login
+    private productoPendiente: ItemFavorito | null = null;
+
     private apiUrl = 'http://localhost:5000/api';
 
     constructor(private http: HttpClient) {
@@ -108,5 +111,35 @@ export class FavoritosService {
         this.favoritos = [];
         sessionStorage.removeItem('favoritos');
         this.favoritosSubject.next([]);
+    }
+
+    // Verificar si el usuario está logueado
+    isLoggedIn(): boolean {
+        return sessionStorage.getItem('isLoggedIn') === 'true';
+    }
+
+    // Guardar producto pendiente para agregar después del login
+    setProductoPendiente(producto: ItemFavorito): void {
+        this.productoPendiente = producto;
+    }
+
+    // Obtener y limpiar producto pendiente
+    getProductoPendiente(): ItemFavorito | null {
+        const producto = this.productoPendiente;
+        this.productoPendiente = null;
+        return producto;
+    }
+
+    // Verificar si hay producto pendiente
+    tieneProductoPendiente(): boolean {
+        return this.productoPendiente !== null;
+    }
+
+    // Agregar el producto pendiente después del login exitoso
+    agregarProductoPendiente(): void {
+        if (this.productoPendiente) {
+            this.agregarFavorito(this.productoPendiente);
+            this.productoPendiente = null;
+        }
     }
 }

@@ -236,7 +236,7 @@ app-title {
 }
 
 /* Responsive */
-@media (max-width: 900px) {
+@media (max-width: 768px) {
     .bienvenida h1 {
         font-size: 38px;
     }
@@ -268,7 +268,7 @@ app-title {
     }
 }
   
-@media (max-width: 600px) {
+@media (max-width: 480px) {
     .bienvenida h1 {
         font-size: 32px;
     }

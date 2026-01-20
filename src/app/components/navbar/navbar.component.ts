@@ -20,10 +20,33 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
   
   private particleEffectCircle!: ParticleEffectCircle;
   private particleEffectSquare!: ParticleEffectSquare;
+  private particlesInitialized = false;
 
   ngAfterViewInit(): void {
-    this.particleEffectCircle = new ParticleEffectCircle('particle-canvas-circle');
-    this.particleEffectSquare = new ParticleEffectSquare('particle-canvas-square');
+    // Dar tiempo para que el DOM se actualice con el *ngIf
+    this.initParticlesWithRetry();
+  }
+
+  private initParticlesWithRetry(attempts = 0): void {
+    if (this.particlesInitialized || attempts > 10) return;
+    
+    setTimeout(() => {
+      const canvasCircle = document.getElementById('particle-canvas-circle');
+      const canvasSquare = document.getElementById('particle-canvas-square');
+      
+      if (canvasCircle && canvasSquare) {
+        try {
+          this.particleEffectCircle = new ParticleEffectCircle('particle-canvas-circle');
+          this.particleEffectSquare = new ParticleEffectSquare('particle-canvas-square');
+          this.particlesInitialized = true;
+        } catch (e) {
+          console.warn('Error inicializando partículas:', e);
+        }
+      } else {
+        // Reintentar si los canvas aún no están disponibles
+        this.initParticlesWithRetry(attempts + 1);
+      }
+    }, 100);
   }
 
   ngOnDestroy(): void {
@@ -63,6 +86,10 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
         this.checkUserType();
         this.actualizarCarrito();
         this.actualizarFavoritos();
+        // Reinicializar partículas si es una ruta válida y no están inicializadas
+        if (this.validRoute && !this.particlesInitialized) {
+          this.initParticlesWithRetry();
+        }
       });
 
     // Escuchar eventos de actualización del carrito

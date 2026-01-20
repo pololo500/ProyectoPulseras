@@ -29,6 +29,9 @@ body {
 h1 {
     font-family: 'Dancing Script';
     font-size: 70px;
+    color: #d6b435;
+    margin: 0px 0px 20px 0px;
+    text-align: center;
 }
 
 button {
@@ -154,7 +157,13 @@ textarea, input[type="date"] {
     font-family:'Inter', sans-serif;
 }
 
-@media (max-width: 450px) {
+@media (max-width: 768px) {
+    h1 {
+        font-size: 36px;
+    }
+}
+
+@media (max-width: 480px) {
     html {
         font-size: 14px;
     }

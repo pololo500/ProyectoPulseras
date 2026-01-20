@@ -41,7 +41,7 @@
                 </div>
             </div>
             
-            <button class="btn-limpiar" (click)="limpiarFiltros()">Limpiar filtros</button>
+            <button class="btn-limpiar" (click)="limpiarFiltros()" *ngIf="tieneFiltrosActivos()">Mostrar todo</button>
         </div>
         
         <div class="vista-opciones">
@@ -154,7 +154,7 @@
             </div>
             
             <div class="filtros-mobile-acciones">
-                <button class="btn-limpiar" (click)="limpiarFiltros()">Limpiar filtros</button>
+                <button class="btn-limpiar" (click)="limpiarFiltros()" *ngIf="tieneFiltrosActivos()">Mostrar todo</button>
                 <button class="btn-aplicar" (click)="cerrarFiltrosMobile()">Aplicar</button>
             </div>
         </div>
@@ -173,7 +173,11 @@
                 <div class="popup-imagen-container">
                     <div class="popup-carrusel">
                         <button class="popup-nav prev" (click)="imagenAnterior()" *ngIf="getImagenes(productoDetalle).length > 1">❮</button>
-                        <img [src]="getImagenes(productoDetalle)[imagenActualIndex]" [alt]="productoDetalle.nombre" class="popup-imagen">
+                        <img [src]="getImagenes(productoDetalle)[imagenActualIndex]" 
+                             [alt]="productoDetalle.nombre" 
+                             class="popup-imagen clickable"
+                             (click)="abrirLightbox(imagenActualIndex)"
+                             title="Clic para ampliar">
                         <button class="popup-nav next" (click)="imagenSiguiente()" *ngIf="getImagenes(productoDetalle).length > 1">❯</button>
                     </div>
                     <div class="popup-indicadores" *ngIf="getImagenes(productoDetalle).length > 1">
@@ -288,3 +292,110 @@
     [colores]="coloresExito"
     (cerrar)="cerrarPopupExito()">
 </app-popup-exito>
+
+<!-- Lightbox para ver imágenes en grande -->
+<div class="lightbox-overlay" *ngIf="mostrarLightbox && productoDetalle" (click)="cerrarLightbox()">
+    <button class="lightbox-cerrar" (click)="cerrarLightbox()">✕</button>
+    
+    <button class="lightbox-nav prev" (click)="lightboxAnterior(); $event.stopPropagation()" *ngIf="getImagenes(productoDetalle).length > 1">❮</button>
+    
+    <div class="lightbox-contenido" (click)="$event.stopPropagation()">
+        <img [src]="getImagenes(productoDetalle)[imagenLightboxIndex]" [alt]="productoDetalle.nombre" class="lightbox-imagen">
+    </div>
+    
+    <button class="lightbox-nav next" (click)="lightboxSiguiente(); $event.stopPropagation()" *ngIf="getImagenes(productoDetalle).length > 1">❯</button>
+    
+    <div class="lightbox-indicadores" *ngIf="getImagenes(productoDetalle).length > 1">
+        <span class="lightbox-indicador" 
+              *ngFor="let img of getImagenes(productoDetalle); let i = index"
+              [class.activo]="i === imagenLightboxIndex"
+              (click)="seleccionarImagenLightbox(i); $event.stopPropagation()"></span>
+    </div>
+    
+    <div class="lightbox-contador">
+        {{ imagenLightboxIndex + 1 }} / {{ getImagenes(productoDetalle).length }}
+    </div>
+</div>
+
+<!-- Popup de Login/Registro para Favoritos -->
+<div class="popup-overlay" *ngIf="mostrarPopupLoginFavoritos" (click)="cerrarPopupLoginFavoritos()">
+    <div class="card popup-login-favoritos" (click)="$event.stopPropagation()">
+        <button class="btn-cerrar-popup" (click)="cerrarPopupLoginFavoritos()">✕</button>
+        <div class="popup-login-content">
+            <div class="login-favoritos-header">
+                <span class="icono-favorito">✦</span>
+                <h3>Para guardar favoritos necesitas una cuenta</h3>
+            </div>
+
+            <!-- Tabs para cambiar entre Login y Registro -->
+            <div class="login-tabs">
+                <button [class.active]="modoLoginFavoritos === 'login'" (click)="cambiarModoLoginFavoritos('login')">Iniciar Sesión</button>
+                <button [class.active]="modoLoginFavoritos === 'registro'" (click)="cambiarModoLoginFavoritos('registro')">Registrarse</button>
+            </div>
+
+            <!-- Mensaje de error -->
+            <div class="login-error" *ngIf="popupLoginError">
+                {{ popupLoginError }}
+            </div>
+
+            <!-- Formulario de Login -->
+            <form *ngIf="modoLoginFavoritos === 'login'" [formGroup]="loginForm" (ngSubmit)="onSubmitLoginFavoritos()" class="login-form">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" formControlName="email" placeholder="ejemplo@correo.com">
+                    <div class="form-error" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+                        <span *ngIf="loginForm.get('email')?.errors?.['required']">El email es obligatorio</span>
+                        <span *ngIf="loginForm.get('email')?.errors?.['email']">Ingrese un email válido</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Contraseña</label>
+                    <input type="password" id="loginPassword" formControlName="password">
+                    <div class="form-error" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+                        La contraseña es obligatoria
+                    </div>
+                </div>
+                <button type="submit" class="btn-submit" [disabled]="loginForm.invalid">Iniciar Sesión</button>
+            </form>
+
+            <!-- Formulario de Registro -->
+            <form *ngIf="modoLoginFavoritos === 'registro'" [formGroup]="registroForm" (ngSubmit)="onSubmitRegistroFavoritos()" class="login-form">
+                <div class="form-group">
+                    <label for="regEmail">Email *</label>
+                    <input type="email" id="regEmail" formControlName="email" placeholder="ejemplo@correo.com">
+                    <div class="form-error" *ngIf="registroForm.get('email')?.invalid && registroForm.get('email')?.touched">
+                        <span *ngIf="registroForm.get('email')?.errors?.['required']">El email es obligatorio</span>
+                        <span *ngIf="registroForm.get('email')?.errors?.['email']">Ingrese un email válido</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="regNombre">Nombre *</label>
+                    <input type="text" id="regNombre" formControlName="nombre" placeholder="Tu nombre">
+                    <div class="form-error" *ngIf="registroForm.get('nombre')?.invalid && registroForm.get('nombre')?.touched">
+                        El nombre es obligatorio
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="regTelefono">Teléfono (opcional)</label>
+                    <input type="tel" id="regTelefono" formControlName="telefono" placeholder="11-1234-5678">
+                </div>
+                <div class="form-group">
+                    <label for="regPassword">Contraseña *</label>
+                    <input type="password" id="regPassword" formControlName="password">
+                    <div class="form-error" *ngIf="registroForm.get('password')?.invalid && registroForm.get('password')?.touched">
+                        <span *ngIf="registroForm.get('password')?.errors?.['required']">La contraseña es obligatoria</span>
+                        <span *ngIf="registroForm.get('password')?.errors?.['minlength']">Mínimo 6 caracteres</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="regConfirmar">Confirmar Contraseña *</label>
+                    <input type="password" id="regConfirmar" formControlName="confirmarPassword">
+                    <div class="form-error" *ngIf="registroForm.get('confirmarPassword')?.touched && !passwordsCoinciden">
+                        Las contraseñas no coinciden
+                    </div>
+                </div>
+                <button type="submit" class="btn-submit" [disabled]="registroForm.invalid || !passwordsCoinciden">Registrarse</button>
+            </form>
+        </div>
+    </div>
+</div>
