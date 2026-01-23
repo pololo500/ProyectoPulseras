@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { CapitalizePipe } from '../../extras/capitalizePipe';
 import { GlobalService } from '../../services/global.service';
@@ -52,11 +53,16 @@ interface Pedido {
 interface Venta {
     _id?: string;
     cliente: string;
-    productoNombre: string;
-    productoTipo: string;
-    material: string;
-    cantidad: number;
-    precio: number;
+    // Campos legacy para ventas individuales
+    productoNombre?: string;
+    productoTipo?: string;
+    material?: string;
+    cantidad?: number;
+    precio?: number;
+    coloresPorCapa?: ColorCapa[];
+    // Nuevo campo para ventas con múltiples items
+    items?: ItemPedido[];
+    // Campos comunes
     metodoPago: string;
     fechaPedido: string;
     fechaVenta: string;
@@ -67,7 +73,7 @@ interface Venta {
 @Component({
     selector: 'app-mis-pedidos',
     standalone: true,
-    imports: [CommonModule, RouterModule, CapitalizePipe],
+    imports: [CommonModule, RouterModule, FormsModule, CapitalizePipe],
     templateUrl: './misPedidos.component.html',
     styleUrl: './misPedidos.component.css'
 })
@@ -87,6 +93,10 @@ export class MisPedidosComponent implements OnInit {
     mostrarPopupCancelar = false;
     pedidoACancelar: Pedido | null = null;
     cancelando = false;
+    
+    // Nota editable
+    notaEditada: string = '';
+    guardandoNota = false;
     
     emailCliente: string = '';
 
@@ -140,6 +150,7 @@ export class MisPedidosComponent implements OnInit {
 
     verDetallePedido(pedido: Pedido): void {
         this.pedidoSeleccionado = pedido;
+        this.notaEditada = pedido.nota || '';
         this.ventaSeleccionada = null;
         this.mostrarDetalle = true;
     }
@@ -274,6 +285,42 @@ export class MisPedidosComponent implements OnInit {
         return 1;
     }
 
+    // Métodos helper para ventas (historial)
+    tieneItemsVenta(venta: Venta): boolean {
+        return !!(venta.items && venta.items.length > 0);
+    }
+
+    getCantidadItemsVenta(venta: Venta): number {
+        if (this.tieneItemsVenta(venta)) {
+            return venta.items!.reduce((sum, item) => sum + item.cantidad, 0);
+        }
+        return venta.cantidad || 0;
+    }
+
+    getTotalVenta(venta: Venta): number {
+        if (this.tieneItemsVenta(venta)) {
+            return venta.items!.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+        }
+        return venta.precio || 0;
+    }
+
+    getResumenProductosVenta(venta: Venta): string {
+        if (this.tieneItemsVenta(venta)) {
+            if (venta.items!.length === 1) {
+                return venta.items![0].productoNombre;
+            }
+            return `${venta.items![0].productoNombre} y ${venta.items!.length - 1} más`;
+        }
+        return venta.productoNombre || '';
+    }
+
+    getCantidadProductosVenta(venta: Venta): number {
+        if (this.tieneItemsVenta(venta)) {
+            return venta.items!.length;
+        }
+        return 1;
+    }
+
     // Cancelar pedido
     abrirPopupCancelar(pedido: Pedido, event: Event): void {
         event.stopPropagation();
@@ -293,20 +340,28 @@ export class MisPedidosComponent implements OnInit {
         const pedido = this.pedidoACancelar;
         const fechaHoy = new Date().toISOString().split('T')[0];
         
-        // Crear venta con estado Cancelado
-        const venta = {
+        // Crear venta con estado Cancelado - preservando la estructura de items
+        const venta: any = {
             cliente: pedido.cliente,
-            productoNombre: this.getResumenProductos(pedido),
-            productoTipo: this.tieneItems(pedido) ? 'Varios' : (pedido.productoTipo || ''),
-            material: this.tieneItems(pedido) ? '' : (pedido.material || ''),
-            cantidad: this.getCantidadItems(pedido),
-            precio: this.getTotalPedido(pedido),
             metodoPago: pedido.metodoPago,
             fechaPedido: pedido.fecha,
             fechaVenta: fechaHoy,
             estado: 'Cancelado',
             nota: pedido.nota ? `${pedido.nota} - Cancelado por el cliente` : 'Cancelado por el cliente'
         };
+        
+        // Si tiene items, copiarlos a la venta
+        if (this.tieneItems(pedido)) {
+            venta.items = pedido.items;
+        } else {
+            // Pedido legacy
+            venta.productoNombre = pedido.productoNombre;
+            venta.productoTipo = pedido.productoTipo;
+            venta.material = pedido.material;
+            venta.cantidad = pedido.cantidad;
+            venta.precio = pedido.precio;
+            venta.coloresPorCapa = pedido.coloresPorCapa;
+        }
         
         // Primero crear la venta, luego eliminar el pedido
         this.http.post('http://localhost:5000/api/ventas', venta)
@@ -338,5 +393,31 @@ export class MisPedidosComponent implements OnInit {
                     alert('Error al cancelar el pedido');
                 }
             });
+    }
+
+    guardarNota(): void {
+        if (!this.pedidoSeleccionado || !this.pedidoSeleccionado._id) return;
+        
+        this.guardandoNota = true;
+        
+        this.http.put(`http://localhost:5000/api/pedidos/${this.pedidoSeleccionado._id}`, {
+            ...this.pedidoSeleccionado,
+            nota: this.notaEditada
+        }).subscribe({
+            next: () => {
+                this.guardandoNota = false;
+                this.pedidoSeleccionado!.nota = this.notaEditada;
+                // Actualizar también en la lista
+                const index = this.pedidosEnProceso.findIndex(p => p._id === this.pedidoSeleccionado!._id);
+                if (index !== -1) {
+                    this.pedidosEnProceso[index].nota = this.notaEditada;
+                }
+            },
+            error: (err) => {
+                console.error('Error al guardar nota:', err);
+                this.guardandoNota = false;
+                alert('Error al guardar la nota');
+            }
+        });
     }
 }

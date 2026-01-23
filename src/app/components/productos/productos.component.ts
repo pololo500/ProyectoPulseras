@@ -427,26 +427,93 @@ export class ProductosComponent implements OnInit {
 
   // Función reutilizable para generar SVG con colores
   generarSvgConColores(svgContent: string, mappings: SvgAreaMapping[], colores: (Color | null)[]): SafeHtml {
-    // Primero aplicar blanco con bordes negros a todos los elementos mapeados
-    let svgConColores = this.aplicarEstiloBase(svgContent, mappings);
-    
-    // Luego aplicar los colores seleccionados
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(svgContent, 'image/svg+xml');
+
+    // Assure global defs
+    this.ensureGlobalDefs(doc);
+
+    // Apply base style
+    this.aplicarEstiloBaseEnDoc(doc, mappings);
+
+    // Apply colors
     mappings.forEach((mapping) => {
       const color = colores[mapping.capaIndex];
       if (color && mapping.svgElementId) {
-        svgConColores = this.aplicarColorAElemento(svgConColores, mapping.svgElementId, color.rgb);
+        this.aplicarColorEnDoc(doc, mapping.svgElementId, color);
       }
     });
-    
-    return this.sanitizer.bypassSecurityTrustHtml(svgConColores);
+
+    const serialized = new XMLSerializer().serializeToString(doc);
+    return this.sanitizer.bypassSecurityTrustHtml(serialized);
   }
 
-  // Aplicar estilo base: blanco con bordes negros a todos los elementos mapeados
-  aplicarEstiloBase(svgContent: string, mappings: SvgAreaMapping[]): string {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(svgContent, 'image/svg+xml');
+  ensureGlobalDefs(doc: Document): void {
+    const svg = doc.querySelector('svg');
+    if (!svg) return;
     
-    mappings.forEach((mapping) => {
+    let defs = svg.querySelector('defs');
+    if (!defs) {
+      defs = doc.createElementNS('http://www.w3.org/2000/svg', 'defs');
+      svg.insertBefore(defs, svg.firstChild);
+    }
+    
+    // Gradiente para efecto brillo/translucido (shine)
+    if (!doc.getElementById('grad-shine')) {
+      const gradShine = doc.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+      gradShine.setAttribute('id', 'grad-shine');
+      gradShine.setAttribute('x1', '0%');
+      gradShine.setAttribute('y1', '0%');
+      gradShine.setAttribute('x2', '100%');
+      gradShine.setAttribute('y2', '100%');
+      
+      const stops = [
+        { offset: '0%', color: 'white', opacity: '0.5' },
+        { offset: '40%', color: 'white', opacity: '0' },
+        { offset: '60%', color: 'white', opacity: '0' },
+        { offset: '100%', color: 'white', opacity: '0.3' }
+      ];
+      
+      stops.forEach(s => {
+        const stop = doc.createElementNS('http://www.w3.org/2000/svg', 'stop');
+        stop.setAttribute('offset', s.offset);
+        stop.setAttribute('stop-color', s.color);
+        stop.setAttribute('stop-opacity', s.opacity);
+        gradShine.appendChild(stop);
+      });
+      
+      defs.appendChild(gradShine);
+    }
+
+    // Gradiente para efecto polvo (dust)
+    if (!doc.getElementById('grad-dust')) {
+      const gradDust = doc.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+      gradDust.setAttribute('id', 'grad-dust');
+      gradDust.setAttribute('x1', '0%');
+      gradDust.setAttribute('y1', '0%');
+      gradDust.setAttribute('x2', '100%');
+      gradDust.setAttribute('y2', '100%');
+      
+      const stops = [
+         { offset: '0%', color: 'white', opacity: '0.4' },
+         { offset: '50%', color: 'white', opacity: '0' },
+         { offset: '100%', color: 'white', opacity: '0.4' }
+      ];
+      
+      stops.forEach(s => {
+        const stop = doc.createElementNS('http://www.w3.org/2000/svg', 'stop');
+        stop.setAttribute('offset', s.offset);
+        stop.setAttribute('stop-color', s.color);
+        stop.setAttribute('stop-opacity', s.opacity);
+        gradDust.appendChild(stop);
+      });
+      
+      defs.appendChild(gradDust);
+    }
+  }
+
+  aplicarEstiloBaseEnDoc(doc: Document, mappings: SvgAreaMapping[]): void {
+     mappings.forEach((mapping) => {
       if (mapping.svgElementId) {
         const elemento = doc.getElementById(mapping.svgElementId);
         if (elemento) {
@@ -454,8 +521,86 @@ export class ProductosComponent implements OnInit {
         }
       }
     });
-    
-    return new XMLSerializer().serializeToString(doc);
+  }
+
+  aplicarColorEnDoc(doc: Document, elementId: string, color: Color): void {
+      const elemento = doc.getElementById(elementId);
+      if (elemento) {
+          this.colorearElementoEnDoc(doc, elemento, color);
+      }
+  }
+
+  colorearElementoEnDoc(doc: Document, elemento: Element, color: Color): void {
+      let fillValue = color.rgb;
+      let strokeValue = '#000000';
+      
+      // Manejo de efectos
+      if (color.categoria === 'translucido' || color.categoria === 'polvo') {
+          const defs = doc.querySelector('defs')!;
+          
+          let patternId = '';
+          let gradRef = '';
+          let baseOpacity = '1';
+
+          if (color.categoria === 'translucido') {
+              patternId = `pat-trans-${color._id}`;
+              gradRef = 'grad-shine';
+              baseOpacity = '0.6';
+          } else if (color.categoria === 'polvo') {
+              patternId = `pat-dust-${color._id}`;
+              gradRef = 'grad-dust';
+          }
+
+          if (!doc.getElementById(patternId)) {
+              const pattern = doc.createElementNS('http://www.w3.org/2000/svg', 'pattern');
+              pattern.setAttribute('id', patternId);
+              pattern.setAttribute('patternUnits', 'objectBoundingBox');
+              pattern.setAttribute('width', '1');
+              pattern.setAttribute('height', '1');
+              pattern.setAttribute('viewBox', '0 0 1 1');
+              pattern.setAttribute('preserveAspectRatio', 'none');
+
+              const rectBase = doc.createElementNS('http://www.w3.org/2000/svg', 'rect');
+              rectBase.setAttribute('width', '1');
+              rectBase.setAttribute('height', '1');
+              rectBase.setAttribute('fill', color.rgb);
+              if (baseOpacity !== '1') {
+                   rectBase.setAttribute('fill-opacity', baseOpacity);
+              }
+              
+              const rectOverlay = doc.createElementNS('http://www.w3.org/2000/svg', 'rect');
+              rectOverlay.setAttribute('width', '1');
+              rectOverlay.setAttribute('height', '1');
+              rectOverlay.setAttribute('fill', `url(#${gradRef})`);
+              
+              pattern.appendChild(rectBase);
+              pattern.appendChild(rectOverlay);
+              defs.appendChild(pattern);
+          }
+          fillValue = `url(#${patternId})`;
+      }
+
+      const applyStyle = (el: Element) => {
+          el.setAttribute('fill', fillValue);
+          el.setAttribute('stroke', strokeValue);
+          el.setAttribute('stroke-width', '1');
+          
+          // Limpiar estilos inline
+          let style = el.getAttribute('style') || '';
+          style = style.replace(/(fill|stroke|stroke-width)\s*:\s*[^;]+;?/gi, '');
+          style += `fill: ${fillValue}; stroke: ${strokeValue}; stroke-width: 1;`;
+          el.setAttribute('style', style);
+      };
+
+      const tagName = elemento.tagName.toLowerCase();
+      const elementosConFill = ['path', 'rect', 'circle', 'ellipse', 'polygon', 'polyline'];
+
+      if (elementosConFill.includes(tagName)) {
+        applyStyle(elemento);
+      }
+      
+      const hijos = elemento.querySelectorAll('path, rect, circle, ellipse, polygon, polyline');
+      hijos.forEach(hijo => applyStyle(hijo));
   }
 
   // Aplicar blanco con borde negro a un elemento y sus hijos
@@ -475,53 +620,6 @@ export class ProductosComponent implements OnInit {
       hijo.setAttribute('fill', '#FFFFFF');
       hijo.setAttribute('stroke', '#000000');
       hijo.setAttribute('stroke-width', '1');
-    });
-  }
-
-  // Aplicar color a un elemento específico del SVG
-  aplicarColorAElemento(svgString: string, elementId: string, color: string): string {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(svgString, 'image/svg+xml');
-    const elemento = doc.getElementById(elementId);
-    
-    if (elemento) {
-      this.colorearElemento(elemento, color);
-    }
-    
-    return new XMLSerializer().serializeToString(doc);
-  }
-
-  // Colorear un elemento y sus hijos (manteniendo bordes negros)
-  colorearElemento(elemento: Element, color: string): void {
-    const tagName = elemento.tagName.toLowerCase();
-    const elementosConFill = ['path', 'rect', 'circle', 'ellipse', 'polygon', 'polyline'];
-    
-    if (elementosConFill.includes(tagName)) {
-      elemento.setAttribute('fill', color);
-      elemento.setAttribute('stroke', '#000000');
-      elemento.setAttribute('stroke-width', '1');
-      const style = elemento.getAttribute('style') || '';
-      const nuevoStyle = style
-        .replace(/fill\s*:\s*[^;]+;?/gi, '')
-        .replace(/stroke\s*:\s*[^;]+;?/gi, '')
-        .replace(/stroke-width\s*:\s*[^;]+;?/gi, '')
-        + `fill: ${color}; stroke: #000000; stroke-width: 1;`;
-      elemento.setAttribute('style', nuevoStyle);
-    }
-    
-    // Aplicar a todos los hijos también
-    const hijos = elemento.querySelectorAll('path, rect, circle, ellipse, polygon, polyline');
-    hijos.forEach(hijo => {
-      hijo.setAttribute('fill', color);
-      hijo.setAttribute('stroke', '#000000');
-      hijo.setAttribute('stroke-width', '1');
-      const style = hijo.getAttribute('style') || '';
-      const nuevoStyle = style
-        .replace(/fill\s*:\s*[^;]+;?/gi, '')
-        .replace(/stroke\s*:\s*[^;]+;?/gi, '')
-        .replace(/stroke-width\s*:\s*[^;]+;?/gi, '')
-        + `fill: ${color}; stroke: #000000; stroke-width: 1;`;
-      hijo.setAttribute('style', nuevoStyle);
     });
   }
 

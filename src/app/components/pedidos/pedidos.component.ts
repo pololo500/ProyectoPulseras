@@ -432,46 +432,45 @@ export class PedidosComponent implements OnInit {
     if (!this.pedidoAccion || !this.accionPendiente) return;
 
     const estadoVenta = this.accionPendiente === 'entregar' ? 'Entregado' : 'Cancelado';
+    const fechaHoy = new Date().toISOString().split('T')[0];
     
-    // Si tiene items, crear una venta por cada item
-    const items = this.getItemsPedido(this.pedidoAccion);
+    // Crear una única venta con todos los items del pedido
+    const venta: any = {
+      cliente: this.pedidoAccion.cliente,
+      metodoPago: this.pedidoAccion.metodoPago,
+      fechaPedido: this.pedidoAccion.fecha,
+      fechaVenta: fechaHoy,
+      estado: estadoVenta,
+      nota: this.pedidoAccion.nota
+    };
     
-    if (items.length > 0) {
-      let completadas = 0;
-      items.forEach(item => {
-        const venta = {
-          cliente: this.pedidoAccion!.cliente,
-          productoNombre: item.productoNombre,
-          productoTipo: item.productoTipo,
-          material: item.material,
-          cantidad: item.cantidad,
-          precio: item.precio * item.cantidad,
-          metodoPago: this.pedidoAccion!.metodoPago,
-          fechaPedido: this.pedidoAccion!.fecha,
-          fechaVenta: new Date().toISOString().split('T')[0],
-          estado: estadoVenta,
-          nota: this.pedidoAccion!.nota
-        };
-
-        this.http.post('http://localhost:5000/api/ventas', venta)
-          .subscribe({
-            next: () => {
-              completadas++;
-              if (completadas === items.length) {
-                this.http.delete(`http://localhost:5000/api/pedidos/${this.pedidoAccion!._id}`)
-                  .subscribe({
-                    next: () => {
-                      this.cargarPedidos();
-                      this.cancelarAccion();
-                    },
-                    error: (err) => console.error('Error al eliminar pedido:', err)
-                  });
-              }
-            },
-            error: (err) => console.error('Error al crear venta:', err)
-          });
-      });
+    // Si tiene items, copiarlos a la venta
+    if (this.tieneItems(this.pedidoAccion)) {
+      venta.items = this.pedidoAccion.items;
+    } else {
+      // Pedido legacy - guardar como campos individuales
+      venta.productoNombre = this.pedidoAccion.productoNombre;
+      venta.productoTipo = this.pedidoAccion.productoTipo;
+      venta.material = this.pedidoAccion.material;
+      venta.cantidad = this.pedidoAccion.cantidad;
+      venta.precio = this.pedidoAccion.precio;
+      venta.coloresPorCapa = this.pedidoAccion.coloresPorCapa;
     }
+
+    this.http.post('http://localhost:5000/api/ventas', venta)
+      .subscribe({
+        next: () => {
+          this.http.delete(`http://localhost:5000/api/pedidos/${this.pedidoAccion!._id}`)
+            .subscribe({
+              next: () => {
+                this.cargarPedidos();
+                this.cancelarAccion();
+              },
+              error: (err) => console.error('Error al eliminar pedido:', err)
+            });
+        },
+        error: (err) => console.error('Error al crear venta:', err)
+      });
   }
 
   // Helpers para manejar pedidos legacy y con items

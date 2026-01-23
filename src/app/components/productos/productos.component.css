@@ -1762,15 +1762,12 @@
 .login-tabs button {
     flex: 1;
     padding: 12px 20px;
-    border: none;
     background: white;
     color: #000447;
     font-size: 14px;
     font-weight: 500;
-    cursor: pointer;
     transition: all 0.3s;
     margin: 0;
-    border-radius: 0;
     border-radius: 0 25px 25px 0;
     border: 2px solid #000447;
 }

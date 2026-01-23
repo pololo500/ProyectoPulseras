@@ -182,11 +182,16 @@ const Pedido = mongoose.model('Pedido', PedidoSchema);
 // Esquema para Ventas (historial)
 const VentaSchema = new mongoose.Schema({
     cliente: String,
+    // Campos legacy para ventas individuales
     productoNombre: String,
     productoTipo: String,
     material: String,
     cantidad: Number,
     precio: Number,
+    coloresPorCapa: [ColorCapaPedidoSchema],
+    // Nuevo campo para ventas con múltiples items
+    items: [ItemPedidoSchema],
+    // Campos comunes
     metodoPago: String,
     fechaPedido: String,
     fechaVenta: String,

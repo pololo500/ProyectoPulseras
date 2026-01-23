@@ -201,29 +201,35 @@ export class CarritoComponent implements OnInit, OnDestroy {
     };
     
     // Crear el pedido único
-    this.http.post('http://localhost:5000/api/pedidos', pedido).toPromise()
-      .then(() => {
-        // Generar mensaje de WhatsApp
-        const mensaje = this.generarMensajeWhatsApp(nombreUsuario);
-        const urlWhatsApp = `https://wa.me/${this.numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
-        
-        // Vaciar carrito
-        this.carritoService.vaciarCarrito();
-        
-        // Cerrar popup
-        this.mostrarPopupConfirmacion = false;
-        this.procesando = false;
-        
-        // Abrir WhatsApp
-        window.open(urlWhatsApp, '_blank');
-        
-        // Redirigir a mis pedidos
-        this.router.navigateByUrl('/mis-pedidos');
-      })
-      .catch(error => {
-        console.error('Error al crear pedidos:', error);
-        this.procesando = false;
-        alert('Error al procesar el pedido. Intenta nuevamente.');
+    this.http.post('http://localhost:5000/api/pedidos', pedido)
+      .subscribe({
+        next: () => {
+          // Generar mensaje de WhatsApp
+          const mensaje = this.generarMensajeWhatsApp(nombreUsuario);
+          const urlWhatsApp = `https://wa.me/${this.numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+          
+          // Vaciar carrito
+          this.carritoService.vaciarCarrito();
+          
+          // Cerrar popup
+          this.mostrarPopupConfirmacion = false;
+          this.procesando = false;
+          
+          // Abrir WhatsApp
+          window.open(urlWhatsApp, '_blank');
+          
+          // Redirigir a mis pedidos
+          this.router.navigateByUrl('/mis-pedidos');
+        },
+        error: (error) => {
+          console.error('Error al crear pedido:', error);
+          this.procesando = false;
+          if (error.status === 0) {
+            alert('No se pudo conectar con el servidor. Verifica que esté en ejecución.');
+          } else {
+            alert(`Error al procesar el pedido: ${error.message || 'Intenta nuevamente.'}`);
+          }
+        }
       });
   }
 
