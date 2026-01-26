@@ -30,11 +30,13 @@ export class PerfilComponent implements OnInit {
   });
   
   // Estados
-  editandoDatos: boolean = false;
   editandoPassword: boolean = false;
   mensaje: string = '';
   tipoMensaje: 'success' | 'error' = 'success';
   cargando: boolean = false;
+  
+  // Datos originales para comparar cambios
+  datosOriginales: { nombre: string; telefono: string } = { nombre: '', telefono: '' };
 
   constructor(
     private http: HttpClient, 
@@ -58,23 +60,26 @@ export class PerfilComponent implements OnInit {
     this.http.get<any>(`http://localhost:5000/api/usuarios/${this.email}`)
       .subscribe({
         next: (usuario) => {
-          this.datosForm.patchValue({
-            nombre: usuario.nombre,
-            telefono: usuario.telefono || ''
-          });
+          const nombre = usuario.nombre || '';
+          const telefono = usuario.telefono || '';
+          
+          this.datosForm.patchValue({ nombre, telefono });
+          this.datosOriginales = { nombre, telefono };
         },
         error: (err) => {
           console.error('Error al cargar datos:', err);
         }
       });
   }
-
-  toggleEditarDatos(): void {
-    this.editandoDatos = !this.editandoDatos;
+  
+  datosModificados(): boolean {
+    return this.datosForm.value.nombre !== this.datosOriginales.nombre ||
+           this.datosForm.value.telefono !== this.datosOriginales.telefono;
+  }
+  
+  cancelarCambiosDatos(): void {
+    this.datosForm.patchValue(this.datosOriginales);
     this.mensaje = '';
-    if (!this.editandoDatos) {
-      this.cargarDatosUsuario(); // Recargar datos originales si cancela
-    }
   }
 
   toggleEditarPassword(): void {
@@ -105,7 +110,12 @@ export class PerfilComponent implements OnInit {
           this.cargando = false;
           this.mensaje = 'Datos actualizados correctamente';
           this.tipoMensaje = 'success';
-          this.editandoDatos = false;
+          
+          // Actualizar datos originales
+          this.datosOriginales = {
+            nombre: datos.nombre as string,
+            telefono: datos.telefono as string
+          };
           
           // Actualizar sessionStorage
           sessionStorage.setItem('nombreUsuario', datos.nombre as string);

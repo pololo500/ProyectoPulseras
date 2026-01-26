@@ -1,13 +1,17 @@
 <div class="perfil-page">
     <h1>Mi Perfil</h1>
     
-    <div class="perfil-container">
+    <div class="card perfil-container">
         <!-- Avatar y nombre -->
-        <div class="perfil-header">
-            <div class="avatar">{{ nombreUsuario.charAt(0).toUpperCase() }}</div>
+        <div class="seccion perfil-header">
             <div class="usuario-info">
                 <h2>{{ nombreUsuario }}</h2>
                 <p>{{ email }}</p>
+            </div>
+            
+            <!-- Cerrar sesión -->
+            <div class="cerrar-sesion">
+                <button class="btn-logout" (click)="cerrarSesion()">Cerrar sesión</button>
             </div>
         </div>
         
@@ -20,10 +24,14 @@
         <div class="seccion">
             <div class="seccion-header">
                 <h3>Datos personales</h3>
-                <button class="btn-editar" (click)="toggleEditarDatos()" *ngIf="!editandoDatos">Editar</button>
             </div>
             
-            <form [formGroup]="datosForm" (ngSubmit)="guardarDatos()" *ngIf="editandoDatos">
+            <form [formGroup]="datosForm" (ngSubmit)="guardarDatos()">
+                <div class="campo">
+                    <label>Email</label>
+                    <span class="valor-fijo">{{ email }}</span>
+                </div>
+                
                 <div class="campo">
                     <label>Nombre</label>
                     <input type="text" formControlName="nombre" placeholder="Tu nombre">
@@ -37,28 +45,13 @@
                     <input type="tel" formControlName="telefono" placeholder="Ej: 11-1234-5678">
                 </div>
                 
-                <div class="botones">
+                <div class="botones" *ngIf="datosModificados()">
+                    <button type="button" class="btn-cancelar" (click)="cancelarCambiosDatos()">Cancelar</button>
                     <button type="submit" class="btn-guardar" [disabled]="datosForm.invalid || cargando">
                         {{ cargando ? 'Guardando...' : 'Guardar cambios' }}
                     </button>
-                    <button type="button" class="btn-cancelar" (click)="toggleEditarDatos()">Cancelar</button>
                 </div>
             </form>
-            
-            <div class="datos-readonly" *ngIf="!editandoDatos">
-                <div class="dato">
-                    <span class="label">Nombre</span>
-                    <span class="valor">{{ datosForm.value.nombre }}</span>
-                </div>
-                <div class="dato">
-                    <span class="label">Teléfono</span>
-                    <span class="valor">{{ datosForm.value.telefono || 'No especificado' }}</span>
-                </div>
-                <div class="dato">
-                    <span class="label">Email</span>
-                    <span class="valor">{{ email }}</span>
-                </div>
-            </div>
         </div>
         
         <!-- Sección de contraseña -->
@@ -95,21 +88,16 @@
                 </div>
                 
                 <div class="botones">
+                    <button type="button" class="btn-cancelar" (click)="toggleEditarPassword()">Cancelar</button>
                     <button type="submit" class="btn-guardar" [disabled]="passwordForm.invalid || !passwordsCoinciden || cargando">
                         {{ cargando ? 'Actualizando...' : 'Cambiar contraseña' }}
                     </button>
-                    <button type="button" class="btn-cancelar" (click)="toggleEditarPassword()">Cancelar</button>
                 </div>
             </form>
             
             <div class="datos-readonly" *ngIf="!editandoPassword">
                 <p class="password-info">Tu contraseña está protegida. Haz clic en "Cambiar" para actualizarla.</p>
             </div>
-        </div>
-        
-        <!-- Cerrar sesión -->
-        <div class="seccion cerrar-sesion">
-            <button class="btn-logout" (click)="cerrarSesion()">Cerrar sesión</button>
         </div>
     </div>
 </div>
