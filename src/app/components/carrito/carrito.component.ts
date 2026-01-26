@@ -30,6 +30,13 @@ export class CarritoComponent implements OnInit, OnDestroy {
   telefonoInput = '';
   guardandoTelefono = false;
 
+  // Popup eliminar
+  mostrarPopupEliminar = false;
+  itemAEliminar: ItemCarrito | null = null;
+
+  // Popup vaciar carrito
+  mostrarPopupVaciar = false;
+
   constructor(
     private router: Router, 
     private carritoService: CarritoService,
@@ -50,26 +57,46 @@ export class CarritoComponent implements OnInit, OnDestroy {
     }
   }
 
-  actualizarCantidad(item: ItemCarrito, cantidad: number): void {
-    this.carritoService.actualizarCantidad(item._id, cantidad);
-  }
-
   incrementar(item: ItemCarrito): void {
-    this.carritoService.incrementar(item._id);
+    this.carritoService.incrementar(item._id, item.coloresPorCapa);
   }
 
   decrementar(item: ItemCarrito): void {
-    this.carritoService.decrementar(item._id);
+    this.carritoService.decrementar(item._id, item.coloresPorCapa);
   }
 
   eliminarItem(item: ItemCarrito): void {
-    this.carritoService.eliminarItem(item._id);
+    this.carritoService.eliminarItem(item._id, item.coloresPorCapa);
   }
 
-  vaciarCarrito(): void {
-    if (confirm('¿Estás seguro de vaciar el carrito?')) {
-      this.carritoService.vaciarCarrito();
+  abrirPopupEliminar(item: ItemCarrito): void {
+    this.itemAEliminar = item;
+    this.mostrarPopupEliminar = true;
+  }
+
+  cerrarPopupEliminar(): void {
+    this.mostrarPopupEliminar = false;
+    this.itemAEliminar = null;
+  }
+
+  confirmarEliminar(): void {
+    if (this.itemAEliminar) {
+      this.eliminarItem(this.itemAEliminar);
+      this.cerrarPopupEliminar();
     }
+  }
+
+  abrirPopupVaciar(): void {
+    this.mostrarPopupVaciar = true;
+  }
+
+  cerrarPopupVaciar(): void {
+    this.mostrarPopupVaciar = false;
+  }
+
+  confirmarVaciar(): void {
+    this.carritoService.vaciarCarrito();
+    this.cerrarPopupVaciar();
   }
 
   getSubtotal(item: ItemCarrito): number {

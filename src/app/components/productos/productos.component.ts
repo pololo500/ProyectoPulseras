@@ -836,6 +836,8 @@ export class ProductosComponent implements OnInit {
   seleccionarColorCapaDetalle(capaIndex: number, color: Color): void {
     this.coloresPorCapaDetalle[capaIndex] = color;
     this.actualizarSvgPreviewDetalle();
+    // Cerrar el accordion después de seleccionar el color
+    this.capaAbiertaDetalle = null;
   }
 
   // Verificar si todas las capas tienen color seleccionado en detalle

@@ -170,18 +170,36 @@ export class CarritoService {
     this.guardarCarrito(items);
   }
 
+  // Generar clave única para un item (incluye colores)
+  private getItemKey(item: ItemCarrito): string {
+    const coloresKey = item.coloresPorCapa 
+      ? item.coloresPorCapa.map(c => c.colorId).join('-')
+      : '';
+    return `${item._id}-${coloresKey}`;
+  }
+
   // Incrementar cantidad
-  incrementar(itemId: string): void {
+  incrementar(itemId: string, coloresPorCapa?: ColorPorCapa[]): void {
+    const coloresKey = coloresPorCapa 
+      ? coloresPorCapa.map(c => c.colorId).join('-')
+      : '';
+    const targetKey = `${itemId}-${coloresKey}`;
+    
     const items = this.getItems().map(item => 
-      item._id === itemId ? { ...item, cantidad: item.cantidad + 1 } : item
+      this.getItemKey(item) === targetKey ? { ...item, cantidad: item.cantidad + 1 } : item
     );
     this.guardarCarrito(items);
   }
 
   // Decrementar cantidad
-  decrementar(itemId: string): void {
+  decrementar(itemId: string, coloresPorCapa?: ColorPorCapa[]): void {
+    const coloresKey = coloresPorCapa 
+      ? coloresPorCapa.map(c => c.colorId).join('-')
+      : '';
+    const targetKey = `${itemId}-${coloresKey}`;
+    
     const items = this.getItems().map(item => 
-      item._id === itemId && item.cantidad > 1 
+      this.getItemKey(item) === targetKey && item.cantidad > 1 
         ? { ...item, cantidad: item.cantidad - 1 } 
         : item
     );
@@ -189,8 +207,13 @@ export class CarritoService {
   }
 
   // Eliminar item
-  eliminarItem(itemId: string): void {
-    const items = this.getItems().filter(item => item._id !== itemId);
+  eliminarItem(itemId: string, coloresPorCapa?: ColorPorCapa[]): void {
+    const coloresKey = coloresPorCapa 
+      ? coloresPorCapa.map(c => c.colorId).join('-')
+      : '';
+    const targetKey = `${itemId}-${coloresKey}`;
+    
+    const items = this.getItems().filter(item => this.getItemKey(item) !== targetKey);
     this.guardarCarrito(items);
   }
 

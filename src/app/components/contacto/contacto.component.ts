@@ -11,7 +11,7 @@ import { CommonModule } from '@angular/common';
 export class ContactoComponent {
   instagramUser = '@l.m_pulseras';
   instagramUrl = 'https://www.instagram.com/l.m_pulseras';
-  whatsappNumber = '1140766376';
+  whatsappNumber = '11 4076-6376';
   whatsappUrl = 'https://wa.me/541140766376';
 
   abrirInstagram(): void {

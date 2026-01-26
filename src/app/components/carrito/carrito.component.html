@@ -4,28 +4,28 @@
     <!-- Carrito con items -->
     <div class="carrito-contenido" *ngIf="items.length > 0">
         <div class="carrito-items">
-            <div class="carrito-item" *ngFor="let item of items; let i = index">
+            <div class="card carrito-item" *ngFor="let item of items; let i = index">
                 <div class="item-imagen">
                     <img [src]="item.imagen" [alt]="item.nombre">
                 </div>
                 
                 <div class="item-info">
                     <h3>{{ item.nombre }}</h3>
-                    <p class="item-tipo">{{ item.producto | capitalize }}</p>
-                    <p class="item-material" *ngIf="item.material">{{ item.material | capitalize }}</p>
+                    <p class="item-tipo">{{ item.producto | capitalize }} - {{ item.material | capitalize }}</p>
                     <div class="item-colores" *ngIf="item.coloresPorCapa && item.coloresPorCapa.length > 0">
                         <div class="color-capa-item" *ngFor="let colorCapa of item.coloresPorCapa">
                             <span class="color-dot-carrito" [style.background-color]="colorCapa.colorRgb"></span>
                             <span class="capa-info">{{ colorCapa.capaNombre }}: {{ colorCapa.colorNombre | capitalize }}</span>
                         </div>
                     </div>
-                    <p class="item-precio-unitario">${{ item.precio }} c/u</p>
                 </div>
-                
-                <div class="item-cantidad">
-                    <button class="btn-cantidad" (click)="decrementar(item)">-</button>
-                    <input type="number" [value]="item.cantidad" (change)="actualizarCantidad(item, $any($event.target).value)" min="1">
-                    <button class="btn-cantidad" (click)="incrementar(item)">+</button>
+                <div class="item-valor-cantidad">
+                    <p class="item-precio-unitario">${{ item.precio }} c/u</p>
+                    <div class="item-cantidad">
+                        <button class="btn-cantidad" (click)="decrementar(item)">-</button>
+                        <span class="cantidad">{{ item.cantidad }}</span>
+                        <button class="btn-cantidad" (click)="incrementar(item)">+</button>
+                    </div>
                 </div>
                 
                 <div class="item-subtotal">
@@ -33,7 +33,7 @@
                     <p class="subtotal-valor">${{ getSubtotal(item) }}</p>
                 </div>
                 
-                <button class="btn-eliminar" (click)="eliminarItem(item)" title="Eliminar">✕</button>
+                <button class="btn-eliminar" (click)="abrirPopupEliminar(item)" title="Eliminar">✕</button>
             </div>
         </div>
         
@@ -45,19 +45,19 @@
                 <span>${{ getTotal() }}</span>
             </div>
             
-            <div class="resumen-linea">
-                <span>Envío</span>
-                <span class="envio-calcular">A calcular</span>
-            </div>
-            
             <div class="resumen-total">
                 <span>Total</span>
                 <span>${{ getTotal() }}</span>
             </div>
             
+            <div class="resumen-linea">
+                <span>Envío</span>
+                <span class="envio-calcular">A coordinar</span>
+            </div>
+
             <button class="btn-finalizar" (click)="finalizarCompra()">Finalizar compra</button>
             <button class="btn-continuar" (click)="continuarComprando()">Continuar comprando</button>
-            <button class="btn-vaciar" (click)="vaciarCarrito()">Vaciar carrito</button>
+            <button class="btn-vaciar" (click)="abrirPopupVaciar()">Vaciar carrito</button>
         </div>
     </div>
     
@@ -73,10 +73,10 @@
 <!-- Popup Confirmación de Compra -->
 <div class="popup-overlay" *ngIf="mostrarPopupConfirmacion" (click)="cancelarCompra()">
     <div class="popup-content" (click)="$event.stopPropagation()">
-        <h2>📱 Confirmar Pedido</h2>
+        <h2>Confirmar Pedido</h2>
         
         <p class="popup-descripcion">
-            Al confirmar, se creará tu pedido y serás redirigido a <strong>WhatsApp</strong> para coordinar los detalles con nosotros.
+            Al confirmar, se creará tu pedido y serás redirigido a <strong>WhatsApp</strong> para coordinar los detalles con nosotras
         </p>
         
         <div class="popup-resumen">
@@ -104,7 +104,7 @@
         <div class="popup-acciones">
             <button class="btn-cancelar" (click)="cancelarCompra()" [disabled]="procesando">Cancelar</button>
             <button class="btn-confirmar" (click)="confirmarCompra()" [disabled]="procesando">
-                <span *ngIf="!procesando">📲 Confirmar y enviar</span>
+                <span *ngIf="!procesando">Confirmar y enviar</span>
                 <span *ngIf="procesando">Procesando...</span>
             </button>
         </div>
@@ -137,6 +137,48 @@
                 <span *ngIf="!guardandoTelefono">Guardar y continuar</span>
                 <span *ngIf="guardandoTelefono">Guardando...</span>
             </button>
+        </div>
+    </div>
+</div>
+
+<!-- Popup Confirmar Eliminación -->
+<div class="popup-overlay" *ngIf="mostrarPopupEliminar" (click)="cerrarPopupEliminar()">
+    <div class="popup-content popup-eliminar" (click)="$event.stopPropagation()">
+        <h2>🗑️ Eliminar producto</h2>
+        
+        <p class="popup-descripcion">
+            ¿Estás seguro de eliminar <strong>{{ itemAEliminar?.nombre }}</strong> del carrito?
+        </p>
+        
+        <div class="popup-item-preview" *ngIf="itemAEliminar">
+            <img [src]="itemAEliminar.imagen" [alt]="itemAEliminar.nombre">
+            <div class="preview-info">
+                <span class="preview-nombre">{{ itemAEliminar.nombre }}</span>
+                <span class="preview-cantidad">Cantidad: {{ itemAEliminar.cantidad }}</span>
+            </div>
+        </div>
+        
+        <div class="popup-acciones">
+            <button class="btn-cancelar" (click)="cerrarPopupEliminar()">Cancelar</button>
+            <button class="btn-eliminar-confirmar" (click)="confirmarEliminar()">Eliminar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Popup Confirmar Vaciar Carrito -->
+<div class="popup-overlay" *ngIf="mostrarPopupVaciar" (click)="cerrarPopupVaciar()">
+    <div class="popup-content popup-eliminar" (click)="$event.stopPropagation()">
+        <h2>🗑️ Vaciar carrito</h2>
+        
+        <p class="popup-descripcion">
+            ¿Estás seguro de vaciar todo el carrito?
+        </p>
+        
+        <p class="popup-warning">⚠️ Se eliminarán todos los productos ({{ getCantidadTotal() }} items)</p>
+        
+        <div class="popup-acciones">
+            <button class="btn-cancelar" (click)="cerrarPopupVaciar()">Cancelar</button>
+            <button class="btn-eliminar-confirmar" (click)="confirmarVaciar()">Vaciar carrito</button>
         </div>
     </div>
 </div>

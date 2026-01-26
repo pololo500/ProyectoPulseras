@@ -15,8 +15,7 @@
 
 .subtitulo {
     font-size: 18px;
-    color: #666;
-    margin-bottom: 40px;
+    color: #ffffff;
 }
 
 .contacto-container {
@@ -32,14 +31,13 @@
     background: white;
     border-radius: 16px;
     padding: 25px 30px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .contacto-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 30px rgba(0, 4, 71, 0.2);
+    box-shadow: 0 0 30px rgba(214, 180, 53, 0.7);
 }
 
 .icono {
@@ -102,10 +100,8 @@
 }
 
 .mensaje-final {
-    margin-top: 50px;
-    padding: 30px;
-    background: linear-gradient(135deg, #000447, #080e81);
-    border-radius: 16px;
+    margin: 20px 0px;
+    padding: 20px;
     color: white;
 }
 
@@ -114,9 +110,14 @@
     font-size: 24px;
 }
 
+.mensaje-final p .gracias {
+    font-family: 'Dancing Script', cursive;
+    color: #D6B435;
+    font-size: 40px;
+}
+
 .mensaje-final .small {
     font-size: 14px;
-    opacity: 0.8;
     margin-top: 10px;
 }
 
