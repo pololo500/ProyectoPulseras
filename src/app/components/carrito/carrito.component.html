@@ -20,7 +20,7 @@
                     </div>
                 </div>
                 <div class="item-valor-cantidad">
-                    <p class="item-precio-unitario">${{ item.precio }} c/u</p>
+                    <p class="item-precio-unitario">${{ item.precio | formatoPrecio }} c/u</p>
                     <div class="item-cantidad">
                         <button class="btn-cantidad" (click)="decrementar(item)">-</button>
                         <span class="cantidad">{{ item.cantidad }}</span>
@@ -30,7 +30,7 @@
                 
                 <div class="item-subtotal">
                     <p class="subtotal-label">Subtotal</p>
-                    <p class="subtotal-valor">${{ getSubtotal(item) }}</p>
+                    <p class="subtotal-valor">${{ getSubtotal(item) | formatoPrecio }}</p>
                 </div>
                 
                 <button class="btn-eliminar" (click)="abrirPopupEliminar(item)" title="Eliminar">✕</button>
@@ -42,12 +42,12 @@
             
             <div class="resumen-linea">
                 <span>Productos ({{ getCantidadTotal() }})</span>
-                <span>${{ getTotal() }}</span>
+                <span>${{ getTotal() | formatoPrecio }}</span>
             </div>
             
             <div class="resumen-total">
                 <span>Total</span>
-                <span>${{ getTotal() }}</span>
+                <span>${{ getTotal() | formatoPrecio }}</span>
             </div>
             
             <div class="resumen-linea">
@@ -92,12 +92,12 @@
                             </span>
                         </div>
                     </div>
-                    <span class="item-detalle">x{{ item.cantidad }} - ${{ getSubtotal(item) }}</span>
+                    <span class="item-detalle">x{{ item.cantidad }} - ${{ getSubtotal(item) | formatoPrecio }}</span>
                 </div>
             </div>
             <div class="popup-total">
                 <span>Total:</span>
-                <span class="total-valor">${{ getTotal() }}</span>
+                <span class="total-valor">${{ getTotal() | formatoPrecio }}</span>
             </div>
         </div>
         

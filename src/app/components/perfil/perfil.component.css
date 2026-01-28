@@ -213,6 +213,10 @@ form {
 
 /* Responsive */
 @media (max-width: 768px) {
+    :host {
+        margin-top: 110px;
+    }
+
     .perfil-header {
         padding: 20px;
     }
@@ -224,7 +228,7 @@ form {
     }
     
     .seccion {
-        padding: 20px;
+        padding: 20px 0;
     }
     
     .botones {
@@ -233,6 +237,10 @@ form {
 }
 
 @media (max-width: 480px) {
+    :host {
+        margin-top: 80px;
+    }
+
     .btn-editar {
         width: 50%;
     }

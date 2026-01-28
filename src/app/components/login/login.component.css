@@ -7,11 +7,11 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    overflow-y: auto;
 }
 
 h1, h2 {
-    color: #D6B435;
+    color: #000447;
     margin-top: 0px;
     margin-bottom: 20px;
     text-align: center;
@@ -32,52 +32,68 @@ form {
     flex-direction: column;
     align-items: center;
     z-index: 2;
+    margin: auto;
+    padding: 70px 0;
 }
 
 /* Tabs */
-.tabs {
+.tabs-container {
     display: flex;
     gap: 0;
     margin-bottom: 0;
     z-index: 2;
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 20px;
 }
 
-.tabs button {
-    padding: 12px 30px;
-    border: none;
-    background-color: #e0e0e0;
-    color: #666;
-    font-size: 16px;
+.tabs-container button {
+    flex: 1;
+    padding: 12px 20px;
+    background: #000447;
+    color: #D6B435;
+    font-weight: 500;
+    font-size: 14px;
+    transition: flex 0.5s ease, background 0.3s, font-size 0.3s;
+    margin: 0;
+    border-radius: 0 25px 25px 0;
+    border: 2px solid #D6B435;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     cursor: pointer;
-    transition: all 0.3s;
-    border-radius: 10px 10px 0 0;
 }
 
-.tabs button:first-child {
-    border-right: 1px solid #ccc;
+.tabs-container button:first-child {
+    border-radius: 25px 0 0 25px;
 }
 
-.tabs button.active {
-    background-color: #E4EFE9;
+.tabs-container button.activo {
+    flex: 2;
+    background: #D6B435;
     color: #000447;
-    font-weight: bold;
+    font-weight: 700;
+    font-size: 18px;
+    border: 2px solid #D6B435;
+    z-index: 1;
+    box-shadow: 0px 0px 20px 5px rgb(214 180 53 / 50%);
 }
 
-.tabs button:hover:not(.active) {
-    background-color: #d0d0d0;
+.tabs-container button:hover:not(.activo) {
+    background: #080e81;
 }
 
 /* Formularios */
-form div {
-    margin-bottom: 5px;
-}
-
 input[type="email"],
 input[type="text"],
 input[type="password"],
 input[type="tel"] {
     width: 100%;
     box-sizing: border-box;
+    margin-bottom: 0px;
 }
 
 .error {
@@ -168,21 +184,33 @@ input[type="tel"] {
         inset 0px 0px 50px 20px rgba(255, 223, 100, 0.5);
 }
 
-/* Para pantallas de tabletas (mínimo 600px y máximo 1024px de ancho) */
-@media (max-width: 1024px) {
+/* Para pantallas de tabletas*/
+@media (max-width: 768px) {
     label {
         top: 9px;
     }
 }
   
-/* Para pantallas de móviles (máximo 600px de ancho) */
-@media (max-width: 600px) {
+/* Para pantallas de móviles*/
+@media (max-width: 480px) {
     label {
         top: 8px;
     }
     
     #container {
         width: 85%;
+    }
+
+    .tabs-container {
+        max-width: 350px;
+    }
+
+    .tabs-container button {
+        font-size: 12px;
+    }
+
+    .tabs-container button.activo {
+        font-size: 16px;
     }
     
     .tabs button {
@@ -192,5 +220,6 @@ input[type="tel"] {
     
     .card {
         padding: 20px;
+        max-width: 350px;
     }
 }

@@ -4,13 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { CapitalizePipe } from '../../extras/capitalizePipe';
+import { FormatoPrecioPipe } from '../../extras/formatoPrecio.pipe';
 import { CarritoService, ItemCarrito } from '../../services/carrito.service';
 import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-carrito',
   standalone: true,
-  imports: [CommonModule, FormsModule, CapitalizePipe],
+  imports: [CommonModule, FormsModule, CapitalizePipe, FormatoPrecioPipe],
   templateUrl: './carrito.component.html',
   styleUrl: './carrito.component.css'
 })

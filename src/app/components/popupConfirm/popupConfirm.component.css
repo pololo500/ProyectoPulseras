@@ -94,7 +94,7 @@ p {
   box-shadow: 0 6px 20px rgba(220, 53, 69, 0.6);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 480px) {
   .card {
     padding: 30px 20px;
   }

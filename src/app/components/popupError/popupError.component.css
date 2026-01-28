@@ -26,6 +26,7 @@ p {
     font-weight: bold;
     font-size: 30px;
     margin-top: 0px;
+    text-align: center;
 }
 
 button {
@@ -38,8 +39,8 @@ button {
     font-size: 20px;
 }
 
-/* Para pantallas de tabletas (mínimo 600px y máximo 1024px de ancho) */
-@media (max-width: 1024px) {
+/* Para pantallas de tabletas (máximo 768px de ancho) */
+@media (max-width: 768px) {
     p {
         font-size: 28px;
     }
@@ -49,8 +50,8 @@ button {
     }
 }
 
-/* Para pantallas de móviles (máximo 600px de ancho) */
-@media (max-width: 600px) {
+/* Para pantallas de móviles (máximo 480px de ancho) */
+@media (max-width: 480px) {
     p {
         font-size: 26px;
     }

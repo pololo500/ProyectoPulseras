@@ -1,8 +1,8 @@
 <div id="container">
     <!-- Tabs para cambiar entre Login y Registro -->
-    <div class="tabs">
-        <button [class.active]="modo === 'login'" (click)="cambiarModo('login')">Iniciar Sesión</button>
-        <button [class.active]="modo === 'registro'" (click)="cambiarModo('registro')">Registrarse</button>
+    <div class="tabs-container">
+        <button [class.activo]="modo === 'login'" (click)="cambiarModo('login')">Iniciar Sesión</button>
+        <button [class.activo]="modo === 'registro'" (click)="cambiarModo('registro')">Registrarse</button>
     </div>
     
     <!-- Formulario de Login -->
@@ -80,22 +80,16 @@
 <canvas id="particle-canvas-square-inicio"></canvas>
 
 <!--El usuario inicia sesión correctamente-->
-<app-popupLogin *ngIf="popup == 'success'"></app-popupLogin>
+<app-popupLogin *ngIf="popup == 'success'" [esRegistro]="false"></app-popupLogin>
+
+<!--Registro exitoso-->
+<app-popupLogin *ngIf="popup == 'registroExitoso'" [esRegistro]="true"></app-popupLogin>
 
 <!--Contraseña incorrecta-->
 <app-popupError *ngIf="popup == 'contraseñaIncorrecta'" text="Contraseña incorrecta" textAux="Por favor ingrese la contraseña nuevamente" [closePopup]="close.bind(this)"></app-popupError>
 
 <!--Email no registrado-->
 <app-popupError *ngIf="popup == 'emailNoRegistrado'" text="El email no se encuentra registrado" textAux="Por favor verifique el email o regístrese" [closePopup]="close.bind(this)"></app-popupError>
-
-<!--Registro exitoso-->
-<div class="popup-overlay" *ngIf="popup == 'registroExitoso'">
-    <div class="popup-success">
-        <h3>¡Registro Exitoso!</h3>
-        <p>Tu cuenta ha sido creada correctamente.</p>
-        <p>Redirigiendo...</p>
-    </div>
-</div>
 
 <!--Usuario ya existe-->
 <app-popupError *ngIf="popup == 'usuarioExistente'" text="El email ya está registrado" textAux="Por favor inicie sesión o use otro email" [closePopup]="close.bind(this)"></app-popupError>

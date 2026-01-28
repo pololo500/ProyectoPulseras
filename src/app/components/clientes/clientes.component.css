@@ -3,6 +3,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    margin-top: 130px;
 }
 
 .clientes-page {
@@ -633,6 +634,10 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+    :host {
+        margin-top: 110px;
+    }
+
     .header {
         flex-direction: column;
         align-items: flex-start;
@@ -670,5 +675,11 @@
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    :host {
+        margin-top: 80px;
     }
 }

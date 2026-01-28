@@ -307,6 +307,10 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+    :host {
+        margin-top: 110px;
+    }
+
     .carrito-contenido {
         flex-direction: column-reverse;
     }
@@ -317,7 +321,11 @@
     }
 }
 
-@media (max-width: 480px) {    
+@media (max-width: 480px) {
+    :host {
+        margin-top: 80px;
+    }
+
     .carrito-item {
         flex-wrap: wrap;
         gap: 15px;

@@ -146,7 +146,7 @@
                                 <div class="item-pedido-detalle" *ngFor="let item of pedido.items">
                                     <div class="item-header">
                                         <span class="item-nombre">{{ item.productoNombre | capitalize }}</span>
-                                        <span class="item-precio">${{ (item.precio || 0) * (item.cantidad || 1) }}</span>
+                                        <span class="item-precio">${{ (item.precio || 0) * (item.cantidad || 1) | formatoPrecio }}</span>
                                     </div>
                                     <div class="item-info-row">
                                         <span class="item-tipo">{{ item.productoTipo | capitalize }}</span>
@@ -193,7 +193,7 @@
                                 </div>
                                 <div class="resumen-row total">
                                     <span>Total:</span>
-                                    <span>${{ getTotalPedido(pedido) }}</span>
+                                    <span>${{ getTotalPedido(pedido) | formatoPrecio }}</span>
                                 </div>
                             </div>
                         </div>

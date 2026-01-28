@@ -28,7 +28,7 @@
                 <p class="tipo" *ngIf="tieneItems(pedido) && getCantidadProductos(pedido) > 1">{{ getCantidadProductos(pedido) }} productos</p>
                 <div class="pedido-info">
                     <span class="cantidad">Cantidad: {{ getCantidadItems(pedido) }}</span>
-                    <span class="precio">${{ getTotalPedido(pedido) }}</span>
+                    <span class="precio">${{ getTotalPedido(pedido) | formatoPrecio }}</span>
                 </div>
             </div>
             
@@ -71,7 +71,7 @@
                 <p class="tipo" *ngIf="tieneItemsVenta(venta) && getCantidadProductosVenta(venta) > 1">{{ getCantidadProductosVenta(venta) }} productos</p>
                 <div class="venta-info">
                     <span class="cantidad">Cantidad: {{ getCantidadItemsVenta(venta) }}</span>
-                    <span class="precio">${{ getTotalVenta(venta) }}</span>
+                    <span class="precio">${{ getTotalVenta(venta) | formatoPrecio }}</span>
                 </div>
             </div>
             
@@ -118,7 +118,7 @@
                                 </div>
                             </div>
                             <div class="item-cantidad">x{{ item.cantidad }}</div>
-                            <div class="item-precio">${{ item.precio * item.cantidad }}</div>
+                            <div class="item-precio">${{ item.precio * item.cantidad | formatoPrecio }}</div>
                         </div>
                     </div>
                 </div>
@@ -154,11 +154,11 @@
                         </div>
                         <div class="info-item" *ngIf="!tieneItems(pedidoSeleccionado)">
                             <span class="label">Precio Unitario</span>
-                            <span class="value">${{ pedidoSeleccionado.precio }}</span>
+                            <span class="value">${{ pedidoSeleccionado.precio | formatoPrecio }}</span>
                         </div>
                         <div class="info-item">
                             <span class="label">Total</span>
-                            <span class="value total">${{ getTotalPedido(pedidoSeleccionado) }}</span>
+                            <span class="value total">${{ getTotalPedido(pedidoSeleccionado) | formatoPrecio }}</span>
                         </div>
                         <div class="info-item">
                             <span class="label">Método de Pago</span>
@@ -211,7 +211,7 @@
                                 </div>
                             </div>
                             <div class="item-cantidad">x{{ item.cantidad }}</div>
-                            <div class="item-precio">${{ item.precio * item.cantidad }}</div>
+                            <div class="item-precio">${{ item.precio * item.cantidad | formatoPrecio }}</div>
                         </div>
                     </div>
                 </div>
@@ -232,7 +232,7 @@
                                 </div>
                             </div>
                             <div class="item-cantidad">x{{ ventaSeleccionada.cantidad }}</div>
-                            <div class="item-precio">${{ ventaSeleccionada.precio }}</div>
+                            <div class="item-precio">${{ ventaSeleccionada.precio | formatoPrecio }}</div>
                         </div>
                     </div>
                 </div>
@@ -254,7 +254,7 @@
                         </div>
                         <div class="info-item">
                             <span class="label">Total</span>
-                            <span class="value total">${{ getTotalVenta(ventaSeleccionada) }}</span>
+                            <span class="value total">${{ getTotalVenta(ventaSeleccionada) | formatoPrecio }}</span>
                         </div>
                         <div class="info-item">
                             <span class="label">Método de Pago</span>

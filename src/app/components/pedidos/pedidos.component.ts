@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { CapitalizePipe } from '../../extras/capitalizePipe';
+import { FormatoPrecioPipe } from '../../extras/formatoPrecio.pipe';
 import { GlobalService } from '../../services/global.service';
 
 interface ColorCapa {
@@ -73,7 +74,7 @@ interface Color {
 @Component({
   selector: 'app-pedidos',
   standalone: true,
-  imports: [CommonModule, FormsModule, CapitalizePipe],
+  imports: [CommonModule, FormsModule, CapitalizePipe, FormatoPrecioPipe],
   templateUrl: './pedidos.component.html',
   styleUrl: './pedidos.component.css'
 })

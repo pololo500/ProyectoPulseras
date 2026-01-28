@@ -64,7 +64,7 @@
             <div class="producto-info">
                 <h3>{{ producto.nombre }}</h3>
                 <p class="tipo">{{ producto.producto | capitalize }}<span *ngIf="producto.material"> - {{ producto.material | capitalize }}</span></p>
-                <p class="precio" *ngIf="producto.precio">${{ producto.precio }}</p>
+                <p class="precio" *ngIf="producto.precio">${{ producto.precio | formatoPrecio }}</p>
                 
                 <!-- Selector de cantidad y botón agregar -->
                 <div class="acciones-carrito" (click)="$event.stopPropagation()">
@@ -96,7 +96,7 @@
                     <p><strong>Tipo:</strong> {{ producto.producto | capitalize }}</p>
                     <p *ngIf="producto.material"><strong>Material:</strong> {{ producto.material | capitalize }}</p>
                 </div>
-                <p class="precio" *ngIf="producto.precio">${{ producto.precio }}</p>
+                <p class="precio" *ngIf="producto.precio">${{ producto.precio | formatoPrecio }}</p>
             </div>
             <div class="producto-acciones-lista" (click)="$event.stopPropagation()">
                 <div class="selector-cantidad">
@@ -213,7 +213,7 @@
                         <p class="popup-tipo">{{ productoDetalle.producto | capitalize }}<span *ngIf="productoDetalle.material"> - {{ productoDetalle.material | capitalize }}</span></p>
                         <p class="popup-descripcion" *ngIf="productoDetalle.descripcion">{{ productoDetalle.descripcion }}</p>
                     </div>
-                    <p class="popup-precio">${{ productoDetalle.precio }}</p>
+                    <p class="popup-precio">${{ productoDetalle.precio | formatoPrecio }}</p>
                 </div>
 
                 <!-- Selector de color por capa para productos de resina -->

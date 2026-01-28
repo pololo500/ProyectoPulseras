@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { ButtonComponent } from '../button/button.component';
 import { CapitalizePipe } from '../../extras/capitalizePipe';
+import { FormatoPrecioPipe } from '../../extras/formatoPrecio.pipe';
 import { GlobalService } from '../../services/global.service';
 import { PopupSubcategoriaComponent } from '../popupSubcategoria/popupSubcategoria.component';
 
@@ -30,7 +31,7 @@ interface Producto {
 
 @Component({
   selector: 'app-modificarProductos',
-  imports: [CommonModule, FormsModule, ButtonComponent, CapitalizePipe, PopupSubcategoriaComponent],
+  imports: [CommonModule, FormsModule, ButtonComponent, CapitalizePipe, FormatoPrecioPipe, PopupSubcategoriaComponent],
   templateUrl: './modificarProductos.component.html',
   styleUrl: './modificarProductos.component.css'
 })

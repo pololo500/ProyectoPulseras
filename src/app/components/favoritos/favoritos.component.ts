@@ -8,6 +8,7 @@ import { forkJoin, Subscription } from 'rxjs';
 import { FavoritosService, ItemFavorito } from '../../services/favoritos.service';
 import { CarritoService, ColorPorCapa } from '../../services/carrito.service';
 import { CapitalizePipe } from '../../extras/capitalizePipe';
+import { FormatoPrecioPipe } from '../../extras/formatoPrecio.pipe';
 import { PopupExitoComponent, ColorInfo } from '../popupExito/popupExito.component';
 
 interface Color {
@@ -61,7 +62,7 @@ interface FavoritoConDatos extends ItemFavorito {
 @Component({
     selector: 'app-favoritos',
     standalone: true,
-    imports: [CommonModule, RouterModule, FormsModule, CapitalizePipe, PopupExitoComponent],
+    imports: [CommonModule, RouterModule, FormsModule, CapitalizePipe, FormatoPrecioPipe, PopupExitoComponent],
     templateUrl: './favoritos.component.html',
     styleUrls: ['./favoritos.component.css']
 })

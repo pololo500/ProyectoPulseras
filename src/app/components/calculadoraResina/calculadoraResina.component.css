@@ -1,5 +1,13 @@
+:host {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 130px;
+}
+
 .container {
-  padding: 120px 20px 40px 20px;
+  padding: 20px 20px 40px 20px;
   min-height: 100vh;
   max-width: 1400px;
   margin: 0 auto;
@@ -623,8 +631,12 @@ h2 {
 
 /* Responsive */
 @media (max-width: 768px) {
+  :host {
+    margin-top: 110px;
+  }
+
   .container {
-    padding: 100px 10px 20px 10px;
+    padding: 10px 10px 20px 10px;
   }
 
   .botones-principales {
@@ -656,5 +668,11 @@ h2 {
 
   h1 {
     font-size: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  :host {
+    margin-top: 80px;
   }
 }

@@ -1,5 +1,13 @@
+:host {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 130px;
+}
+
 .container {
-  padding: 120px 20px 20px 20px;
+  padding: 20px 20px 20px 20px;
   min-height: 100vh;
   background-color: #1a1a2e;
   color: #D6B435;
@@ -738,6 +746,10 @@ h1 {
 
 /* Responsive */
 @media (max-width: 768px) {
+  :host {
+    margin-top: 110px;
+  }
+
   .header {
     flex-direction: column;
     gap: 15px;
@@ -752,6 +764,12 @@ h1 {
   .pedidos-table td {
     padding: 8px 5px;
     font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  :host {
+    margin-top: 80px;
   }
 }
 

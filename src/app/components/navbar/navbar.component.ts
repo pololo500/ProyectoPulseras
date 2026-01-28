@@ -14,6 +14,7 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
   validRoute = true;
   color='blanco';
   isMobile: boolean = false;
+  isTablet: boolean = false;
   isAdmin: boolean = false;
   cantidadCarrito: number = 0;
   cantidadFavoritos: number = 0;
@@ -140,7 +141,9 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   checkScreenSize() {
-    this.isMobile = window.innerWidth <= 600;
+    const width = window.innerWidth;
+    this.isMobile = width <= 480;
+    this.isTablet = width > 480 && width <= 768;
   }
 
   isActive(route: string): boolean {

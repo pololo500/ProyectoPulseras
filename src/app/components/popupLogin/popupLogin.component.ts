@@ -12,6 +12,7 @@ import { GlobalService } from '../../services/global.service';
     styleUrl: './popupLogin.component.css'
 })
 export class PopupLoginComponent implements OnInit {
+  @Input() esRegistro = false;
   nombre = '';
   router = inject(Router);
   url = '';

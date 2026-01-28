@@ -18,7 +18,7 @@
       <span class="resumen-label">Pedidos Cancelados</span>
     </div>
     <div class="resumen-card ingreso">
-      <span class="resumen-valor">${{ ingresoTotal }}</span>
+      <span class="resumen-valor">${{ ingresoTotal | formatoPrecio }}</span>
       <span class="resumen-label">Ingreso Total</span>
     </div>
   </div>
@@ -78,8 +78,8 @@
           </td>
           <td>{{ venta.material | capitalize }}</td>
           <td>{{ venta.cantidad }}</td>
-          <td>${{ venta.precio }}</td>
-          <td class="total-cell">${{ venta.precio * venta.cantidad }}</td>
+          <td>${{ venta.precio | formatoPrecio }}</td>
+          <td class="total-cell">${{ venta.precio * venta.cantidad | formatoPrecio }}</td>
           <td>{{ venta.metodoPago }}</td>
           <td>{{ formatearFecha(venta.fechaPedido) }}</td>
           <td>{{ formatearFecha(venta.fechaVenta) }}</td>

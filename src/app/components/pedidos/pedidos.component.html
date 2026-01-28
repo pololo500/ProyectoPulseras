@@ -65,7 +65,7 @@
           </td>
           <td>{{ formatearFecha(pedido.fecha) }}</td>
           <td>{{ getCantidadTotal(pedido) }}</td>
-          <td>${{ getPrecioTotal(pedido) }}</td>
+          <td>${{ getPrecioTotal(pedido) | formatoPrecio }}</td>
           <td>{{ pedido.metodoPago }}</td>
           <td>
             <input 
@@ -225,7 +225,7 @@
                 </select>
               </div>
               <span class="item-detalle">{{ item.productoTipo | capitalize }} - {{ item.material | capitalize }}</span>
-              <span class="item-cantidad">x{{ item.cantidad }} - ${{ item.precio * item.cantidad }}</span>
+              <span class="item-cantidad">x{{ item.cantidad }} - ${{ item.precio * item.cantidad | formatoPrecio }}</span>
               <div *ngIf="item.moldeNombre" class="item-molde">
                 <small>Molde: {{ item.moldeNombre }}</small>
               </div>
@@ -237,7 +237,7 @@
           </div>
         </div>
         <div class="total-pedido">
-          <strong>Total: ${{ getTotalItems() }}</strong>
+          <strong>Total: ${{ getTotalItems() | formatoPrecio }}</strong>
         </div>
       </div>
 

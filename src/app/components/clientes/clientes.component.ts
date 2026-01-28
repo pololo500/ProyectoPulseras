@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { CapitalizePipe } from '../../extras/capitalizePipe';
+import { FormatoPrecioPipe } from '../../extras/formatoPrecio.pipe';
 import { GlobalService } from '../../services/global.service';
 
 interface Pedido {
@@ -28,7 +29,7 @@ interface Cliente {
 @Component({
     selector: 'app-clientes',
     standalone: true,
-    imports: [CommonModule, FormsModule, CapitalizePipe],
+    imports: [CommonModule, FormsModule, CapitalizePipe, FormatoPrecioPipe],
     templateUrl: './clientes.component.html',
     styleUrl: './clientes.component.css'
 })

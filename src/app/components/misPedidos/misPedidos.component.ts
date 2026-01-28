@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { CapitalizePipe } from '../../extras/capitalizePipe';
+import { FormatoPrecioPipe } from '../../extras/formatoPrecio.pipe';
 import { GlobalService } from '../../services/global.service';
 
 interface ColorCapa {
@@ -73,7 +74,7 @@ interface Venta {
 @Component({
     selector: 'app-mis-pedidos',
     standalone: true,
-    imports: [CommonModule, RouterModule, FormsModule, CapitalizePipe],
+    imports: [CommonModule, RouterModule, FormsModule, CapitalizePipe, FormatoPrecioPipe],
     templateUrl: './misPedidos.component.html',
     styleUrl: './misPedidos.component.css'
 })

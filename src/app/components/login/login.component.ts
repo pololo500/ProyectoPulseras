@@ -92,15 +92,6 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
             
             // Sincronizar favoritos con la base de datos
             this.favoritosService.sincronizarAlLogin(formData.email as string);
-            
-            // Redirigir según tipo de usuario después de un breve delay
-            setTimeout(() => {
-              if (res.tipoUsuario === 'Administrador') {
-                this.router.navigateByUrl('/inicioAdministrador');
-              } else {
-                this.router.navigateByUrl('/inicio');
-              }
-            }, 1500);
           }
           this.loginForm.reset();
         },
@@ -143,11 +134,6 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
             
             this.popup = 'registroExitoso';
             this.registroForm.reset();
-            
-            // Redirigir a inicio después de un breve delay
-            setTimeout(() => {
-              this.router.navigateByUrl('/inicio');
-            }, 1500);
           }
         },
         error: (err) => {

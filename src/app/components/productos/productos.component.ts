@@ -6,6 +6,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { CapitalizePipe } from '../../extras/capitalizePipe';
+import { FormatoPrecioPipe } from '../../extras/formatoPrecio.pipe';
 import { CarritoService, ColorPorCapa } from '../../services/carrito.service';
 import { FavoritosService, ItemFavorito } from '../../services/favoritos.service';
 import { PopupExitoComponent, ColorInfo } from '../popupExito/popupExito.component';
@@ -53,7 +54,7 @@ interface Producto {
 @Component({
   selector: 'app-productos',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, CapitalizePipe, PopupExitoComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, CapitalizePipe, FormatoPrecioPipe, PopupExitoComponent],
   templateUrl: './productos.component.html',
   styleUrl: './productos.component.css'
 })

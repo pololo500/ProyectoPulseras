@@ -28,11 +28,18 @@ p {
     color: #000447;
     font-size: 30px;
     margin: 0px;
+    text-align: center;
 }
 
 #bienvenido {
     font-weight: lighter;
-    margin: 10px 0px;
+    margin-top: 10px;
+}
+
+#gracias {
+    font-size: 20px;
+    font-weight: 500;
+    margin: 0;
 }
 
 #lm {
@@ -55,12 +62,12 @@ app-button {
     margin-top: 0px;
 }
 
-button {
+app-button button {
     margin: 0px;
 }
 
-/* Para pantallas de tabletas (mínimo 600px y máximo 1024px de ancho) */
-@media (max-width: 1024px) {
+/* Para pantallas de tabletas */
+@media (max-width: 768px) {
     p {
         font-size: 36px;
     }
@@ -68,15 +75,23 @@ button {
     #bienvenido {
         font-size: 28px;
     }
+
+    #lm {
+        font-size: 45px;
+    }
 }
 
-/* Para pantallas de móviles (máximo 600px de ancho) */
-@media (max-width: 600px) {
+/* Para pantallas de móviles */
+@media (max-width: 480px) {
     p {
         font-size: 34px;
     }
 
     #bienvenido {
         font-size: 26px;
+    }
+
+    #lm {
+        font-size: 40px;
     }
 }

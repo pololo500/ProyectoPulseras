@@ -128,7 +128,7 @@ p {
   color: #000447;
 }
 
-@media (max-width: 450px) {
+@media (max-width: 480px) {
   .card {
     padding: 30px 20px;
     width: 80%;

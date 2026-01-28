@@ -1216,6 +1216,10 @@ h1 {
 
 /* ========== RESPONSIVE ========== */
 @media (max-width: 768px) {
+    :host {
+        margin-top: 110px;
+    }
+
     h1 {
         font-size: 36px;
     }
@@ -1362,7 +1366,7 @@ h1 {
 /* Responsive para celulares */
 @media (max-width: 480px) {
     :host {
-        margin-top: 100px;
+        margin-top: 80px;
     }
 
     .favoritos-page {

@@ -1,3 +1,11 @@
+:host {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 130px;
+}
+
 h1 {
     margin-top: 0px;
 }
@@ -442,4 +450,17 @@ label#imagen:active {
     color: #666;
     font-size: 13px;
     margin: 0 0 10px 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  :host {
+    margin-top: 110px;
+  }
+}
+
+@media (max-width: 480px) {
+  :host {
+    margin-top: 80px;
+  }
 }

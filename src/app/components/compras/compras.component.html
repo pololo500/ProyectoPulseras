@@ -27,12 +27,12 @@
         <tr *ngFor="let compra of compras">
           <td>{{ compra.producto | capitalize }}</td>
           <td>{{ compra.cantidad }}</td>
-          <td>${{ compra.costoUnidad | number:'1.2-2' }}</td>
-          <td class="costo-total">${{ compra.costoTotal | number:'1.2-2' }}</td>
+          <td>${{ compra.costoUnidad | formatoPrecio }}</td>
+          <td class="costo-total">${{ compra.costoTotal | formatoPrecio }}</td>
           <td>{{ compra.lugar | capitalize }}</td>
           <td>{{ formatearFecha(compra.fechaCompra) }}</td>
           <td>{{ compra.cantidadIndividual }}</td>
-          <td>${{ compra.costoIndividual | number:'1.2-2' }}</td>
+          <td>${{ compra.costoIndividual | formatoPrecio }}</td>
           <td class="acciones-cell">
             <button class="btn-editar" (click)="editarCompra(compra)">✏️</button>
             <button class="btn-eliminar" (click)="confirmarEliminar(compra)">🗑️</button>
@@ -45,7 +45,7 @@
       <tfoot *ngIf="compras.length > 0">
         <tr>
           <td colspan="3" class="total-label">TOTAL GENERAL:</td>
-          <td class="total-valor">${{ getTotalGeneral() | number:'1.2-2' }}</td>
+          <td class="total-valor">${{ getTotalGeneral() | formatoPrecio }}</td>
           <td colspan="5"></td>
         </tr>
       </tfoot>

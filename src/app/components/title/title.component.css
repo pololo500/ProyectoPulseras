@@ -46,8 +46,8 @@ img {
   }
 }
 
-/* Para pantallas de móviles (máximo 600px de ancho) */
-@media (max-width: 600px) {
+/* Para pantallas de móviles (máximo 480px de ancho) */
+@media (max-width: 480px) {
   h1 {
     font-size: 50px;
   }

@@ -33,7 +33,7 @@
         <h3>{{ producto.nombre }}</h3>
         <p class="producto-tipo">{{ producto.producto | capitalize }} - {{ producto.material | capitalize }}</p>
         <p class="producto-descripcion" *ngIf="producto.descripcion">{{ producto.descripcion }}</p>
-        <p class="producto-precio">${{ producto.precio }}</p>
+        <p class="producto-precio">${{ producto.precio | formatoPrecio }}</p>
       </div>
       <div class="producto-acciones">
         <button class="btn-editar" (click)="editarProducto(producto)">✏️ Editar</button>

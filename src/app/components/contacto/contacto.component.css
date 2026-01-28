@@ -122,7 +122,11 @@
 }
 
 /* Responsive */
-@media (max-width: 600px) {
+@media (max-width: 768px) {
+    :host {
+        margin-top: 110px;
+    }
+
     h1 {
         font-size: 36px;
     }
@@ -156,5 +160,11 @@
     
     .mensaje-final p {
         font-size: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    :host {
+        margin-top: 80px;
     }
 }
