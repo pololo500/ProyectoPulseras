@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { CapitalizePipe } from '../../extras/capitalizePipe';
@@ -11,7 +11,7 @@ import { Subscription } from 'rxjs';
 @Component({
   selector: 'app-carrito',
   standalone: true,
-  imports: [CommonModule, FormsModule, CapitalizePipe, FormatoPrecioPipe],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, CapitalizePipe, FormatoPrecioPipe],
   templateUrl: './carrito.component.html',
   styleUrl: './carrito.component.css'
 })
@@ -37,6 +37,25 @@ export class CarritoComponent implements OnInit, OnDestroy {
 
   // Popup vaciar carrito
   mostrarPopupVaciar = false;
+
+  // Popup Login/Registro
+  mostrarPopupLogin = false;
+  modoLogin: 'login' | 'registro' = 'login';
+  popupLoginError = '';
+  
+  // Formularios
+  loginForm = new FormGroup({
+    email: new FormControl('', [Validators.required, Validators.email]),
+    password: new FormControl('', Validators.required),
+  });
+  
+  registroForm = new FormGroup({
+    email: new FormControl('', [Validators.required, Validators.email]),
+    nombre: new FormControl('', Validators.required),
+    telefono: new FormControl(''),
+    password: new FormControl('', [Validators.required, Validators.minLength(6)]),
+    confirmarPassword: new FormControl('', Validators.required),
+  });
 
   constructor(
     private router: Router, 
@@ -120,8 +139,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
     // Verificar si está logueado
     const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
     if (!isLoggedIn) {
-      alert('Debes iniciar sesión para finalizar la compra');
-      this.router.navigateByUrl('/login');
+      this.mostrarPopupLogin = true;
       return;
     }
     
@@ -291,5 +309,116 @@ export class CarritoComponent implements OnInit, OnDestroy {
     mensaje += `¡Espero su confirmación! 😊`;
     
     return mensaje;
+  }
+
+  // ========== POPUP LOGIN/REGISTRO ==========
+  
+  cerrarPopupLogin(): void {
+    this.mostrarPopupLogin = false;
+    this.popupLoginError = '';
+    this.loginForm.reset();
+    this.registroForm.reset();
+  }
+
+  cambiarModoLogin(modo: 'login' | 'registro'): void {
+    this.modoLogin = modo;
+    this.popupLoginError = '';
+    this.loginForm.reset();
+    this.registroForm.reset();
+  }
+
+  get passwordsCoinciden(): boolean {
+    return this.registroForm.get('password')?.value === this.registroForm.get('confirmarPassword')?.value;
+  }
+
+  onSubmitLogin(): void {
+    const formData = {
+      email: this.loginForm.value.email,
+      password: this.loginForm.value.password
+    };
+  
+    this.http.post<any>(`http://localhost:5000/api/login`, formData)
+      .subscribe({
+        next: (res) => {
+          if (res.success) {
+            // Guardar sesión
+            sessionStorage.setItem("email", formData.email as string);
+            sessionStorage.setItem("isLoggedIn", "true");
+            sessionStorage.setItem("tipoUsuario", res.tipoUsuario);
+            sessionStorage.setItem("nombreUsuario", res.nombre);
+            
+            // Sincronizar carrito (combina local + DB)
+            this.carritoService.sincronizarAlLogin();
+            
+            // Cerrar popup y continuar con la compra
+            this.mostrarPopupLogin = false;
+            this.popupLoginError = '';
+            this.loginForm.reset();
+            
+            // Esperar a que se sincronice y luego continuar
+            setTimeout(() => {
+              this.finalizarCompra();
+            }, 500);
+          }
+        },
+        error: (err) => {
+          const errorMessage = err?.error?.error;
+          if (errorMessage === "contraseñaIncorrecta") {
+            this.popupLoginError = 'Contraseña incorrecta';
+          } else {
+            this.popupLoginError = 'El email no está registrado';
+          }
+        }
+      });
+  }
+
+  onSubmitRegistro(): void {
+    if (!this.passwordsCoinciden) {
+      this.popupLoginError = 'Las contraseñas no coinciden';
+      return;
+    }
+    
+    const formData = {
+      email: this.registroForm.value.email,
+      nombre: this.registroForm.value.nombre,
+      telefono: this.registroForm.value.telefono || '',
+      password: this.registroForm.value.password
+    };
+  
+    this.http.post<any>(`http://localhost:5000/api/usuarios/registro`, formData)
+      .subscribe({
+        next: (res) => {
+          if (res.success) {
+            // Auto-login: guardar sesión
+            sessionStorage.setItem("email", formData.email as string);
+            sessionStorage.setItem("isLoggedIn", "true");
+            sessionStorage.setItem("tipoUsuario", "Cliente");
+            sessionStorage.setItem("nombreUsuario", formData.nombre as string);
+            
+            // Sincronizar carrito
+            this.carritoService.sincronizarAlLogin();
+            
+            // Cerrar popup y continuar con la compra
+            this.mostrarPopupLogin = false;
+            this.popupLoginError = '';
+            this.registroForm.reset();
+            
+            // Esperar y continuar
+            setTimeout(() => {
+              this.finalizarCompra();
+            }, 500);
+          }
+        },
+        error: (err) => {
+          const errorMessage = err?.error?.error;
+          if (errorMessage === "usuarioExistente") {
+            this.popupLoginError = 'El email ya está registrado';
+          } else if (errorMessage === "emailInvalido") {
+            this.popupLoginError = 'Email inválido';
+          } else {
+            this.popupLoginError = 'Error al registrar. Intente nuevamente';
+          }
+        }
+      });
   }
 }

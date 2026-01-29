@@ -121,6 +121,22 @@ input[type="tel"] {
     color: #D6B435;
 }
 
+/* Botón anónimo */
+.btn-anonimo {
+    width: 100%;
+    margin-top: 15px;
+    padding: 12px 20px;
+    background: transparent;
+    color: #000447;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-anonimo:hover {
+    background: #ffffff;
+}
+
 /* Popup de registro exitoso */
 .popup-overlay {
     position: fixed;

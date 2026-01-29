@@ -29,6 +29,7 @@
             </form>
         </div>
         <p class="link-texto">¿No tienes cuenta? <a (click)="cambiarModo('registro')">Regístrate aquí</a></p>
+        <button class="btn-anonimo" (click)="continuarComoAnonimo()">Continuar Sin Iniciar Sesión</button>
     </div>
     
     <!-- Formulario de Registro -->
@@ -74,6 +75,7 @@
             </form>
         </div>
         <p class="link-texto">¿Ya tienes cuenta? <a (click)="cambiarModo('login')">Inicia sesión</a></p>
+        <button class="btn-anonimo" (click)="continuarComoAnonimo()">Continuar Sin Registrarse</button>
     </div>
 </div>
 

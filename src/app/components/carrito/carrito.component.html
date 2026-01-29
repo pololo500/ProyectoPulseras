@@ -182,3 +182,86 @@
         </div>
     </div>
 </div>
+
+<!-- Popup de Login/Registro para finalizar compra -->
+<div class="popup-overlay" *ngIf="mostrarPopupLogin" (click)="cerrarPopupLogin()">
+    <div class="card popup-login" (click)="$event.stopPropagation()">
+        <button class="btn-cerrar-popup" (click)="cerrarPopupLogin()">✕</button>
+        <div class="popup-login-content">
+            <div class="login-header">
+                <span class="icono-carrito">🛒</span>
+                <h3>Para finalizar tu compra necesitas una cuenta</h3>
+            </div>
+
+            <!-- Tabs para cambiar entre Login y Registro -->
+            <div class="login-tabs">
+                <button [class.active]="modoLogin === 'login'" (click)="cambiarModoLogin('login')">Iniciar Sesión</button>
+                <button [class.active]="modoLogin === 'registro'" (click)="cambiarModoLogin('registro')">Registrarse</button>
+            </div>
+
+            <!-- Mensaje de error -->
+            <div class="login-error" *ngIf="popupLoginError">
+                {{ popupLoginError }}
+            </div>
+
+            <!-- Formulario de Login -->
+            <form *ngIf="modoLogin === 'login'" [formGroup]="loginForm" (ngSubmit)="onSubmitLogin()" class="login-form">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" formControlName="email" placeholder="ejemplo@correo.com">
+                    <div class="form-error" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+                        <span *ngIf="loginForm.get('email')?.errors?.['required']">El email es obligatorio</span>
+                        <span *ngIf="loginForm.get('email')?.errors?.['email']">Ingrese un email válido</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Contraseña</label>
+                    <input type="password" id="loginPassword" formControlName="password">
+                    <div class="form-error" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+                        La contraseña es obligatoria
+                    </div>
+                </div>
+                <button type="submit" class="btn-submit" [disabled]="loginForm.invalid">Iniciar Sesión</button>
+            </form>
+
+            <!-- Formulario de Registro -->
+            <form *ngIf="modoLogin === 'registro'" [formGroup]="registroForm" (ngSubmit)="onSubmitRegistro()" class="login-form">
+                <div class="form-group">
+                    <label for="regEmail">Email *</label>
+                    <input type="email" id="regEmail" formControlName="email" placeholder="ejemplo@correo.com">
+                    <div class="form-error" *ngIf="registroForm.get('email')?.invalid && registroForm.get('email')?.touched">
+                        <span *ngIf="registroForm.get('email')?.errors?.['required']">El email es obligatorio</span>
+                        <span *ngIf="registroForm.get('email')?.errors?.['email']">Ingrese un email válido</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="regNombre">Nombre *</label>
+                    <input type="text" id="regNombre" formControlName="nombre" placeholder="Tu nombre">
+                    <div class="form-error" *ngIf="registroForm.get('nombre')?.invalid && registroForm.get('nombre')?.touched">
+                        El nombre es obligatorio
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="regTelefono">Teléfono (opcional)</label>
+                    <input type="tel" id="regTelefono" formControlName="telefono" placeholder="11-1234-5678">
+                </div>
+                <div class="form-group">
+                    <label for="regPassword">Contraseña *</label>
+                    <input type="password" id="regPassword" formControlName="password">
+                    <div class="form-error" *ngIf="registroForm.get('password')?.invalid && registroForm.get('password')?.touched">
+                        <span *ngIf="registroForm.get('password')?.errors?.['required']">La contraseña es obligatoria</span>
+                        <span *ngIf="registroForm.get('password')?.errors?.['minlength']">Mínimo 6 caracteres</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="regConfirmar">Confirmar Contraseña *</label>
+                    <input type="password" id="regConfirmar" formControlName="confirmarPassword">
+                    <div class="form-error" *ngIf="registroForm.get('confirmarPassword')?.touched && !passwordsCoinciden">
+                        Las contraseñas no coinciden
+                    </div>
+                </div>
+                <button type="submit" class="btn-submit" [disabled]="registroForm.invalid || !passwordsCoinciden">Registrarse</button>
+            </form>
+        </div>
+    </div>
+</div>

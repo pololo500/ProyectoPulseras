@@ -718,3 +718,176 @@
     margin: 15px 0;
     text-align: center;
 }
+
+/* ========== POPUP LOGIN/REGISTRO ========== */
+.popup-login {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    width: 90%;
+    max-width: 420px;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+    animation: popupEntrar 0.3s ease;
+}
+
+.btn-cerrar-popup {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: #f0f0f0;
+    color: #666;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s;
+    padding: 0;
+    margin: 0;
+}
+
+.btn-cerrar-popup:hover {
+    background: #dc3545;
+    color: white;
+}
+
+.popup-login-content {
+    max-height: calc(85vh - 60px);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.login-header {
+    text-align: center;
+}
+
+.login-header .icono-carrito {
+    font-size: 40px;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.login-header h3 {
+    color: #000447;
+    font-size: 18px;
+    margin: 0;
+    font-weight: 500;
+}
+
+.login-tabs {
+    display: flex;
+    gap: 0;
+    margin: 20px 30px;
+}
+
+.login-tabs button {
+    flex: 1;
+    padding: 12px 20px;
+    background: white;
+    color: #000447;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s;
+    margin: 0;
+    border-radius: 0 25px 25px 0;
+    border: 2px solid #000447;
+}
+
+.login-tabs button:first-child {
+    border-radius: 25px 0 0 25px;
+}
+
+.login-tabs button.active {
+    background: #000447;
+    color: #D6B435;
+    font-weight: 700;
+}
+
+.login-tabs button:hover:not(.active) {
+    background: rgba(0, 4, 71, 0.1);
+}
+
+.login-error {
+    background: #fff3f3;
+    border: 1px solid #dc3545;
+    color: #dc3545;
+    padding: 10px 15px;
+    border-radius: 25px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    text-align: center;
+    width: fit-content;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+}
+
+.login-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.login-form input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.login-form .form-error {
+    color: #dc3545;
+    font-size: 12px;
+}
+
+.login-form .btn-submit {
+    padding: 14px 20px;
+    border: none;
+    border-radius: 25px;
+    transition: all 0.3s;
+    margin-top: 10px;
+}
+
+.login-form .btn-submit:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Responsive del popup login */
+@media (max-width: 480px) {
+    .popup-login {
+        padding: 20px;
+        max-width: 90%;
+    }
+    
+    .login-header .icono-carrito {
+        font-size: 32px;
+    }
+    
+    .login-header h3 {
+        font-size: 16px;
+    }
+    
+    .login-tabs button {
+        padding: 10px 15px;
+        font-size: 13px;
+    }
+
+    .login-error {
+        font-size: 12px;
+        padding: 8px 12px;
+    }
+    
+    .login-form input {
+        padding: 10px 12px;
+    }
+}

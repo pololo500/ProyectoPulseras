@@ -25,11 +25,13 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     // Dar tiempo para que el DOM se actualice con el *ngIf
-    this.initParticlesWithRetry();
+    if (this.validRoute) {
+      this.initParticlesWithRetry();
+    }
   }
 
   private initParticlesWithRetry(attempts = 0): void {
-    if (this.particlesInitialized || attempts > 10) return;
+    if (attempts > 20) return; // Más intentos
     
     setTimeout(() => {
       const canvasCircle = document.getElementById('particle-canvas-circle');
@@ -37,14 +39,23 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
       
       if (canvasCircle && canvasSquare) {
         try {
+          // Destruir instancias anteriores si existen
+          if (this.particleEffectCircle) {
+            this.particleEffectCircle.destroy();
+          }
+          if (this.particleEffectSquare) {
+            this.particleEffectSquare.destroy();
+          }
+          
           this.particleEffectCircle = new ParticleEffectCircle('particle-canvas-circle');
           this.particleEffectSquare = new ParticleEffectSquare('particle-canvas-square');
           this.particlesInitialized = true;
         } catch (e) {
           console.warn('Error inicializando partículas:', e);
+          this.particlesInitialized = false;
         }
-      } else {
-        // Reintentar si los canvas aún no están disponibles
+      } else if (this.validRoute) {
+        // Reintentar si los canvas aún no están disponibles y la ruta es válida
         this.initParticlesWithRetry(attempts + 1);
       }
     }, 100);
@@ -87,9 +98,17 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
         this.checkUserType();
         this.actualizarCarrito();
         this.actualizarFavoritos();
-        // Reinicializar partículas si es una ruta válida y no están inicializadas
-        if (this.validRoute && !this.particlesInitialized) {
-          this.initParticlesWithRetry();
+        // Reinicializar partículas si es una ruta válida
+        if (this.validRoute) {
+          // Pequeño delay para que el *ngIf renderice los canvas
+          setTimeout(() => {
+            if (!this.particlesInitialized) {
+              this.initParticlesWithRetry();
+            }
+          }, 50);
+        } else {
+          // Si no es ruta válida, marcar como no inicializado para el próximo cambio
+          this.particlesInitialized = false;
         }
       });
 

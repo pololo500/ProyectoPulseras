@@ -25,6 +25,11 @@ export class FavoritosService {
 
     constructor(private http: HttpClient) {
         this.cargarFavoritosLocal();
+        
+        // Escuchar evento de logout para limpiar favoritos en memoria
+        window.addEventListener('favoritosActualizado', () => {
+            this.cargarFavoritosLocal();
+        });
     }
 
     private cargarFavoritosLocal(): void {
@@ -32,6 +37,9 @@ export class FavoritosService {
         if (guardados) {
             this.favoritos = JSON.parse(guardados);
             this.favoritosSubject.next([...this.favoritos]);
+        } else {
+            this.favoritos = [];
+            this.favoritosSubject.next([]);
         }
     }
 

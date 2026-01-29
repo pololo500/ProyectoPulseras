@@ -46,7 +46,24 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
   private particleEffectSquare!: ParticleEffectSquare;
 
   ngAfterViewInit(): void {
-    this.particleEffectSquare = new ParticleEffectSquare('particle-canvas-square-inicio');
+    this.initParticlesWithRetry();
+  }
+
+  private initParticlesWithRetry(attempts = 0): void {
+    if (attempts > 20) return;
+    
+    setTimeout(() => {
+      const canvas = document.getElementById('particle-canvas-square-inicio');
+      if (canvas) {
+        try {
+          this.particleEffectSquare = new ParticleEffectSquare('particle-canvas-square-inicio');
+        } catch (e) {
+          console.warn('Error inicializando partículas en login:', e);
+        }
+      } else {
+        this.initParticlesWithRetry(attempts + 1);
+      }
+    }, 100);
   }
 
   ngOnDestroy(): void {
@@ -153,5 +170,9 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 
   close() {
     this.popup = '';
+  }
+
+  continuarComoAnonimo() {
+    this.router.navigate(['/productos']);
   }
 }

@@ -35,6 +35,11 @@ export class CarritoService {
 
   constructor(private http: HttpClient) {
     this.cargarCarritoInicial();
+    
+    // Escuchar evento de logout para limpiar el carrito en memoria
+    window.addEventListener('carritoActualizado', () => {
+      this.cargarCarritoInicial();
+    });
   }
 
   private getEmail(): string | null {
@@ -64,6 +69,9 @@ export class CarritoService {
       } catch {
         this.carritoSubject.next([]);
       }
+    } else {
+      // Si no hay carrito en sessionStorage, limpiar el BehaviorSubject
+      this.carritoSubject.next([]);
     }
   }
 
@@ -227,10 +235,21 @@ export class CarritoService {
     return this.getItems().reduce((total, item) => total + (item.precio * item.cantidad), 0);
   }
 
-  // Sincronizar carrito local con DB al hacer login
+  // Sincronizar carrito local con DB al hacer login (combina ambos carritos)
   sincronizarAlLogin(): void {
     const email = this.getEmail();
     if (!email) return;
+    
+    // Obtener carrito local antes de consultar DB
+    const carritoLocalStr = sessionStorage.getItem('carrito');
+    let itemsLocales: ItemCarrito[] = [];
+    if (carritoLocalStr) {
+      try {
+        itemsLocales = JSON.parse(carritoLocalStr);
+      } catch {
+        itemsLocales = [];
+      }
+    }
     
     // Cargar carrito de la base de datos
     this.http.get<{ carrito: ItemCarrito[] }>(`${this.apiUrl}/usuarios/${email}/carrito`)
@@ -238,26 +257,24 @@ export class CarritoService {
         next: (res) => {
           const itemsDB = res.carrito || [];
           
-          // Si el usuario ya tiene carrito en DB, usar ese directamente
-          if (itemsDB.length > 0) {
-            this.carritoSubject.next(itemsDB);
-            sessionStorage.setItem('carrito', JSON.stringify(itemsDB));
-            window.dispatchEvent(new Event('carritoActualizado'));
-          } else {
-            // Si no tiene carrito en DB, verificar si hay carrito local para migrar
-            const carritoLocal = sessionStorage.getItem('carrito');
-            if (carritoLocal) {
-              try {
-                const itemsLocales = JSON.parse(carritoLocal);
-                if (itemsLocales.length > 0) {
-                  // Guardar el carrito local en la DB
-                  this.guardarCarrito(itemsLocales);
-                }
-              } catch {
-                this.carritoSubject.next([]);
-              }
+          // Combinar carritos: agregar items locales al carrito de DB
+          const carritoFinal = [...itemsDB];
+          
+          for (const itemLocal of itemsLocales) {
+            const keyLocal = this.getItemKey(itemLocal);
+            const existeEnDB = carritoFinal.find(item => this.getItemKey(item) === keyLocal);
+            
+            if (existeEnDB) {
+              // Si ya existe, sumar cantidades
+              existeEnDB.cantidad += itemLocal.cantidad;
+            } else {
+              // Si no existe, agregarlo
+              carritoFinal.push(itemLocal);
             }
           }
+          
+          // Guardar el carrito combinado
+          this.guardarCarrito(carritoFinal);
         },
         error: () => {
           // Si hay error, mantener el carrito local
