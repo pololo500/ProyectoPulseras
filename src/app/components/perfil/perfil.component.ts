@@ -95,12 +95,22 @@ export class PerfilComponent implements OnInit {
            this.passwordForm.get('confirmarPassword')?.value;
   }
 
+  // Capitalizar cada palabra del nombre
+  private capitalizarNombre(nombre: string): string {
+    return nombre
+      .toLowerCase()
+      .split(' ')
+      .map(palabra => palabra.charAt(0).toUpperCase() + palabra.slice(1))
+      .join(' ');
+  }
+
   guardarDatos(): void {
     if (this.datosForm.invalid) return;
     
     this.cargando = true;
+    const nombreCapitalizado = this.capitalizarNombre(this.datosForm.value.nombre || '');
     const datos = {
-      nombre: this.datosForm.value.nombre,
+      nombre: nombreCapitalizado,
       telefono: this.datosForm.value.telefono
     };
     

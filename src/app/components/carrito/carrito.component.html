@@ -114,14 +114,14 @@
 <!-- Popup Solicitar Teléfono -->
 <div class="popup-overlay" *ngIf="mostrarPopupTelefono" (click)="cerrarPopupTelefono()">
     <div class="popup-content popup-telefono" (click)="$event.stopPropagation()">
-        <h2>📞 Número de Teléfono</h2>
+        <h2>Número de Teléfono</h2>
         
         <p class="popup-descripcion">
             Para poder contactarte sobre tu pedido, necesitamos tu número de teléfono.
         </p>
         
         <div class="form-telefono">
-            <label for="telefono">Teléfono / WhatsApp *</label>
+            <label for="telefono">Teléfono</label>
             <input 
                 type="tel" 
                 id="telefono" 

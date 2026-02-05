@@ -236,50 +236,88 @@ export class CarritoService {
   }
 
   // Sincronizar carrito local con DB al hacer login (combina ambos carritos)
-  sincronizarAlLogin(): void {
-    const email = this.getEmail();
-    if (!email) return;
-    
-    // Obtener carrito local antes de consultar DB
-    const carritoLocalStr = sessionStorage.getItem('carrito');
-    let itemsLocales: ItemCarrito[] = [];
-    if (carritoLocalStr) {
-      try {
-        itemsLocales = JSON.parse(carritoLocalStr);
-      } catch {
-        itemsLocales = [];
+  // Retorna un Observable para poder esperar a que se complete
+  sincronizarAlLogin(): Observable<void> {
+    return new Observable(observer => {
+      const email = this.getEmail();
+      if (!email) {
+        observer.next();
+        observer.complete();
+        return;
       }
-    }
-    
-    // Cargar carrito de la base de datos
-    this.http.get<{ carrito: ItemCarrito[] }>(`${this.apiUrl}/usuarios/${email}/carrito`)
-      .subscribe({
-        next: (res) => {
-          const itemsDB = res.carrito || [];
-          
-          // Combinar carritos: agregar items locales al carrito de DB
-          const carritoFinal = [...itemsDB];
-          
-          for (const itemLocal of itemsLocales) {
-            const keyLocal = this.getItemKey(itemLocal);
-            const existeEnDB = carritoFinal.find(item => this.getItemKey(item) === keyLocal);
-            
-            if (existeEnDB) {
-              // Si ya existe, sumar cantidades
-              existeEnDB.cantidad += itemLocal.cantidad;
-            } else {
-              // Si no existe, agregarlo
-              carritoFinal.push(itemLocal);
-            }
-          }
-          
-          // Guardar el carrito combinado
-          this.guardarCarrito(carritoFinal);
-        },
-        error: () => {
-          // Si hay error, mantener el carrito local
-          this.cargarCarritoLocal();
+      
+      // Obtener carrito local antes de consultar DB
+      const carritoLocalStr = sessionStorage.getItem('carrito');
+      let itemsLocales: ItemCarrito[] = [];
+      if (carritoLocalStr) {
+        try {
+          itemsLocales = JSON.parse(carritoLocalStr);
+        } catch {
+          itemsLocales = [];
         }
-      });
+      }
+      
+      // Si no hay items locales, no hay nada que sincronizar
+      if (itemsLocales.length === 0) {
+        observer.next();
+        observer.complete();
+        return;
+      }
+      
+      // Cargar carrito de la base de datos
+      this.http.get<{ carrito: ItemCarrito[] }>(`${this.apiUrl}/usuarios/${email}/carrito`)
+        .subscribe({
+          next: (res) => {
+            const itemsDB = res.carrito || [];
+            
+            // Combinar carritos: agregar items locales al carrito de DB
+            const carritoFinal = [...itemsDB];
+            
+            for (const itemLocal of itemsLocales) {
+              const keyLocal = this.getItemKey(itemLocal);
+              const existeEnDB = carritoFinal.find(item => this.getItemKey(item) === keyLocal);
+              
+              if (existeEnDB) {
+                // Si ya existe, sumar cantidades
+                existeEnDB.cantidad += itemLocal.cantidad;
+              } else {
+                // Si no existe, agregarlo
+                carritoFinal.push(itemLocal);
+              }
+            }
+            
+            // Guardar el carrito combinado en la DB
+            this.http.put(`${this.apiUrl}/usuarios/${email}/carrito`, { carrito: carritoFinal })
+              .subscribe({
+                next: () => {
+                  // Actualizar sessionStorage con el carrito combinado
+                  sessionStorage.setItem('carrito', JSON.stringify(carritoFinal));
+                  this.carritoSubject.next(carritoFinal);
+                  observer.next();
+                  observer.complete();
+                },
+                error: (err) => {
+                  console.error('Error al guardar carrito combinado:', err);
+                  observer.next();
+                  observer.complete();
+                }
+              });
+          },
+          error: () => {
+            // Si hay error al obtener de DB, guardar solo los locales
+            this.http.put(`${this.apiUrl}/usuarios/${email}/carrito`, { carrito: itemsLocales })
+              .subscribe({
+                next: () => {
+                  observer.next();
+                  observer.complete();
+                },
+                error: () => {
+                  observer.next();
+                  observer.complete();
+                }
+              });
+          }
+        });
+    });
   }
 }

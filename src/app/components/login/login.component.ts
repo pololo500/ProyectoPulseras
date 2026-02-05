@@ -132,9 +132,16 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
     
+    // Capitalizar cada palabra del nombre
+    const nombreCapitalizado = (this.registroForm.value.nombre || '')
+      .toLowerCase()
+      .split(' ')
+      .map((palabra: string) => palabra.charAt(0).toUpperCase() + palabra.slice(1))
+      .join(' ');
+    
     const formData = {
       email: this.registroForm.value.email,
-      nombre: this.registroForm.value.nombre,
+      nombre: nombreCapitalizado,
       telefono: this.registroForm.value.telefono || '',
       password: this.registroForm.value.password
     };

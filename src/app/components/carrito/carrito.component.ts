@@ -347,18 +347,16 @@ export class CarritoComponent implements OnInit, OnDestroy {
             sessionStorage.setItem("tipoUsuario", res.tipoUsuario);
             sessionStorage.setItem("nombreUsuario", res.nombre);
             
-            // Sincronizar carrito (combina local + DB)
-            this.carritoService.sincronizarAlLogin();
-            
-            // Cerrar popup y continuar con la compra
-            this.mostrarPopupLogin = false;
-            this.popupLoginError = '';
-            this.loginForm.reset();
-            
-            // Esperar a que se sincronice y luego continuar
-            setTimeout(() => {
-              this.finalizarCompra();
-            }, 500);
+            // Sincronizar carrito (combina local + DB) y recargar página
+            this.carritoService.sincronizarAlLogin().subscribe({
+              next: () => {
+                // Recargar la página para que se carguen todos los datos correctamente
+                window.location.reload();
+              },
+              error: () => {
+                window.location.reload();
+              }
+            });
           }
         },
         error: (err) => {
@@ -378,9 +376,16 @@ export class CarritoComponent implements OnInit, OnDestroy {
       return;
     }
     
+    // Capitalizar cada palabra del nombre
+    const nombreCapitalizado = (this.registroForm.value.nombre || '')
+      .toLowerCase()
+      .split(' ')
+      .map((palabra: string) => palabra.charAt(0).toUpperCase() + palabra.slice(1))
+      .join(' ');
+    
     const formData = {
       email: this.registroForm.value.email,
-      nombre: this.registroForm.value.nombre,
+      nombre: nombreCapitalizado,
       telefono: this.registroForm.value.telefono || '',
       password: this.registroForm.value.password
     };
@@ -395,18 +400,16 @@ export class CarritoComponent implements OnInit, OnDestroy {
             sessionStorage.setItem("tipoUsuario", "Cliente");
             sessionStorage.setItem("nombreUsuario", formData.nombre as string);
             
-            // Sincronizar carrito
-            this.carritoService.sincronizarAlLogin();
-            
-            // Cerrar popup y continuar con la compra
-            this.mostrarPopupLogin = false;
-            this.popupLoginError = '';
-            this.registroForm.reset();
-            
-            // Esperar y continuar
-            setTimeout(() => {
-              this.finalizarCompra();
-            }, 500);
+            // Sincronizar carrito (combina local + DB) y recargar página
+            this.carritoService.sincronizarAlLogin().subscribe({
+              next: () => {
+                // Recargar la página para que se carguen todos los datos correctamente
+                window.location.reload();
+              },
+              error: () => {
+                window.location.reload();
+              }
+            });
           }
         },
         error: (err) => {

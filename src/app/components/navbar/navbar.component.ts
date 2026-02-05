@@ -166,7 +166,8 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   isActive(route: string): boolean {
-    if(this.router.url === `/${route}`) {
+    // Usar startsWith para que funcione también con query params (ej: /productos?categoria=pulseras)
+    if(this.router.url.startsWith(`/${route}`)) {
       this.color = 'azul';
       return true;
     } else {
