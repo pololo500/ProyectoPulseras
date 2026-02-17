@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, inject, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { ButtonComponent } from '../button/button.component';
 import { GlobalService } from '../../services/global.service';
 import { Router } from '@angular/router';
@@ -28,14 +28,12 @@ interface CarruselPorTipo {
     templateUrl: './inicioAdmin.component.html',
     styleUrl: './inicioAdmin.component.css'
 })
-export class InicioAdminComponent implements OnInit, AfterViewInit, OnDestroy {
-  @ViewChildren('viewport') viewports!: QueryList<ElementRef>;
+export class InicioAdminComponent implements OnInit, OnDestroy {
   router = inject(Router);
   
   carruseles: CarruselPorTipo[] = [];
   autoplayInterval: any;
-  autoplayDelay = 3000; // 3 segundos
-  itemWidth = 0;
+  autoplayDelay = 3000;
 
   constructor(private globalService: GlobalService, private http: HttpClient) {}
 
@@ -45,20 +43,13 @@ export class InicioAdminComponent implements OnInit, AfterViewInit, OnDestroy {
     this.startAutoplay();
   }
 
-  ngAfterViewInit() {
-    this.calculateItemWidth();
-    window.addEventListener('resize', this.calculateItemWidth.bind(this));
-  }
-
   ngOnDestroy(): void {
     this.stopAutoplay();
-    window.removeEventListener('resize', this.calculateItemWidth.bind(this));
   }
 
   obtenerProductos() {
     this.http.get<Producto[]>('http://localhost:5000/api/productos')
       .subscribe(data => {
-        // Agrupar productos por tipo
         const productosPorTipo = new Map<string, Producto[]>();
         
         data.forEach(producto => {
@@ -69,7 +60,6 @@ export class InicioAdminComponent implements OnInit, AfterViewInit, OnDestroy {
           productosPorTipo.get(tipo)!.push(producto);
         });
         
-        // Crear carruseles por tipo
         this.carruseles = [];
         productosPorTipo.forEach((productos, tipo) => {
           this.carruseles.push({
@@ -82,14 +72,29 @@ export class InicioAdminComponent implements OnInit, AfterViewInit, OnDestroy {
       });
   }
 
-  calculateItemWidth() {
-    if (this.viewports && this.viewports.first) {
-      const viewportWidth = this.viewports.first.nativeElement.clientWidth;
-      this.itemWidth = (viewportWidth / 3) - 20;
+  getItemClass(carrusel: CarruselPorTipo, index: number): string {
+    const len = carrusel.productos.length;
+    const current = carrusel.currentIndex;
+    
+    let diff = index - current;
+    
+    if (diff > len / 2) {
+      diff -= len;
+    } else if (diff < -len / 2) {
+      diff += len;
+    }
+    
+    if (diff === 0) {
+      return 'carrusel-item center';
+    } else if (diff === -1 || (diff === len - 1)) {
+      return 'carrusel-item prev';
+    } else if (diff === 1 || (diff === -(len - 1))) {
+      return 'carrusel-item next';
+    } else {
+      return 'carrusel-item hidden';
     }
   }
 
-  // Obtener la primera imagen de un producto
   getPrimeraImagen(producto: Producto): string {
     if (producto.imagenesUrls && producto.imagenesUrls.length > 0) {
       return producto.imagenesUrls[0];
@@ -139,22 +144,12 @@ export class InicioAdminComponent implements OnInit, AfterViewInit, OnDestroy {
     carrusel.isHovered = false;
   }
 
-  getTrackStyles(carrusel: CarruselPorTipo): any {
-    const offset = carrusel.currentIndex * (this.itemWidth + 20);
-    return {
-      transform: `translateX(-${offset}px)`,
-      transition: 'transform 1.2s ease-in-out'
-    };
-  }
-
-  // Navegar a modificar productos con filtro
   irAModificarProductos(tipo: string) {
     this.router.navigate(['/modificarProductos'], { 
       queryParams: { filtroProducto: tipo } 
     });
   }
 
-  // Cerrar sesión
   cerrarSesion() {
     this.globalService.logout();
   }

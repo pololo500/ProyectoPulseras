@@ -84,6 +84,13 @@
                 <img *ngIf="(isMobile || isTablet) && color == 'blanco'" src="images/expensas blanco.png">
             </a>
         </li>
+        <li *ngIf="!isMobile && !isTablet">|</li>
+        <li [class.active]="isActive('recursos')">
+            <a routerLink="/recursos">
+                <span *ngIf="!isMobile && !isTablet">Recursos</span>
+                <span *ngIf="isMobile || isTablet" class="nav-icon">🧰</span>
+            </a>
+        </li>
     </ul>
         
     <a routerLink="/inicioAdministrador"><img src="images/Logo final.png" class="logo"></a>

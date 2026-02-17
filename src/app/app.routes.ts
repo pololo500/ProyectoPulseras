@@ -19,6 +19,7 @@ import { MisPedidosComponent } from './components/misPedidos/misPedidos.componen
 import { ClientesComponent } from './components/clientes/clientes.component';
 import { AgregarSvgComponent } from './components/agregarSvg/agregarSvg.component';
 import { StockComponent } from './components/stock/stock.component';
+import { RecursosComponent } from './components/recursos/recursos.component';
 
 export const routes: Routes = [
     { path: '', component: InicioComponent, title: 'LM Pulseras' },
@@ -40,5 +41,6 @@ export const routes: Routes = [
     { path: 'pedidos', component: PedidosComponent, title: 'LM Pulseras - Pedidos' },
     { path: 'clientes', component: ClientesComponent, title: 'LM Pulseras - Clientes' },
     { path: 'stock', component: StockComponent, title: 'LM Pulseras - Stock' },
+    { path: 'recursos', component: RecursosComponent, title: 'LM Pulseras - Recursos' },
     { path: '**', component: ErrorComponent, title: 'LM Pulseras - Error' }
 ];

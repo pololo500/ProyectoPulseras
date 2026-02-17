@@ -668,6 +668,19 @@ app.delete('/api/colores/:id', async (req, res) => {
     }
 });
 
+// Actualizar color
+app.put('/api/colores/:id', async (req, res) => {
+    const datos = req.body;
+    try {
+        const result = await Color.findByIdAndUpdate(req.params.id, datos, { new: true });
+        if (!result) return res.status(404).json({ mensaje: 'Color no encontrado' });
+        res.status(200).json({ mensaje: 'Color actualizado', color: result });
+    } catch (error) {
+        console.error('Error al actualizar color:', error);
+        res.status(500).json({ mensaje: 'Error al actualizar color' });
+    }
+});
+
 // Importar colores desde JSON (bulk)
 app.post('/api/colores/importar', async (req, res) => {
     const { colores } = req.body;

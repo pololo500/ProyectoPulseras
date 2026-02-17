@@ -49,25 +49,47 @@
                 <!-- Diseño simple: un solo color -->
                 <div class="color-simple" *ngIf="capa.colores.length === 1">
                   <div class="color-simple-row">
-                    <select [(ngModel)]="capa.colores[0].colorId" (change)="onColorChange(capa.colores[0])" 
-                            (focus)="recargarColores()"
-                            [class.filled]="capa.colores[0].colorId"
-                            [style.background-color]="capa.colores[0].colorRgb || 'rgba(255,255,255,0.1)'"
-                            [style.color]="capa.colores[0].colorRgb ? getTextColor(capa.colores[0].colorRgb) : '#fff'">
-                      <option value="">Color</option>
-                      <optgroup label="Translúcidos">
-                        <option *ngFor="let color of colores | filterByCategoria:'translucido'" [value]="color._id">
-                          {{ color.nombre }}
-                        </option>
-                      </optgroup>
-                      <optgroup label="Polvo">
-                        <option *ngFor="let color of colores | filterByCategoria:'polvo'" [value]="color._id">
-                          {{ color.nombre }}
-                        </option>
-                      </optgroup>
-                    </select>
+                    <div class="color-picker-wrapper">
+                      <div class="color-chip" 
+                           (click)="toggleColorPicker('simple-' + producto.id + '-' + capa.capaIndex + '-0')"
+                           [class.con-color]="capa.colores[0].colorRgb">
+                        <span class="chip-dot" *ngIf="capa.colores[0].colorRgb" [style.background-color]="capa.colores[0].colorRgb"></span>
+                        <span class="chip-nombre">{{ capa.colores[0].colorId ? (capa.colores[0].colorNombre | capitalize) : 'Seleccionar color' }}</span>
+                        <span class="chip-arrow">▾</span>
+                      </div>
+                      <!-- Grid de colores desplegable -->
+                      <div class="color-grid-dropdown" *ngIf="colorPickerAbierto === 'simple-' + producto.id + '-' + capa.capaIndex + '-0'">
+                        <div class="color-grid-overlay" (click)="cerrarColorPicker()"></div>
+                        <div class="color-grid-panel">
+                          <div class="color-grid-categoria" *ngIf="getColoresPorCategoria('translucido').length > 0">
+                            <h5>✨ Translúcidos</h5>
+                            <div class="color-grid">
+                              <div class="color-grid-item" 
+                                   *ngFor="let color of getColoresPorCategoria('translucido')"
+                                   [class.seleccionado]="capa.colores[0].colorId === color._id"
+                                   (click)="seleccionarColorDesdeGrid(capa.colores[0], color)">
+                                <span class="grid-dot translucido" [style.background-color]="color.rgb"></span>
+                                <span class="grid-nombre">{{ color.nombre | capitalize }}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="color-grid-categoria" *ngIf="getColoresPorCategoria('polvo').length > 0">
+                            <h5>🌟 Polvo</h5>
+                            <div class="color-grid">
+                              <div class="color-grid-item" 
+                                   *ngFor="let color of getColoresPorCategoria('polvo')"
+                                   [class.seleccionado]="capa.colores[0].colorId === color._id"
+                                   (click)="seleccionarColorDesdeGrid(capa.colores[0], color)">
+                                <span class="grid-dot polvo" [style.background-color]="color.rgb"></span>
+                                <span class="grid-nombre">{{ color.nombre | capitalize }}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                     <select [(ngModel)]="capa.colores[0].fase" (change)="onFaseChange()" [class.filled]="capa.colores[0].fase">
-                      <option *ngFor="let fase of fases" [value]="fase">Fase {{ fase }}</option>
+                      <option *ngFor="let fase of fases" [ngValue]="fase">Fase {{ fase }}</option>
                     </select>
                   </div>
                   <input type="text" [(ngModel)]="capa.colores[0].nota" placeholder="Nota..." class="input-nota" (blur)="onNotaChange()">
@@ -77,28 +99,50 @@
                 <div class="colores-capa" *ngIf="capa.colores.length > 1">
                   <div class="color-capa-item" *ngFor="let colorCapa of capa.colores; let i = index" [class.principal]="i === 0">
                     <div class="color-capa-row">
-                      <select [(ngModel)]="colorCapa.colorId" (change)="onColorChange(colorCapa)" 
-                              (focus)="recargarColores()"
-                              [class.filled]="colorCapa.colorId"
-                              [style.background-color]="colorCapa.colorRgb || 'rgba(255,255,255,0.1)'"
-                              [style.color]="colorCapa.colorRgb ? getTextColor(colorCapa.colorRgb) : '#fff'">
-                        <option value="">Color</option>
-                        <optgroup label="Translúcidos">
-                          <option *ngFor="let color of colores | filterByCategoria:'translucido'" [value]="color._id">
-                            {{ color.nombre }}
-                          </option>
-                        </optgroup>
-                        <optgroup label="Polvo">
-                          <option *ngFor="let color of colores | filterByCategoria:'polvo'" [value]="color._id">
-                            {{ color.nombre }}
-                          </option>
-                        </optgroup>
-                      </select>
+                      <div class="color-picker-wrapper">
+                        <div class="color-chip color-chip-mini" 
+                             (click)="toggleColorPicker('multi-' + producto.id + '-' + capa.capaIndex + '-' + i)"
+                             [class.con-color]="colorCapa.colorRgb">
+                          <span class="chip-dot" *ngIf="colorCapa.colorRgb" [style.background-color]="colorCapa.colorRgb"></span>
+                          <span class="chip-nombre">{{ colorCapa.colorId ? (colorCapa.colorNombre | capitalize) : 'Color' }}</span>
+                          <span class="chip-arrow">▾</span>
+                        </div>
+                        <!-- Grid de colores desplegable -->
+                        <div class="color-grid-dropdown" *ngIf="colorPickerAbierto === 'multi-' + producto.id + '-' + capa.capaIndex + '-' + i">
+                          <div class="color-grid-overlay" (click)="cerrarColorPicker()"></div>
+                          <div class="color-grid-panel">
+                            <div class="color-grid-categoria" *ngIf="getColoresPorCategoria('translucido').length > 0">
+                              <h5>✨ Translúcidos</h5>
+                              <div class="color-grid">
+                                <div class="color-grid-item" 
+                                     *ngFor="let color of getColoresPorCategoria('translucido')"
+                                     [class.seleccionado]="colorCapa.colorId === color._id"
+                                     (click)="seleccionarColorDesdeGrid(colorCapa, color)">
+                                  <span class="grid-dot translucido" [style.background-color]="color.rgb"></span>
+                                  <span class="grid-nombre">{{ color.nombre | capitalize }}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="color-grid-categoria" *ngIf="getColoresPorCategoria('polvo').length > 0">
+                              <h5>🌟 Polvo</h5>
+                              <div class="color-grid">
+                                <div class="color-grid-item" 
+                                     *ngFor="let color of getColoresPorCategoria('polvo')"
+                                     [class.seleccionado]="colorCapa.colorId === color._id"
+                                     (click)="seleccionarColorDesdeGrid(colorCapa, color)">
+                                  <span class="grid-dot polvo" [style.background-color]="color.rgb"></span>
+                                  <span class="grid-nombre">{{ color.nombre | capitalize }}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                       <span class="volumen-display" *ngIf="i === 0">{{ colorCapa.volumen }}ml</span>
                       <input type="number" *ngIf="i > 0" [(ngModel)]="colorCapa.volumen" (change)="onVolumenChange(capa, colorCapa, i)" 
                              class="input-volumen" min="0" [max]="capa.volumenTotal" placeholder="ml">
                       <select [(ngModel)]="colorCapa.fase" (change)="onFaseChange()" [class.filled]="colorCapa.fase">
-                        <option *ngFor="let fase of fases" [value]="fase">F{{ fase }}</option>
+                        <option *ngFor="let fase of fases" [ngValue]="fase">F{{ fase }}</option>
                       </select>
                       <button class="btn-remove-color" (click)="eliminarColorDeCapa(capa, i)" *ngIf="i > 0">×</button>
                     </div>
@@ -183,8 +227,11 @@
 <!-- Popups -->
 <app-popup-molde 
   *ngIf="mostrarPopupMolde" 
+  [moldeEditar]="moldeParaEditar"
   (cerrar)="cerrarPopupMolde()" 
   (moldeGuardado)="onMoldeGuardado($event)"
+  (moldeActualizado)="onMoldeActualizado($event)"
+  (moldeEliminado)="onMoldeEliminado($event)"
   (moldesImportados)="onMoldesImportados($event)">
 </app-popup-molde>
 

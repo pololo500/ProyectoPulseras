@@ -6,6 +6,7 @@ import { PopupMoldeComponent } from '../popupMolde/popupMolde.component';
 import { PopupColorComponent } from '../popupColor/popupColor.component';
 import { PopupConfirmComponent } from '../popupConfirm/popupConfirm.component';
 import { FilterByCategoriaPipe } from '../../extras/filterByCategoria.pipe';
+import { CapitalizePipe } from '../../extras/capitalizePipe';
 import { GlobalService } from '../../services/global.service';
 import jsPDF from 'jspdf';
 
@@ -66,7 +67,7 @@ interface ResumenColor {
 @Component({
   selector: 'app-calculadora-resina',
   standalone: true,
-  imports: [CommonModule, FormsModule, PopupMoldeComponent, PopupColorComponent, PopupConfirmComponent, FilterByCategoriaPipe],
+  imports: [CommonModule, FormsModule, PopupMoldeComponent, PopupColorComponent, PopupConfirmComponent, FilterByCategoriaPipe, CapitalizePipe],
   templateUrl: './calculadoraResina.component.html',
   styleUrl: './calculadoraResina.component.css'
 })
@@ -74,9 +75,12 @@ export class CalculadoraResinaComponent implements OnInit {
   mostrarPopupMolde = false;
   mostrarPopupColor = false;
   mostrarPopupConfirm = false;
+  moldeParaEditar: Molde | null = null;
+  colorParaEditar: Color | null = null;
 
   moldes: Molde[] = [];
   colores: Color[] = [];
+  colorPickerAbierto: string | null = null; // id único del picker abierto
   productos: ProductoTabla[] = [];
   contadorId = 1;
   resumenColores: ResumenColor[] = [];
@@ -130,13 +134,20 @@ export class CalculadoraResinaComponent implements OnInit {
                     colorId: capaAntigua.colorId || '',
                     colorNombre: capaAntigua.colorNombre || '',
                     colorRgb: capaAntigua.colorRgb || '',
-                    fase: capaAntigua.fase || 1,
+                    fase: Number(capaAntigua.fase) || 1,
                     volumen: capaAntigua.volumen || capa.volumenTotal || 0,
                     nota: capaAntigua.nota || ''
                   }]
                 };
               }
-              return capa;
+              // Normalizar fase a number en datos existentes
+              return {
+                ...capa,
+                colores: capa.colores.map(c => ({
+                  ...c,
+                  fase: Number(c.fase) || 1
+                }))
+              };
             })
           }));
           
@@ -185,17 +196,61 @@ export class CalculadoraResinaComponent implements OnInit {
     this.mostrarPopupConfirm = false;
   }
 
-  abrirPopupMolde(): void { this.mostrarPopupMolde = true; }
-  cerrarPopupMolde(): void { this.mostrarPopupMolde = false; }
+  abrirPopupMolde(): void { this.moldeParaEditar = null; this.mostrarPopupMolde = true; }
+  cerrarPopupMolde(): void { this.mostrarPopupMolde = false; this.moldeParaEditar = null; }
   onMoldeGuardado(molde: Molde): void { this.moldes.push(molde); }
+  onMoldeActualizado(molde: Molde): void {
+    const index = this.moldes.findIndex(m => m._id === molde._id);
+    if (index !== -1) { this.moldes[index] = molde; }
+  }
+  onMoldeEliminado(moldeId: string): void {
+    this.moldes = this.moldes.filter(m => m._id !== moldeId);
+  }
   onMoldesImportados(moldes: Molde[]): void { this.moldes.push(...moldes); }
 
-  abrirPopupColor(): void { this.mostrarPopupColor = true; }
-  cerrarPopupColor(): void { this.mostrarPopupColor = false; }
+  abrirPopupColor(): void { this.colorParaEditar = null; this.mostrarPopupColor = true; }
+  cerrarPopupColor(): void { this.mostrarPopupColor = false; this.colorParaEditar = null; }
   onColorGuardado(color: Color): void { this.colores.push(color); }
+  onColorActualizado(color: Color): void {
+    const index = this.colores.findIndex(c => c._id === color._id);
+    if (index !== -1) { this.colores[index] = color; }
+  }
+  onColorEliminado(colorId: string): void {
+    this.colores = this.colores.filter(c => c._id !== colorId);
+  }
   onColoresImportados(colores: Color[]): void { this.colores.push(...colores); }
 
-  // Recargar colores desde el servidor (para cuando se abre el select)
+  getColorById(colorId: string): Color | undefined {
+    return this.colores.find(c => c._id === colorId);
+  }
+
+  getColoresPorCategoria(categoria: string): Color[] {
+    return this.colores.filter(c => c.categoria === categoria);
+  }
+
+  toggleColorPicker(pickerId: string): void {
+    if (this.colorPickerAbierto === pickerId) {
+      this.colorPickerAbierto = null;
+    } else {
+      this.recargarColores();
+      this.colorPickerAbierto = pickerId;
+    }
+  }
+
+  seleccionarColorDesdeGrid(colorCapa: ColorCapa, color: Color): void {
+    colorCapa.colorId = color._id;
+    colorCapa.colorNombre = color.nombre;
+    colorCapa.colorRgb = color.rgb;
+    this.colorPickerAbierto = null;
+    this.actualizarResumen();
+    this.guardarMemoria();
+  }
+
+  cerrarColorPicker(): void {
+    this.colorPickerAbierto = null;
+  }
+
+  // Recargar colores desde el servidor
   recargarColores(): void {
     this.http.get<Color[]>('http://localhost:5000/api/colores').subscribe({
       next: (data) => this.colores = data,

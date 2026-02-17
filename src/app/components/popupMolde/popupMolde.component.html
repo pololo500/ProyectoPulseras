@@ -2,7 +2,7 @@
 <div class="card popup">
   <button class="btn-cerrar" (click)="cerrarPopup()">✕</button>
   
-  <h2>Agregar Molde</h2>
+  <h2>{{ modoEdicion ? 'Editar Molde' : 'Agregar Molde' }}</h2>
   
   <form (ngSubmit)="guardarMolde()">
     <label for="nombreMolde">Nombre del Molde</label>
@@ -16,9 +16,28 @@
     >
 
     <div class="capas-section">
-      <label>Capas del Molde</label>
+      <div class="capas-header">
+        <label>Capas del Molde</label>
+        <button type="button" class="btn-agregar-capa" (click)="agregarCapa()">+ Agregar Capa</button>
+      </div>
       
-      <div class="capa-row" *ngFor="let capa of capas; let i = index">
+      <div class="capa-row" *ngFor="let capa of capas; let i = index" [class.capa-vacia]="!esCapaValida(capa)">
+        <div class="capa-orden" *ngIf="esCapaValida(capa)">
+          <button 
+            type="button" 
+            class="btn-orden" 
+            (click)="moverCapaArriba(i)"
+            [disabled]="i === 0"
+            title="Mover arriba"
+          >▲</button>
+          <button 
+            type="button" 
+            class="btn-orden" 
+            (click)="moverCapaAbajo(i)"
+            [disabled]="i >= capas.length - 1 || !esCapaValida(capas[i + 1] || {nombre: '', volumen: null})"
+            title="Mover abajo"
+          >▼</button>
+        </div>
         <div class="capa-inputs">
           <input 
             type="text" 
@@ -44,6 +63,7 @@
           class="btn-eliminar-capa" 
           (click)="eliminarCapa(i)"
           *ngIf="capas.length > 1"
+          title="Eliminar capa"
         >🗑️</button>
       </div>
     </div>
@@ -52,12 +72,32 @@
 
     <div class="botones-popup">
       <button type="submit" [disabled]="!formularioValido() || guardando">
-        {{ guardando ? 'Guardando...' : 'Guardar Molde' }}
+        {{ guardando ? 'Guardando...' : (modoEdicion ? '💾 Guardar Cambios' : 'Guardar Molde') }}
       </button>
-      <button type="button" class="btn-importar" (click)="inputMoldesJson.click()">
+      
+      <button type="button" class="btn-eliminar-molde" *ngIf="modoEdicion" (click)="confirmarEliminarMolde()" [disabled]="eliminando">
+        🗑️ {{ eliminando ? 'Eliminando...' : 'Eliminar Molde' }}
+      </button>
+
+      <button type="button" class="btn-importar" (click)="inputMoldesJson.click()" *ngIf="!modoEdicion">
         📁 Importar desde JSON
       </button>
       <input #inputMoldesJson type="file" accept=".json" (change)="importarMoldesJson($event)" style="display: none;">
     </div>
   </form>
+
+  <!-- Confirmación de eliminación -->
+  <div class="confirm-eliminar" *ngIf="mostrarConfirmEliminar">
+    <div class="confirm-overlay" (click)="cancelarEliminar()"></div>
+    <div class="confirm-card">
+      <p>¿Estás seguro de eliminar el molde <strong>"{{ nombreMolde }}"</strong>?</p>
+      <p class="confirm-aviso">⚠️ Esta acción no se puede deshacer. Los productos que usen este molde podrían verse afectados.</p>
+      <div class="confirm-botones">
+        <button class="btn-confirm-cancelar" (click)="cancelarEliminar()">Cancelar</button>
+        <button class="btn-confirm-eliminar" (click)="eliminarMolde()" [disabled]="eliminando">
+          {{ eliminando ? 'Eliminando...' : 'Sí, Eliminar' }}
+        </button>
+      </div>
+    </div>
+  </div>
 </div>

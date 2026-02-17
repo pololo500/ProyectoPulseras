@@ -2,7 +2,7 @@
 <div class="card popup">
   <button class="btn-cerrar" (click)="cerrarPopup()">✕</button>
   
-  <h2>Agregar Color</h2>
+  <h2>{{ modoEdicion ? 'Editar Color' : 'Agregar Color' }}</h2>
   
   <form (ngSubmit)="guardarColor()">
     <label for="nombreColor">Nombre del Color</label>
@@ -45,12 +45,33 @@
 
     <div class="botones-popup">
       <button type="submit" [disabled]="!formularioValido() || guardando">
-        {{ guardando ? 'Guardando...' : 'Guardar Color' }}
+        {{ guardando ? 'Guardando...' : (modoEdicion ? '💾 Guardar Cambios' : 'Guardar Color') }}
       </button>
-      <button type="button" class="btn-importar" (click)="inputColoresJson.click()">
+      
+      <button type="button" class="btn-eliminar-color" *ngIf="modoEdicion" (click)="confirmarEliminarColor()" [disabled]="eliminando">
+        🗑️ {{ eliminando ? 'Eliminando...' : 'Eliminar Color' }}
+      </button>
+
+      <button type="button" class="btn-importar" (click)="inputColoresJson.click()" *ngIf="!modoEdicion">
         📁 Importar desde JSON
       </button>
       <input #inputColoresJson type="file" accept=".json" (change)="importarColoresJson($event)" style="display: none;">
     </div>
   </form>
+
+  <!-- Confirmación de eliminación -->
+  <div class="confirm-eliminar" *ngIf="mostrarConfirmEliminar">
+    <div class="confirm-overlay" (click)="cancelarEliminar()"></div>
+    <div class="confirm-card">
+      <p>¿Estás seguro de eliminar el color <strong>"{{ nombreColor }}"</strong>?</p>
+      <div class="confirm-color-preview" [style.background-color]="rgbColor"></div>
+      <p class="confirm-aviso">⚠️ Esta acción no se puede deshacer.</p>
+      <div class="confirm-botones">
+        <button class="btn-confirm-cancelar" (click)="cancelarEliminar()">Cancelar</button>
+        <button class="btn-confirm-eliminar" (click)="eliminarColor()" [disabled]="eliminando">
+          {{ eliminando ? 'Eliminando...' : 'Sí, Eliminar' }}
+        </button>
+      </div>
+    </div>
+  </div>
 </div>

@@ -22,18 +22,19 @@
 
   <!-- Lista de productos -->
   <div class="productos-grid" *ngIf="!productoEditando">
-    <div class="producto-card" *ngFor="let producto of productosFiltrados">
-      <div class="producto-imagen-container">
-        <img [src]="getPrimeraImagen(producto)" [alt]="producto.nombre" class="producto-imagen"/>
-        <span class="badge-imagenes" *ngIf="getImagenesProducto(producto).length > 1">
-          {{ getImagenesProducto(producto).length }} fotos
-        </span>
+    <div class="producto-card card" *ngFor="let producto of productosFiltrados">
+      <div class="badge-imagenes" *ngIf="getImagenesProducto(producto).length > 1">
+        {{ getImagenesProducto(producto).length }} fotos
+      </div>
+      
+      <div class="producto-imagen">
+        <img [src]="getPrimeraImagen(producto)" [alt]="producto.nombre">
       </div>
       <div class="producto-info">
         <h3>{{ producto.nombre }}</h3>
-        <p class="producto-tipo">{{ producto.producto | capitalize }} - {{ producto.material | capitalize }}</p>
-        <p class="producto-descripcion" *ngIf="producto.descripcion">{{ producto.descripcion }}</p>
-        <p class="producto-precio">${{ producto.precio | formatoPrecio }}</p>
+        <p class="tipo">{{ producto.producto | capitalize }} - {{ producto.material | capitalize }}</p>
+        <p class="descripcion" *ngIf="producto.descripcion">{{ producto.descripcion }}</p>
+        <p class="precio">${{ producto.precio | formatoPrecio }}</p>
       </div>
       <div class="producto-acciones">
         <button class="btn-editar" (click)="editarProducto(producto)">✏️ Editar</button>

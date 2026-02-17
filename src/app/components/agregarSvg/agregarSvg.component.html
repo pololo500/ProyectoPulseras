@@ -39,7 +39,10 @@
     <div class="contenido-principal">
         <!-- Lista de moldes -->
         <div class="panel-moldes">
-            <h2>Moldes Disponibles</h2>
+            <div class="panel-moldes-header">
+                <h2>Moldes Disponibles</h2>
+                <button class="btn-nuevo-molde" (click)="abrirPopupCrear()">+ Nuevo Molde</button>
+            </div>
             
             <div class="lista-moldes" *ngIf="!cargando">
                 <div class="molde-card" 
@@ -54,8 +57,13 @@
                     </div>
                     <div class="molde-capas">
                         <span class="capa-tag" *ngFor="let capa of molde.capas">
-                            {{ capa.nombre | capitalize }}
+                            {{ capa.nombre | capitalize }} ({{ capa.volumen }}ml)
                         </span>
+                    </div>
+                    <div class="molde-acciones">
+                        <button class="btn-editar-molde" (click)="abrirPopupEditar(molde, $event)" title="Editar molde">
+                            ✏️
+                        </button>
                     </div>
                 </div>
             </div>
@@ -66,6 +74,7 @@
             
             <div class="sin-moldes" *ngIf="!cargando && moldes.length === 0">
                 <p>No hay moldes registrados</p>
+                <button class="btn-nuevo-molde" (click)="abrirPopupCrear()">+ Crear primer molde</button>
             </div>
         </div>
         
@@ -148,3 +157,14 @@
         </div>
     </div>
 </div>
+
+<!-- Popup para crear/editar molde -->
+<app-popup-molde 
+    *ngIf="mostrarPopupMolde"
+    [moldeEditar]="moldeParaEditar"
+    (cerrar)="cerrarPopupMolde()"
+    (moldeGuardado)="onMoldeGuardado($event)"
+    (moldeActualizado)="onMoldeActualizado($event)"
+    (moldeEliminado)="onMoldeEliminado($event)"
+    (moldesImportados)="onMoldesImportados($event)">
+</app-popup-molde>

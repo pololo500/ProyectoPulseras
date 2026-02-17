@@ -1,0 +1,286 @@
+<div class="recursos-page">
+  <h1>Recursos</h1>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab" [class.activa]="tabActiva === 'colores'" (click)="cambiarTab('colores')">
+      <span class="tab-icon">🎨</span>
+      <span class="tab-texto">Colores</span>
+      <span class="tab-badge">{{ colores.length }}</span>
+    </button>
+    <button class="tab" [class.activa]="tabActiva === 'moldes'" (click)="cambiarTab('moldes')">
+      <span class="tab-icon">📐</span>
+      <span class="tab-texto">Moldes</span>
+      <span class="tab-badge">{{ moldes.length }}</span>
+    </button>
+    <button class="tab" [class.activa]="tabActiva === 'svgs'" (click)="cambiarTab('svgs')">
+      <span class="tab-icon">🖼️</span>
+      <span class="tab-texto">SVGs</span>
+    </button>
+  </div>
+
+  <!-- ==================== TAB COLORES ==================== -->
+  <div class="tab-content" *ngIf="tabActiva === 'colores'">
+    <div class="seccion-header">
+      <div class="header-izq">
+        <h2>Gestionar Colores</h2>
+        <input type="text" [(ngModel)]="busquedaColor" placeholder="🔍 Buscar color..." class="input-busqueda">
+      </div>
+      <button class="btn-crear" (click)="abrirPopupCrearColor()">+ Nuevo Color</button>
+    </div>
+
+    <div class="cargando" *ngIf="cargandoColores">
+      <p>Cargando colores...</p>
+    </div>
+
+    <div class="sin-datos" *ngIf="!cargandoColores && colores.length === 0">
+      <span class="sin-datos-icon">🎨</span>
+      <p>No hay colores registrados</p>
+      <button class="btn-crear" (click)="abrirPopupCrearColor()">+ Crear primer color</button>
+    </div>
+
+    <div class="colores-contenido" *ngIf="!cargandoColores && coloresFiltrados.length > 0">
+      <!-- Translúcidos -->
+      <div class="categoria-grupo" *ngIf="coloresTranslucidos.length > 0">
+        <h3 class="categoria-titulo">
+          <span class="categoria-dot translucido"></span>
+          Translúcidos
+          <span class="categoria-count">({{ coloresTranslucidos.length }})</span>
+        </h3>
+        <div class="colores-grid">
+          <div class="color-card" *ngFor="let color of coloresTranslucidos" (click)="abrirPopupEditarColor(color)">
+            <div class="color-muestra" [style.background-color]="color.rgb">
+              <span class="color-hex" [style.color]="getTextColor(color.rgb)">{{ color.rgb }}</span>
+            </div>
+            <div class="color-datos">
+              <span class="color-nombre">{{ color.nombre }}</span>
+              <span class="color-categoria">Translúcido</span>
+            </div>
+            <button class="btn-editar-item" (click)="abrirPopupEditarColor(color); $event.stopPropagation()" title="Editar color">✏️</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Polvo -->
+      <div class="categoria-grupo" *ngIf="coloresPolvo.length > 0">
+        <h3 class="categoria-titulo">
+          <span class="categoria-dot polvo"></span>
+          Polvo
+          <span class="categoria-count">({{ coloresPolvo.length }})</span>
+        </h3>
+        <div class="colores-grid">
+          <div class="color-card" *ngFor="let color of coloresPolvo" (click)="abrirPopupEditarColor(color)">
+            <div class="color-muestra" [style.background-color]="color.rgb">
+              <span class="color-hex" [style.color]="getTextColor(color.rgb)">{{ color.rgb }}</span>
+            </div>
+            <div class="color-datos">
+              <span class="color-nombre">{{ color.nombre }}</span>
+              <span class="color-categoria">Polvo</span>
+            </div>
+            <button class="btn-editar-item" (click)="abrirPopupEditarColor(color); $event.stopPropagation()" title="Editar color">✏️</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sin-resultados" *ngIf="!cargandoColores && colores.length > 0 && coloresFiltrados.length === 0">
+      <p>No se encontraron colores que coincidan con "{{ busquedaColor }}"</p>
+    </div>
+  </div>
+
+  <!-- ==================== TAB MOLDES ==================== -->
+  <div class="tab-content" *ngIf="tabActiva === 'moldes'">
+    <div class="seccion-header">
+      <div class="header-izq">
+        <h2>Gestionar Moldes</h2>
+        <input type="text" [(ngModel)]="busquedaMolde" placeholder="🔍 Buscar molde..." class="input-busqueda">
+      </div>
+      <button class="btn-crear" (click)="abrirPopupCrearMolde()">+ Nuevo Molde</button>
+    </div>
+
+    <div class="cargando" *ngIf="cargandoMoldes">
+      <p>Cargando moldes...</p>
+    </div>
+
+    <div class="sin-datos" *ngIf="!cargandoMoldes && moldes.length === 0">
+      <span class="sin-datos-icon">📐</span>
+      <p>No hay moldes registrados</p>
+      <button class="btn-crear" (click)="abrirPopupCrearMolde()">+ Crear primer molde</button>
+    </div>
+
+    <div class="moldes-grid" *ngIf="!cargandoMoldes && moldesFiltrados.length > 0">
+      <div class="molde-card" *ngFor="let molde of moldesFiltrados" (click)="abrirPopupEditarMolde(molde)">
+        <div class="molde-card-header">
+          <h3>{{ molde.nombre | capitalize }}</h3>
+          <div class="molde-badges">
+            <span class="badge-capas">{{ molde.capas.length }} capa(s)</span>
+            <span class="badge-svg" *ngIf="tieneSvg(molde)">✓ SVG</span>
+          </div>
+        </div>
+        <div class="molde-card-capas">
+          <span class="capa-tag" *ngFor="let capa of molde.capas">
+            {{ capa.nombre | capitalize }} <small>({{ capa.volumen }}ml)</small>
+          </span>
+        </div>
+        <button class="btn-editar-item" (click)="abrirPopupEditarMolde(molde); $event.stopPropagation()" title="Editar molde">✏️</button>
+      </div>
+    </div>
+
+    <div class="sin-resultados" *ngIf="!cargandoMoldes && moldes.length > 0 && moldesFiltrados.length === 0">
+      <p>No se encontraron moldes que coincidan con "{{ busquedaMolde }}"</p>
+    </div>
+  </div>
+
+  <!-- ==================== TAB SVGs ==================== -->
+  <div class="tab-content" *ngIf="tabActiva === 'svgs'">
+    <div class="seccion-header">
+      <div class="header-izq">
+        <h2>Gestionar SVGs de Moldes</h2>
+      </div>
+    </div>
+
+    <!-- Instrucciones -->
+    <div class="instrucciones">
+      <h3>📋 Instrucciones para subir un SVG</h3>
+      <div class="instrucciones-contenido">
+        <p><strong>El SVG debe estar preparado de la siguiente manera:</strong></p>
+        <ol>
+          <li>
+            <strong>Cada área coloreable debe tener un ID único</strong><br>
+            <code>&lt;path id="capa-base" d="..."&gt;</code>
+          </li>
+          <li>
+            <strong>Nombra los IDs de forma descriptiva</strong><br>
+            Ejemplo: <code>layer-base</code>, <code>layer-relleno</code>, <code>layer-tapa</code>
+          </li>
+          <li>
+            <strong>Agrupa elementos relacionados con &lt;g&gt;</strong><br>
+            <code>&lt;g id="area-decoracion"&gt;...paths...&lt;/g&gt;</code>
+          </li>
+          <li>
+            <strong>Evita estilos inline de fill</strong><br>
+            Los colores se aplicarán dinámicamente
+          </li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="svg-contenido-principal">
+      <!-- Lista de moldes para SVG -->
+      <div class="panel-moldes-svg">
+        <h3>Moldes Disponibles</h3>
+        <div class="lista-moldes-svg" *ngIf="!cargandoMoldes">
+          <div class="molde-svg-item"
+               *ngFor="let molde of moldes"
+               [class.seleccionado]="moldeSeleccionado?._id === molde._id"
+               [class.con-svg]="tieneSvg(molde)"
+               (click)="seleccionarMoldeSvg(molde)">
+            <div class="molde-svg-info">
+              <span class="molde-svg-nombre">{{ molde.nombre | capitalize }}</span>
+              <span class="molde-svg-capas">{{ molde.capas.length }} capa(s)</span>
+            </div>
+            <span class="badge-svg-small" *ngIf="tieneSvg(molde)">✓</span>
+          </div>
+        </div>
+        <div class="sin-datos-mini" *ngIf="!cargandoMoldes && moldes.length === 0">
+          <p>No hay moldes. Crea uno primero en la pestaña Moldes.</p>
+        </div>
+      </div>
+
+      <!-- Panel de edición SVG -->
+      <div class="panel-svg" *ngIf="moldeSeleccionado">
+        <div class="panel-svg-header">
+          <h3>{{ moldeSeleccionado.nombre | capitalize }}</h3>
+          <button class="btn-cerrar-svg" (click)="limpiarSeleccionSvg()">✕</button>
+        </div>
+
+        <!-- Cargar SVG -->
+        <div class="seccion-cargar">
+          <label class="btn-cargar-svg" for="inputSvgRecursos">
+            📁 {{ svgContent ? 'Cambiar SVG' : 'Cargar SVG' }}
+          </label>
+          <input type="file" id="inputSvgRecursos" accept=".svg" (change)="onFileSelected($event)" hidden>
+          <button class="btn-eliminar-svg" *ngIf="svgContent" (click)="eliminarSvg()">
+            🗑️ Eliminar SVG
+          </button>
+        </div>
+
+        <!-- Preview SVG -->
+        <div class="seccion-preview" *ngIf="svgPreview">
+          <h4>Vista Previa</h4>
+          <div class="svg-preview-container" [innerHTML]="svgPreview"></div>
+          <p class="preview-nota">Los colores son de ejemplo.</p>
+        </div>
+
+        <!-- Elementos detectados -->
+        <div class="seccion-elementos" *ngIf="svgElementIds.length > 0">
+          <h4>Elementos SVG Detectados</h4>
+          <div class="elementos-lista">
+            <span class="elemento-tag" *ngFor="let id of svgElementIds">{{ id }}</span>
+          </div>
+        </div>
+
+        <!-- Mapeo de capas -->
+        <div class="seccion-mapeo" *ngIf="svgContent && areaMappings.length > 0">
+          <h4>Asignar Capas a Elementos SVG</h4>
+          <div class="mapeo-lista">
+            <div class="mapeo-item" *ngFor="let mapping of areaMappings; let i = index">
+              <div class="mapeo-capa">
+                <span class="color-dot" [style.background-color]="coloresPreview[i % coloresPreview.length]"></span>
+                <span class="capa-nombre">{{ mapping.capaNombre | capitalize }}</span>
+              </div>
+              <select [(ngModel)]="mapping.svgElementId"
+                      (ngModelChange)="onMappingChange()"
+                      [class.asignado]="mapping.svgElementId">
+                <option value="">-- Seleccionar elemento --</option>
+                <option *ngFor="let id of svgElementIds" [value]="id">{{ id }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mensaje SVG -->
+        <div class="mensaje" *ngIf="mensajeSvg" [class.exito]="tipoMensajeSvg === 'exito'" [class.error]="tipoMensajeSvg === 'error'">
+          {{ mensajeSvg }}
+        </div>
+
+        <!-- Botón guardar SVG -->
+        <div class="acciones-svg" *ngIf="svgContent">
+          <button class="btn-guardar-svg"
+                  (click)="guardarSvg()"
+                  [disabled]="guardandoSvg || !todosLosMapeosCompletos()">
+            {{ guardandoSvg ? 'Guardando...' : '💾 Guardar SVG' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Placeholder -->
+      <div class="panel-placeholder" *ngIf="!moldeSeleccionado">
+        <span class="placeholder-icon">🖼️</span>
+        <p>Selecciona un molde para gestionar su SVG</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Popup Color -->
+<app-popup-color
+  *ngIf="mostrarPopupColor"
+  [colorEditar]="colorParaEditar"
+  (cerrar)="cerrarPopupColor()"
+  (colorGuardado)="onColorGuardado($event)"
+  (colorActualizado)="onColorActualizado($event)"
+  (colorEliminado)="onColorEliminado($event)"
+  (coloresImportados)="onColoresImportados($event)">
+</app-popup-color>
+
+<!-- Popup Molde -->
+<app-popup-molde
+  *ngIf="mostrarPopupMolde"
+  [moldeEditar]="moldeParaEditar"
+  (cerrar)="cerrarPopupMolde()"
+  (moldeGuardado)="onMoldeGuardado($event)"
+  (moldeActualizado)="onMoldeActualizado($event)"
+  (moldeEliminado)="onMoldeEliminado($event)"
+  (moldesImportados)="onMoldesImportados($event)">
+</app-popup-molde>
