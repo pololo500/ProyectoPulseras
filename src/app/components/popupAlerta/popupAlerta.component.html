@@ -1,0 +1,7 @@
+<div class="overlay" (click)="onCerrar()">
+  <div class="card" (click)="$event.stopPropagation()">
+    <div class="icono" [ngClass]="tipo">{{ icono }}</div>
+    <p>{{ mensaje }}</p>
+    <button class="btn-aceptar" [ngClass]="tipo" (click)="onCerrar()">Aceptar</button>
+  </div>
+</div>

@@ -7,6 +7,7 @@ import { CapitalizePipe } from '../../extras/capitalizePipe';
 import { GlobalService } from '../../services/global.service';
 import { PopupMoldeComponent } from '../popupMolde/popupMolde.component';
 import { PopupColorComponent } from '../popupColor/popupColor.component';
+import { PopupConfirmComponent } from '../popupConfirm/popupConfirm.component';
 
 interface Capa {
   nombre: string;
@@ -37,7 +38,7 @@ interface Color {
 @Component({
   selector: 'app-recursos',
   standalone: true,
-  imports: [CommonModule, FormsModule, CapitalizePipe, PopupMoldeComponent, PopupColorComponent],
+  imports: [CommonModule, FormsModule, CapitalizePipe, PopupMoldeComponent, PopupColorComponent, PopupConfirmComponent],
   templateUrl: './recursos.component.html',
   styleUrl: './recursos.component.css'
 })
@@ -65,6 +66,9 @@ export class RecursosComponent implements OnInit {
 
   // SVG (reusar lógica de agregarSvg)
   moldeSeleccionado: Molde | null = null;
+
+  // Popup confirmar eliminar SVG
+  mostrarPopupEliminarSvg = false;
   svgContent = '';
   svgPreview: SafeHtml | null = null;
   svgElementIds: string[] = [];
@@ -388,7 +392,12 @@ export class RecursosComponent implements OnInit {
 
   eliminarSvg(): void {
     if (!this.moldeSeleccionado) return;
-    if (!confirm('¿Estás seguro de eliminar el SVG de este molde?')) return;
+    this.mostrarPopupEliminarSvg = true;
+  }
+
+  confirmarEliminarSvg(): void {
+    this.mostrarPopupEliminarSvg = false;
+    if (!this.moldeSeleccionado) return;
     this.guardandoSvg = true;
     const datosActualizados = { svgContent: null, svgAreaMappings: [] };
     this.http.put(`http://localhost:5000/api/moldes/${this.moldeSeleccionado._id}`, datosActualizados)

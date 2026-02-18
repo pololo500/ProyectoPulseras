@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { CapitalizePipe } from '../../extras/capitalizePipe';
 import { FormatoPrecioPipe } from '../../extras/formatoPrecio.pipe';
 import { GlobalService } from '../../services/global.service';
+import { PopupAlertaComponent } from '../popupAlerta/popupAlerta.component';
 
 interface Pedido {
     _id: string;
@@ -29,7 +30,7 @@ interface Cliente {
 @Component({
     selector: 'app-clientes',
     standalone: true,
-    imports: [CommonModule, FormsModule, CapitalizePipe, FormatoPrecioPipe],
+    imports: [CommonModule, FormsModule, CapitalizePipe, FormatoPrecioPipe, PopupAlertaComponent],
     templateUrl: './clientes.component.html',
     styleUrl: './clientes.component.css'
 })
@@ -52,6 +53,19 @@ export class ClientesComponent implements OnInit {
     
     // Estado de carga
     cargando = true;
+
+    // Popup alerta
+    mensajeAlerta = '';
+    tipoAlerta: 'exito' | 'error' | 'info' = 'info';
+
+    mostrarAlerta(mensaje: string, tipo: 'exito' | 'error' | 'info' = 'info') {
+      this.mensajeAlerta = mensaje;
+      this.tipoAlerta = tipo;
+    }
+
+    cerrarAlerta() {
+      this.mensajeAlerta = '';
+    }
 
     constructor(
         private http: HttpClient,
@@ -214,17 +228,17 @@ export class ClientesComponent implements OnInit {
 
     copiarEmail(email: string): void {
         navigator.clipboard.writeText(email);
-        alert('Email copiado al portapapeles');
+        this.mostrarAlerta('Email copiado al portapapeles', 'exito');
     }
 
     copiarTelefono(telefono: string): void {
         navigator.clipboard.writeText(telefono);
-        alert('Teléfono copiado al portapapeles');
+        this.mostrarAlerta('Teléfono copiado al portapapeles', 'exito');
     }
 
     abrirWhatsApp(telefono: string): void {
         if (!telefono) {
-            alert('Este cliente no tiene teléfono registrado');
+            this.mostrarAlerta('Este cliente no tiene teléfono registrado', 'info');
             return;
         }
         // Limpiar teléfono de caracteres no numéricos

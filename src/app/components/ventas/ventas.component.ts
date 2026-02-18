@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { CapitalizePipe } from '../../extras/capitalizePipe';
 import { FormatoPrecioPipe } from '../../extras/formatoPrecio.pipe';
 import { GlobalService } from '../../services/global.service';
+import { PopupAlertaComponent } from '../popupAlerta/popupAlerta.component';
 
 interface Venta {
   _id?: string;
@@ -32,7 +33,7 @@ interface Producto {
 @Component({
   selector: 'app-ventas',
   standalone: true,
-  imports: [CommonModule, FormsModule, CapitalizePipe, FormatoPrecioPipe],
+  imports: [CommonModule, FormsModule, CapitalizePipe, FormatoPrecioPipe, PopupAlertaComponent],
   templateUrl: './ventas.component.html',
   styleUrl: './ventas.component.css'
 })
@@ -66,6 +67,19 @@ export class VentasComponent implements OnInit {
   // Importar JSON
   mostrarImportarJson = false;
   archivoSeleccionado: File | null = null;
+
+  // Popup alerta
+  mensajeAlerta = '';
+  tipoAlerta: 'exito' | 'error' | 'info' = 'info';
+
+  mostrarAlerta(mensaje: string, tipo: 'exito' | 'error' | 'info' = 'info') {
+    this.mensajeAlerta = mensaje;
+    this.tipoAlerta = tipo;
+  }
+
+  cerrarAlerta() {
+    this.mensajeAlerta = '';
+  }
 
   constructor(private http: HttpClient, private globalService: GlobalService) {}
 
@@ -205,7 +219,7 @@ export class VentasComponent implements OnInit {
 
   guardarVenta() {
     if (!this.nuevaVenta.cliente || !this.nuevaVenta.productoNombre) {
-      alert('Cliente y producto son requeridos');
+      this.mostrarAlerta('Cliente y producto son requeridos', 'error');
       return;
     }
 
@@ -235,14 +249,14 @@ export class VentasComponent implements OnInit {
     if (file && file.type === 'application/json') {
       this.archivoSeleccionado = file;
     } else {
-      alert('Por favor selecciona un archivo .json válido');
+      this.mostrarAlerta('Por favor selecciona un archivo .json válido', 'error');
       this.archivoSeleccionado = null;
     }
   }
 
   importarJson() {
     if (!this.archivoSeleccionado) {
-      alert('Por favor selecciona un archivo JSON');
+      this.mostrarAlerta('Por favor selecciona un archivo JSON', 'error');
       return;
     }
 
@@ -277,7 +291,7 @@ export class VentasComponent implements OnInit {
                 if (importados + errores === ventasArray.length) {
                   this.cargarVentas();
                   this.cerrarImportarJson();
-                  alert(`Importación completada: ${importados} ventas importadas, ${errores} errores`);
+                  this.mostrarAlerta(`Importación completada: ${importados} ventas importadas, ${errores} errores`, errores > 0 ? 'info' : 'exito');
                 }
               },
               error: () => {
@@ -285,13 +299,13 @@ export class VentasComponent implements OnInit {
                 if (importados + errores === ventasArray.length) {
                   this.cargarVentas();
                   this.cerrarImportarJson();
-                  alert(`Importación completada: ${importados} ventas importadas, ${errores} errores`);
+                  this.mostrarAlerta(`Importación completada: ${importados} ventas importadas, ${errores} errores`, errores > 0 ? 'info' : 'exito');
                 }
               }
             });
         });
       } catch (error) {
-        alert('Error al parsear el archivo JSON. Verifica el formato.');
+        this.mostrarAlerta('Error al parsear el archivo JSON. Verifica el formato.', 'error');
       }
     };
     reader.readAsText(this.archivoSeleccionado);

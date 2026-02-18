@@ -270,17 +270,18 @@
 </div>
 
 <!-- Popup Confirmar Cancelación -->
-<div class="popup-overlay" *ngIf="mostrarPopupCancelar" (click)="cerrarPopupCancelar()">
-    <div class="popup-cancelar" (click)="$event.stopPropagation()">
-        <h3>🗑️ ¿Cancelar pedido?</h3>
-        <p class="popup-descripcion">Estás por cancelar el pedido</p>
-        <p class="popup-warning">⚠️ Esta acción no se puede deshacer</p>
-        
-        <div class="popup-acciones">
-            <button class="btn-volver" (click)="cerrarPopupCancelar()" [disabled]="cancelando">Volver</button>
-            <button class="btn-confirmar-cancelar" (click)="confirmarCancelacion()" [disabled]="cancelando">
-                {{ cancelando ? 'Cancelando...' : 'Sí, cancelar' }}
-            </button>
-        </div>
-    </div>
-</div>
+<app-popup-confirm
+  *ngIf="mostrarPopupCancelar"
+  titulo="¿Cancelar pedido?"
+  mensaje="Estás por cancelar el pedido. Esta acción no se puede deshacer."
+  (confirmar)="confirmarCancelacion()"
+  (cancelar)="cerrarPopupCancelar()">
+</app-popup-confirm>
+
+<!-- Popup de alerta -->
+<app-popup-alerta
+  *ngIf="mensajeAlerta"
+  [mensaje]="mensajeAlerta"
+  [tipo]="tipoAlerta"
+  (cerrar)="cerrarAlerta()">
+</app-popup-alerta>

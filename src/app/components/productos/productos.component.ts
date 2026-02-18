@@ -49,6 +49,44 @@ interface Producto {
   imagenesUrls?: string[];
   moldeNombre?: string;
   cantidad?: number;
+  coloresPorImagen?: {
+    imagenIndex: number;
+    colores: {
+      capaIndex: number;
+      capaNombre: string;
+      colorId: string;
+      colorNombre: string;
+      colorRgb: string;
+      colorCategoria: string;
+    }[];
+  }[];
+}
+
+interface ColorCapaStock {
+  capaIndex: number;
+  capaNombre: string;
+  colorId: string;
+  colorNombre: string;
+  colorRgb: string;
+}
+
+interface StockVariante {
+  _id: string;
+  coloresPorCapa: ColorCapaStock[];
+  cantidad: number;
+  detallesDiseno?: string;
+}
+
+interface StockItem {
+  _id: string;
+  productoId: string;
+  productoNombre: string;
+  productoTipo: string;
+  material: string;
+  moldeId?: string;
+  moldeNombre?: string;
+  imagenUrl?: string;
+  variantes: StockVariante[];
 }
 
 @Component({
@@ -116,6 +154,12 @@ export class ProductosComponent implements OnInit {
   mostrarPopupLoginFavoritos = false;
   modoLoginFavoritos: 'login' | 'registro' = 'login';
   popupLoginError = '';
+
+  // Stock disponible
+  stockPorProducto: Map<string, { items: StockItem[], totalUnidades: number }> = new Map();
+  mostrarPopupStock = false;
+  stockDetalleItems: StockItem[] = [];
+  cantidadStockSeleccionada: Map<string, number> = new Map(); // varianteId -> cantidad seleccionada
   
   // Formulario de login
   loginForm = new FormGroup({
@@ -155,11 +199,12 @@ export class ProductosComponent implements OnInit {
   }
 
   cargarDatos(): void {
-    // Cargar productos, colores y moldes en paralelo
+    // Cargar productos, colores, moldes y stock en paralelo
     forkJoin({
       productos: this.http.get<Producto[]>('http://localhost:5000/api/productos'),
       colores: this.http.get<Color[]>('http://localhost:5000/api/colores'),
-      moldes: this.http.get<Molde[]>('http://localhost:5000/api/moldes')
+      moldes: this.http.get<Molde[]>('http://localhost:5000/api/moldes'),
+      stock: this.http.get<StockItem[]>('http://localhost:5000/api/stock')
     }).subscribe({
       next: (data) => {
         // Cargar colores
@@ -172,6 +217,25 @@ export class ProductosComponent implements OnInit {
         this.productos = data.productos.map(p => ({ ...p, cantidad: 1 }));
         this.productosFiltrados = [...this.productos];
         this.extraerFiltros();
+
+        // Procesar stock: agrupar por productoId y filtrar variantes con cantidad > 0
+        this.stockPorProducto.clear();
+        data.stock.forEach(item => {
+          const variantesDisponibles = item.variantes.filter(v => v.cantidad > 0);
+          if (variantesDisponibles.length > 0) {
+            const itemFiltrado = { ...item, variantes: variantesDisponibles };
+            const existing = this.stockPorProducto.get(item.productoId);
+            if (existing) {
+              existing.items.push(itemFiltrado);
+              existing.totalUnidades += variantesDisponibles.reduce((sum, v) => sum + v.cantidad, 0);
+            } else {
+              this.stockPorProducto.set(item.productoId, {
+                items: [itemFiltrado],
+                totalUnidades: variantesDisponibles.reduce((sum, v) => sum + v.cantidad, 0)
+              });
+            }
+          }
+        });
         
         // Aplicar filtro si viene de query params
         if (this.filtroTipo) {
@@ -841,6 +905,31 @@ export class ProductosComponent implements OnInit {
     this.capaAbiertaDetalle = null;
   }
 
+  // Verificar si la imagen actual tiene colores asignados
+  imagenActualTieneColores(): boolean {
+    if (!this.productoDetalle?.coloresPorImagen) return false;
+    const entry = this.productoDetalle.coloresPorImagen.find(c => c.imagenIndex === this.imagenActualIndex);
+    return !!(entry && entry.colores.length > 0);
+  }
+
+  // Aplicar los colores asignados a la foto actual
+  aplicarColoresDeFoto(): void {
+    if (!this.productoDetalle?.coloresPorImagen || !this.moldeDetalle) return;
+    
+    const entry = this.productoDetalle.coloresPorImagen.find(c => c.imagenIndex === this.imagenActualIndex);
+    if (!entry || entry.colores.length === 0) return;
+    
+    // Para cada color asignado a la imagen, buscar el color completo y asignarlo
+    entry.colores.forEach(colorData => {
+      const colorCompleto = this.colores.find(c => c._id === colorData.colorId);
+      if (colorCompleto && colorData.capaIndex < this.coloresPorCapaDetalle.length) {
+        this.coloresPorCapaDetalle[colorData.capaIndex] = colorCompleto;
+      }
+    });
+    
+    this.actualizarSvgPreviewDetalle();
+  }
+
   // Verificar si todas las capas tienen color seleccionado en detalle
   todasCapasConColorDetalle(): boolean {
     if (!this.moldeDetalle) return true; // No es resina
@@ -941,6 +1030,130 @@ export class ProductosComponent implements OnInit {
   tieneFiltrosActivos(): boolean {
     return !!(this.filtroTipo || this.filtroMaterial || this.filtroNombre || 
               this.filtroPrecioMin !== null || this.filtroPrecioMax !== null);
+  }
+
+  // ========== STOCK DISPONIBLE ==========
+
+  productoTieneStock(productoId: string): boolean {
+    const stock = this.stockPorProducto.get(productoId);
+    return !!(stock && stock.totalUnidades > 0);
+  }
+
+  getStockTotal(productoId: string): number {
+    const stock = this.stockPorProducto.get(productoId);
+    return stock ? stock.totalUnidades : 0;
+  }
+
+  abrirPopupStock(): void {
+    if (!this.productoDetalle) return;
+    const stock = this.stockPorProducto.get(this.productoDetalle._id);
+    if (!stock) return;
+    this.stockDetalleItems = stock.items;
+    this.cantidadStockSeleccionada.clear();
+    // Inicializar cantidad en 1 para cada variante
+    stock.items.forEach(item => {
+      item.variantes.forEach(v => {
+        this.cantidadStockSeleccionada.set(v._id, 1);
+      });
+    });
+    this.mostrarPopupStock = true;
+  }
+
+  cerrarPopupStock(): void {
+    this.mostrarPopupStock = false;
+    this.stockDetalleItems = [];
+    this.cantidadStockSeleccionada.clear();
+  }
+
+  generarSvgParaVariante(variante: StockVariante, moldeNombre?: string): SafeHtml | null {
+    if (!moldeNombre) return null;
+    const molde = this.getMoldeByNombre(moldeNombre);
+    if (!molde?.svgContent || !molde?.svgAreaMappings) return null;
+    
+    // Construir array de colores a partir de la variante
+    const coloresArray: (Color | null)[] = new Array(molde.capas.length).fill(null);
+    variante.coloresPorCapa.forEach(cc => {
+      if (cc.capaIndex < coloresArray.length) {
+        // Crear un objeto Color compatible
+        coloresArray[cc.capaIndex] = {
+          _id: cc.colorId,
+          nombre: cc.colorNombre,
+          rgb: cc.colorRgb,
+          categoria: this.colores.find(c => c._id === cc.colorId)?.categoria || ''
+        };
+      }
+    });
+    
+    return this.generarSvgConColores(molde.svgContent, molde.svgAreaMappings, coloresArray);
+  }
+
+  getImagenParaVariante(variante: StockVariante, stockItem: StockItem): string | null {
+    if (!this.productoDetalle?.coloresPorImagen || !this.productoDetalle?.imagenesUrls) return stockItem.imagenUrl || null;
+    
+    // Buscar una imagen que tenga exactamente los mismos colores que la variante
+    for (const entry of this.productoDetalle.coloresPorImagen) {
+      if (entry.colores.length === 0) continue;
+      const match = variante.coloresPorCapa.every(vc => 
+        entry.colores.some(ec => ec.capaIndex === vc.capaIndex && ec.colorId === vc.colorId)
+      ) && entry.colores.every(ec =>
+        variante.coloresPorCapa.some(vc => vc.capaIndex === ec.capaIndex && vc.colorId === ec.colorId)
+      );
+      if (match && this.productoDetalle.imagenesUrls[entry.imagenIndex]) {
+        return this.productoDetalle.imagenesUrls[entry.imagenIndex];
+      }
+    }
+    
+    return stockItem.imagenUrl || null;
+  }
+
+  incrementarCantidadStock(varianteId: string, max: number): void {
+    const actual = this.cantidadStockSeleccionada.get(varianteId) || 1;
+    if (actual < max) {
+      this.cantidadStockSeleccionada.set(varianteId, actual + 1);
+    }
+  }
+
+  decrementarCantidadStock(varianteId: string): void {
+    const actual = this.cantidadStockSeleccionada.get(varianteId) || 1;
+    if (actual > 1) {
+      this.cantidadStockSeleccionada.set(varianteId, actual - 1);
+    }
+  }
+
+  getCantidadStock(varianteId: string): number {
+    return this.cantidadStockSeleccionada.get(varianteId) || 1;
+  }
+
+  comprarDesdeStock(variante: StockVariante, stockItem: StockItem): void {
+    if (!this.productoDetalle) return;
+    const cantidad = this.cantidadStockSeleccionada.get(variante._id) || 1;
+
+    // Construir coloresPorCapa para el carrito
+    const coloresPorCapa: ColorPorCapa[] = variante.coloresPorCapa.map(cc => ({
+      capaIndex: cc.capaIndex,
+      capaNombre: cc.capaNombre,
+      colorId: cc.colorId,
+      colorNombre: cc.colorNombre,
+      colorRgb: cc.colorRgb
+    }));
+
+    this.carritoService.agregarProducto({
+      _id: this.productoDetalle._id,
+      nombre: this.productoDetalle.nombre,
+      producto: this.productoDetalle.producto,
+      material: this.productoDetalle.material,
+      precio: this.productoDetalle.precio || 0,
+      imagen: this.getImagenParaVariante(variante, stockItem) || this.getPrimeraImagen(this.productoDetalle),
+      moldeNombre: this.productoDetalle.moldeNombre,
+      coloresPorCapa: coloresPorCapa.length > 0 ? coloresPorCapa : undefined,
+      esStock: true,
+      stockVarianteId: variante._id
+    }, cantidad);
+
+    const coloresGuardados = coloresPorCapa.length > 0 ? [...coloresPorCapa] : undefined;
+    this.cerrarPopupStock();
+    this.cerrarDetalle();
+    this.mostrarMensajeExito(`${cantidad} x ${this.productoDetalle?.nombre || stockItem.productoNombre} - Listo para retirar`, coloresGuardados);
   }
 
   // ========== POPUP LOGIN/REGISTRO PARA FAVORITOS ==========

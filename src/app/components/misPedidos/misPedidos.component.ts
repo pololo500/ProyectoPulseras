@@ -6,6 +6,8 @@ import { HttpClient } from '@angular/common/http';
 import { CapitalizePipe } from '../../extras/capitalizePipe';
 import { FormatoPrecioPipe } from '../../extras/formatoPrecio.pipe';
 import { GlobalService } from '../../services/global.service';
+import { PopupAlertaComponent } from '../popupAlerta/popupAlerta.component';
+import { PopupConfirmComponent } from '../popupConfirm/popupConfirm.component';
 
 interface ColorCapa {
     capaIndex: number;
@@ -74,7 +76,7 @@ interface Venta {
 @Component({
     selector: 'app-mis-pedidos',
     standalone: true,
-    imports: [CommonModule, RouterModule, FormsModule, CapitalizePipe, FormatoPrecioPipe],
+    imports: [CommonModule, RouterModule, FormsModule, CapitalizePipe, FormatoPrecioPipe, PopupAlertaComponent, PopupConfirmComponent],
     templateUrl: './misPedidos.component.html',
     styleUrl: './misPedidos.component.css'
 })
@@ -100,6 +102,19 @@ export class MisPedidosComponent implements OnInit {
     guardandoNota = false;
     
     emailCliente: string = '';
+
+    // Popup alerta
+    mensajeAlerta = '';
+    tipoAlerta: 'exito' | 'error' | 'info' = 'info';
+
+    mostrarAlerta(mensaje: string, tipo: 'exito' | 'error' | 'info' = 'info') {
+      this.mensajeAlerta = mensaje;
+      this.tipoAlerta = tipo;
+    }
+
+    cerrarAlerta() {
+      this.mensajeAlerta = '';
+    }
 
     constructor(
         private http: HttpClient,
@@ -384,14 +399,14 @@ export class MisPedidosComponent implements OnInit {
                             error: (err) => {
                                 console.error('Error al eliminar pedido:', err);
                                 this.cancelando = false;
-                                alert('Error al cancelar el pedido');
+                                this.mostrarAlerta('Error al cancelar el pedido', 'error');
                             }
                         });
                 },
                 error: (err) => {
                     console.error('Error al crear venta:', err);
                     this.cancelando = false;
-                    alert('Error al cancelar el pedido');
+                    this.mostrarAlerta('Error al cancelar el pedido', 'error');
                 }
             });
     }
@@ -417,7 +432,7 @@ export class MisPedidosComponent implements OnInit {
             error: (err) => {
                 console.error('Error al guardar nota:', err);
                 this.guardandoNota = false;
-                alert('Error al guardar la nota');
+                this.mostrarAlerta('Error al guardar la nota', 'error');
             }
         });
     }

@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { CapitalizePipe } from '../../extras/capitalizePipe';
+import { PopupConfirmComponent } from '../popupConfirm/popupConfirm.component';
+import { PopupAlertaComponent } from '../popupAlerta/popupAlerta.component';
 
 interface ColorCapaStock {
   capaIndex: number;
@@ -61,7 +63,7 @@ interface Color {
 @Component({
   selector: 'app-stock',
   standalone: true,
-  imports: [CommonModule, FormsModule, CapitalizePipe],
+  imports: [CommonModule, FormsModule, CapitalizePipe, PopupConfirmComponent, PopupAlertaComponent],
   templateUrl: './stock.component.html',
   styleUrl: './stock.component.css'
 })
@@ -100,10 +102,34 @@ export class StockComponent implements OnInit {
   // Modal para detalle
   mostrarModalDetalle = false;
   stockDetalle: StockItem | null = null;
+
+  // Modal para agregar variante a stock existente
+  mostrarModalAgregarVariante = false;
+  stockParaVariante: StockItem | null = null;
+  nuevaVarianteExistente: StockVariante = this.crearNuevaVariante();
   
+  // Accordion de capas para selector de colores
+  capaAbiertaCargar: number | null = null;
+  capaAbiertaVariante: number | null = null;
+
   // Filtros
   filtroMaterial = '';
   filtroNombre = '';
+  filtroTipo = '';
+  mostrarFiltrosMobile = false;
+
+  // Popup alerta
+  mensajeAlerta = '';
+  tipoAlerta: 'exito' | 'error' | 'info' = 'info';
+
+  mostrarAlerta(mensaje: string, tipo: 'exito' | 'error' | 'info' = 'info') {
+    this.mensajeAlerta = mensaje;
+    this.tipoAlerta = tipo;
+  }
+
+  cerrarAlerta() {
+    this.mensajeAlerta = '';
+  }
 
   constructor(private http: HttpClient) {}
 
@@ -176,6 +202,9 @@ export class StockComponent implements OnInit {
       if (this.filtroNombre && !item.productoNombre.toLowerCase().includes(this.filtroNombre.toLowerCase())) {
         return false;
       }
+      if (this.filtroTipo && item.productoTipo !== this.filtroTipo) {
+        return false;
+      }
       return true;
     });
   }
@@ -183,6 +212,29 @@ export class StockComponent implements OnInit {
   get materialesUnicos(): string[] {
     const materiales = new Set(this.stock.map(s => s.material));
     return Array.from(materiales).sort();
+  }
+
+  get tiposUnicos(): string[] {
+    const tipos = new Set(this.stock.map(s => s.productoTipo));
+    return Array.from(tipos).sort();
+  }
+
+  abrirFiltrosMobile(): void {
+    this.mostrarFiltrosMobile = true;
+  }
+
+  cerrarFiltrosMobile(): void {
+    this.mostrarFiltrosMobile = false;
+  }
+
+  tieneFiltrosActivos(): boolean {
+    return !!(this.filtroNombre || this.filtroTipo || this.filtroMaterial);
+  }
+
+  limpiarFiltros(): void {
+    this.filtroNombre = '';
+    this.filtroTipo = '';
+    this.filtroMaterial = '';
   }
 
   getCantidadTotal(item: StockItem): number {
@@ -242,17 +294,47 @@ export class StockComponent implements OnInit {
     return item.material.toLowerCase() === 'resina';
   }
 
+  getColoresPorCategoria(categoria: string): Color[] {
+    return this.colores.filter(c => c.categoria?.toLowerCase() === categoria.toLowerCase());
+  }
+
+  toggleCapaCargar(index: number): void {
+    this.capaAbiertaCargar = this.capaAbiertaCargar === index ? null : index;
+  }
+
+  toggleCapaVariante(index: number): void {
+    this.capaAbiertaVariante = this.capaAbiertaVariante === index ? null : index;
+  }
+
+  seleccionarColorCapaDesdeGrid(capaIndex: number, color: Color, modo: 'cargar' | 'variante'): void {
+    if (modo === 'cargar') {
+      if (this.nuevaVariante.coloresPorCapa) {
+        this.nuevaVariante.coloresPorCapa[capaIndex].colorId = color._id;
+        this.nuevaVariante.coloresPorCapa[capaIndex].colorNombre = color.nombre;
+        this.nuevaVariante.coloresPorCapa[capaIndex].colorRgb = color.rgb;
+      }
+      this.capaAbiertaCargar = null;
+    } else {
+      if (this.nuevaVarianteExistente.coloresPorCapa) {
+        this.nuevaVarianteExistente.coloresPorCapa[capaIndex].colorId = color._id;
+        this.nuevaVarianteExistente.coloresPorCapa[capaIndex].colorNombre = color.nombre;
+        this.nuevaVarianteExistente.coloresPorCapa[capaIndex].colorRgb = color.rgb;
+      }
+      this.capaAbiertaVariante = null;
+    }
+  }
+
   agregarVarianteAlModal(): void {
     if (this.esResina(this.nuevoStock) && this.nuevaVariante.coloresPorCapa) {
       const faltanColores = this.nuevaVariante.coloresPorCapa.some(c => !c.colorId);
       if (faltanColores) {
-        alert('Por favor selecciona un color para cada capa');
+        this.mostrarAlerta('Por favor selecciona un color para cada capa', 'error');
         return;
       }
     }
 
     if (this.nuevaVariante.cantidad < 1) {
-      alert('La cantidad debe ser mayor a 0');
+      this.mostrarAlerta('La cantidad debe ser mayor a 0', 'error');
       return;
     }
 
@@ -278,7 +360,7 @@ export class StockComponent implements OnInit {
   guardarStock(): void {
     // Validar
     if (!this.nuevoStock.productoId || this.nuevoStock.variantes.length === 0) {
-      alert('Por favor completa el producto y agrega al menos una variante');
+      this.mostrarAlerta('Por favor completa el producto y agrega al menos una variante', 'error');
       return;
     }
 
@@ -288,14 +370,14 @@ export class StockComponent implements OnInit {
       .subscribe({
         next: (response) => {
           console.log('✅ Respuesta del servidor:', response);
-          alert('Producto agregado al stock exitosamente');
+          this.mostrarAlerta('Producto agregado al stock exitosamente', 'exito');
           this.cargarStock();
           this.cerrarModalCargar();
         },
         error: (err) => {
           console.error('❌ Error al guardar stock:', err);
           console.error('Datos enviados:', this.nuevoStock);
-          alert(`Error al guardar en el stock: ${err.error?.mensaje || err.message}`);
+          this.mostrarAlerta(`Error al guardar en el stock: ${err.error?.mensaje || err.message}`, 'error');
         }
       });
   }
@@ -320,17 +402,17 @@ export class StockComponent implements OnInit {
 
   confirmarVenta(): void {
     if (!this.stockSeleccionado || !this.varianteSeleccionada) {
-      alert('Por favor selecciona una variante');
+      this.mostrarAlerta('Por favor selecciona una variante', 'error');
       return;
     }
 
     if (this.ventaData.cantidadVendida < 1) {
-      alert('La cantidad debe ser mayor a 0');
+      this.mostrarAlerta('La cantidad debe ser mayor a 0', 'error');
       return;
     }
 
     if (this.ventaData.cantidadVendida > this.varianteSeleccionada.cantidad) {
-      alert('Cantidad insuficiente en esta variante');
+      this.mostrarAlerta('Cantidad insuficiente en esta variante', 'error');
       return;
     }
 
@@ -342,13 +424,13 @@ export class StockComponent implements OnInit {
     this.http.post(`http://localhost:5000/api/stock/${this.stockSeleccionado._id}/vender`, payload)
       .subscribe({
         next: () => {
-          alert('Venta registrada exitosamente');
+          this.mostrarAlerta('Venta registrada exitosamente', 'exito');
           this.cargarStock();
           this.cerrarModalVender();
         },
         error: (err) => {
           console.error('Error al registrar venta:', err);
-          alert('Error al registrar la venta');
+          this.mostrarAlerta('Error al registrar la venta', 'error');
         }
       });
   }
@@ -368,7 +450,7 @@ export class StockComponent implements OnInit {
 
   guardarCantidad(): void {
     if (!this.stockAEditar || !this.varianteAEditar || this.cantidadTemporal < 0) {
-      alert('Cantidad inválida');
+      this.mostrarAlerta('Cantidad inválida', 'error');
       return;
     }
 
@@ -384,7 +466,7 @@ export class StockComponent implements OnInit {
         },
         error: (err) => {
           console.error('Error al actualizar cantidad:', err);
-          alert('Error al actualizar cantidad');
+          this.mostrarAlerta('Error al actualizar cantidad', 'error');
         }
       });
   }
@@ -404,20 +486,16 @@ export class StockComponent implements OnInit {
   confirmarEliminarVariante(): void {
     if (!this.stockSeleccionado || !this.varianteAEliminar) return;
 
-    if (!confirm('¿Estás seguro de eliminar esta variante?')) {
-      return;
-    }
-
     this.http.delete(`http://localhost:5000/api/stock/${this.stockSeleccionado._id}/variante/${this.varianteAEliminar._id}`)
       .subscribe({
         next: () => {
-          alert('Variante eliminada');
+          this.mostrarAlerta('Variante eliminada', 'exito');
           this.cargarStock();
           this.cerrarModalEliminarVariante();
         },
         error: (err) => {
           console.error('Error al eliminar variante:', err);
-          alert('Error al eliminar variante');
+          this.mostrarAlerta('Error al eliminar variante', 'error');
         }
       });
   }
@@ -435,5 +513,73 @@ export class StockComponent implements OnInit {
   cerrarModalDetalle(): void {
     this.mostrarModalDetalle = false;
     this.stockDetalle = null;
+  }
+
+  // ========== AGREGAR VARIANTE A STOCK EXISTENTE ==========
+
+  abrirModalAgregarVariante(item: StockItem): void {
+    this.stockParaVariante = item;
+    this.nuevaVarianteExistente = this.crearNuevaVariante();
+
+    // Si es resina, preparar array de colores por capa
+    if (this.esResina(item) && item.moldeNombre) {
+      const molde = this.moldes.find(m => m.nombre === item.moldeNombre);
+      if (molde) {
+        this.nuevaVarianteExistente.coloresPorCapa = molde.capas.map((capa, index) => ({
+          capaIndex: index,
+          capaNombre: capa.nombre,
+          colorId: '',
+          colorNombre: '',
+          colorRgb: ''
+        }));
+      }
+    }
+
+    this.mostrarModalAgregarVariante = true;
+  }
+
+  cerrarModalAgregarVariante(): void {
+    this.mostrarModalAgregarVariante = false;
+    this.stockParaVariante = null;
+    this.nuevaVarianteExistente = this.crearNuevaVariante();
+  }
+
+  seleccionarColorCapaVarianteExistente(capaIndex: number, colorId: string): void {
+    const color = this.colores.find(c => c._id === colorId);
+    if (color && this.nuevaVarianteExistente.coloresPorCapa) {
+      this.nuevaVarianteExistente.coloresPorCapa[capaIndex].colorId = color._id;
+      this.nuevaVarianteExistente.coloresPorCapa[capaIndex].colorNombre = color.nombre;
+      this.nuevaVarianteExistente.coloresPorCapa[capaIndex].colorRgb = color.rgb;
+    }
+  }
+
+  guardarNuevaVariante(): void {
+    if (!this.stockParaVariante?._id) return;
+
+    if (this.esResina(this.stockParaVariante) && this.nuevaVarianteExistente.coloresPorCapa) {
+      const faltanColores = this.nuevaVarianteExistente.coloresPorCapa.some(c => !c.colorId);
+      if (faltanColores) {
+        this.mostrarAlerta('Por favor selecciona un color para cada capa', 'error');
+        return;
+      }
+    }
+
+    if (this.nuevaVarianteExistente.cantidad < 1) {
+      this.mostrarAlerta('La cantidad debe ser mayor a 0', 'error');
+      return;
+    }
+
+    this.http.post(`http://localhost:5000/api/stock/${this.stockParaVariante._id}/variante`, this.nuevaVarianteExistente)
+      .subscribe({
+        next: () => {
+          this.mostrarAlerta('Variante agregada exitosamente', 'exito');
+          this.cargarStock();
+          this.cerrarModalAgregarVariante();
+        },
+        error: (err) => {
+          console.error('Error al agregar variante:', err);
+          this.mostrarAlerta('Error al agregar variante', 'error');
+        }
+      });
   }
 }

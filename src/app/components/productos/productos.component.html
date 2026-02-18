@@ -53,6 +53,8 @@
     <!-- Productos Grid -->
     <div class="productos-grid" *ngIf="vistaGrid">
         <div class="card producto-card" *ngFor="let producto of productosFiltrados" (click)="abrirDetalle(producto, $event)">
+            <!-- Badge stock disponible -->
+            <span class="badge-stock" *ngIf="productoTieneStock(producto._id)">Listo para retirar</span>
             <!-- Botón favorito -->
             <button class="btn-favorito" (click)="toggleFavorito(producto); $event.stopPropagation()" [class.activo]="esFavorito(producto._id)" title="Agregar a favoritos">
                 <span class="sparkle-icon">✦</span>
@@ -82,6 +84,8 @@
     <!-- Productos Lista -->
     <div class="productos-lista" *ngIf="!vistaGrid">
         <div class="card producto-row" *ngFor="let producto of productosFiltrados" (click)="abrirDetalle(producto, $event)">
+            <!-- Badge stock disponible -->
+            <span class="badge-stock badge-stock-lista" *ngIf="productoTieneStock(producto._id)">Listo para retirar</span>
             <!-- Botón favorito -->
             <button class="btn-favorito" id="btn-favorito-lista" (click)="toggleFavorito(producto); $event.stopPropagation()" [class.activo]="esFavorito(producto._id)" title="Agregar a favoritos">
                 <span class="sparkle-icon">✦</span>
@@ -188,6 +192,13 @@
                     </div>
                 </div>
                 
+                <!-- Botón para aplicar colores de la foto -->
+                <button class="btn-colores-foto" 
+                        *ngIf="esResina(productoDetalle) && moldeTieneSvg(moldeDetalle) && imagenActualTieneColores()"
+                        (click)="aplicarColoresDeFoto()">
+                    🎨 Quiero los colores de la foto
+                </button>
+                
                 <!-- SVG Preview interactivo (cuando es resina con SVG) -->
                 <div class="svg-panel-detalle" *ngIf="esResina(productoDetalle) && moldeTieneSvg(moldeDetalle)">
                     <div class="svg-preview-grande" 
@@ -268,6 +279,13 @@
                     </div>
                 </div>
                 
+                <!-- Botón para ver stock disponible -->
+                <button class="btn-ver-stock" 
+                        *ngIf="productoTieneStock(productoDetalle._id)"
+                        (click)="abrirPopupStock()">
+                    📦 Ver disponibles para retirar ({{ getStockTotal(productoDetalle._id) }})
+                </button>
+
                 <div class="popup-acciones">
                     <div class="popup-cantidad">
                         <button (click)="decrementarCantidadDetalle()">-</button>
@@ -292,6 +310,55 @@
     [colores]="coloresExito"
     (cerrar)="cerrarPopupExito()">
 </app-popup-exito>
+
+<!-- Popup de Stock Disponible -->
+<div class="popup-overlay popup-stock-overlay" *ngIf="mostrarPopupStock && productoDetalle" (click)="cerrarPopupStock()">
+    <div class="card popup-stock" (click)="$event.stopPropagation()">
+        <button class="btn-cerrar-popup" (click)="cerrarPopupStock()">✕</button>
+        <h2>📦 Disponibles para retirar</h2>
+        <p class="stock-subtitle">{{ productoDetalle.nombre }}</p>
+
+        <div class="stock-variantes-lista">
+            <ng-container *ngFor="let stockItem of stockDetalleItems">
+                <div class="stock-variante-card" *ngFor="let variante of stockItem.variantes">
+                    <div class="stock-variante-visual">
+                        <!-- SVG con colores o imagen -->
+                        <div class="stock-variante-svg" 
+                             *ngIf="generarSvgParaVariante(variante, stockItem.moldeNombre) as svgHtml"
+                             [innerHTML]="svgHtml"></div>
+                        <img class="stock-variante-img" 
+                             *ngIf="!generarSvgParaVariante(variante, stockItem.moldeNombre) && getImagenParaVariante(variante, stockItem)"
+                             [src]="getImagenParaVariante(variante, stockItem)" 
+                             [alt]="productoDetalle.nombre">
+                    </div>
+                    <div class="stock-variante-info">
+                        <div class="stock-colores-chips">
+                            <span class="stock-color-chip" *ngFor="let cc of variante.coloresPorCapa"
+                                  [title]="cc.capaNombre + ': ' + cc.colorNombre">
+                                <span class="stock-color-dot" [style.background-color]="cc.colorRgb"></span>
+                                <span class="stock-color-nombre">{{ cc.colorNombre | capitalize }}</span>
+                            </span>
+                        </div>
+                        <p class="stock-variante-detalles" *ngIf="variante.detallesDiseno">{{ variante.detallesDiseno }}</p>
+                        <p class="stock-variante-cantidad">
+                            <span class="stock-disponible">{{ variante.cantidad }} disponible{{ variante.cantidad > 1 ? 's' : '' }}</span>
+                        </p>
+                    </div>
+                    <div class="stock-variante-acciones">
+                        <div class="selector-cantidad stock-cantidad-selector">
+                            <button class="btn-cantidad" (click)="decrementarCantidadStock(variante._id)">-</button>
+                            <span class="cantidad">{{ getCantidadStock(variante._id) }}</span>
+                            <button class="btn-cantidad" (click)="incrementarCantidadStock(variante._id, variante.cantidad)">+</button>
+                        </div>
+                        <button class="btn-comprar-stock" (click)="comprarDesdeStock(variante, stockItem)">
+                            Agregar
+                        </button>
+                    </div>
+                </div>
+            </ng-container>
+        </div>
+    </div>
+</div>
 
 <!-- Lightbox para ver imágenes en grande -->
 <div class="lightbox-overlay" *ngIf="mostrarLightbox && productoDetalle" (click)="cerrarLightbox()">

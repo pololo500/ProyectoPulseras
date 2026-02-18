@@ -60,18 +60,19 @@
   </form>
 
   <!-- Confirmación de eliminación -->
-  <div class="confirm-eliminar" *ngIf="mostrarConfirmEliminar">
-    <div class="confirm-overlay" (click)="cancelarEliminar()"></div>
-    <div class="confirm-card">
-      <p>¿Estás seguro de eliminar el color <strong>"{{ nombreColor }}"</strong>?</p>
-      <div class="confirm-color-preview" [style.background-color]="rgbColor"></div>
-      <p class="confirm-aviso">⚠️ Esta acción no se puede deshacer.</p>
-      <div class="confirm-botones">
-        <button class="btn-confirm-cancelar" (click)="cancelarEliminar()">Cancelar</button>
-        <button class="btn-confirm-eliminar" (click)="eliminarColor()" [disabled]="eliminando">
-          {{ eliminando ? 'Eliminando...' : 'Sí, Eliminar' }}
-        </button>
-      </div>
-    </div>
-  </div>
+  <app-popup-confirm
+    *ngIf="mostrarConfirmEliminar"
+    titulo="¿Eliminar color?"
+    [mensaje]="'¿Estás seguro de eliminar el color &quot;' + nombreColor + '&quot;? Esta acción no se puede deshacer.'"
+    (confirmar)="eliminarColor()"
+    (cancelar)="cancelarEliminar()">
+  </app-popup-confirm>
+
+  <!-- Popup de alerta -->
+  <app-popup-alerta
+    *ngIf="mensajeAlerta"
+    [mensaje]="mensajeAlerta"
+    [tipo]="tipoAlerta"
+    (cerrar)="cerrarAlerta()">
+  </app-popup-alerta>
 </div>

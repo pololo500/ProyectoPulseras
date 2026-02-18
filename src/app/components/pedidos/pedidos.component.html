@@ -256,20 +256,19 @@
   </div>
 
   <!-- Popup de confirmación -->
-  <div class="popup-overlay" *ngIf="mostrarPopupConfirmar" (click)="cancelarAccion()">
-    <div class="popup-confirmar" (click)="$event.stopPropagation()">
-      <h3 *ngIf="accionPendiente === 'entregar'">¿Marcar como entregado?</h3>
-      <h3 *ngIf="accionPendiente === 'cancelar'">¿Cancelar este pedido?</h3>
-      <p>El pedido de <strong>{{ pedidoAccion?.cliente }}</strong> será movido a ventas.</p>
-      <div class="popup-actions">
-        <button class="btn-cancelar-form" (click)="cancelarAccion()">No</button>
-        <button 
-          class="btn-confirmar" 
-          [ngClass]="{'btn-entregar': accionPendiente === 'entregar', 'btn-cancelar-red': accionPendiente === 'cancelar'}"
-          (click)="ejecutarAccion()">
-          Sí, {{ accionPendiente === 'entregar' ? 'entregar' : 'cancelar' }}
-        </button>
-      </div>
-    </div>
-  </div>
+  <app-popup-confirm
+    *ngIf="mostrarPopupConfirmar"
+    [titulo]="accionPendiente === 'entregar' ? '¿Marcar como entregado?' : '¿Cancelar este pedido?'"
+    [mensaje]="'El pedido de ' + pedidoAccion?.cliente + ' será movido a ventas.'"
+    (confirmar)="ejecutarAccion()"
+    (cancelar)="cancelarAccion()">
+  </app-popup-confirm>
+
+  <!-- Popup de alerta -->
+  <app-popup-alerta
+    *ngIf="mensajeAlerta"
+    [mensaje]="mensajeAlerta"
+    [tipo]="tipoAlerta"
+    (cerrar)="cerrarAlerta()">
+  </app-popup-alerta>
 </div>

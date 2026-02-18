@@ -1,5 +1,5 @@
+<h1>Agregá tu producto!</h1>
 <div class="card">
-  <h1>Agregá tu producto!</h1>
   <form [formGroup]="addProductForm" (ngSubmit)="submit()">
     <div class="form">
       <div>
@@ -82,27 +82,28 @@
         
         <!-- Carrusel cuando hay más de 1 imagen -->
         <div class="carrusel-container" *ngIf="imagenesPreview.length > 1">
-          <button type="button" class="carrusel-btn carrusel-prev" (click)="anteriorImagen()" [disabled]="imagenCarruselIndex === 0">❮</button>
-          
           <div class="carrusel-imagen-wrapper">
+            <button type="button" class="carrusel-btn carrusel-prev" (click)="anteriorImagen()" [disabled]="imagenCarruselIndex === 0">❮</button>
             <img [src]="imagenActual" alt="Preview" class="carrusel-imagen"/>
+            <button type="button" class="carrusel-btn carrusel-next" (click)="siguienteImagen()" [disabled]="imagenCarruselIndex >= imagenesPreview.length - 1">❯</button>
             <button type="button" class="btn-eliminar-imagen-carrusel" (click)="eliminarImagenCarrusel()" title="Eliminar imagen">✕</button>
-            <div class="carrusel-orden-btns">
-              <button type="button" class="btn-orden" (click)="moverImagenIzquierda(imagenCarruselIndex)" [disabled]="imagenCarruselIndex === 0" title="Mover a la izquierda">◀</button>
-              <button type="button" class="btn-orden" (click)="moverImagenDerecha(imagenCarruselIndex)" [disabled]="imagenCarruselIndex === imagenesPreview.length - 1" title="Mover a la derecha">▶</button>
-            </div>
           </div>
-          
-          <button type="button" class="carrusel-btn carrusel-next" (click)="siguienteImagen()" [disabled]="imagenCarruselIndex >= imagenesPreview.length - 1">❯</button>
         </div>
-        
-        <div class="carrusel-indicadores" *ngIf="imagenesPreview.length > 1">
-          <span class="indicador" *ngFor="let img of imagenesPreview; let i = index" 
-                [class.activo]="i === imagenCarruselIndex" 
-                (click)="irAImagen(i)"></span>
+
+        <div class="carrusel-footer" *ngIf="imagenesPreview.length > 1">
+          <div class="carrusel-orden-btns">
+            <button type="button" class="btn-orden" (click)="moverImagenIzquierda(imagenCarruselIndex)" [disabled]="imagenCarruselIndex === 0" title="Mover a la izquierda">◀</button>
+            <button type="button" class="btn-orden" (click)="moverImagenDerecha(imagenCarruselIndex)" [disabled]="imagenCarruselIndex === imagenesPreview.length - 1" title="Mover a la derecha">▶</button>
+          </div>
+          <div class="carrusel-info">
+            <div class="carrusel-indicadores">
+              <span class="indicador" *ngFor="let img of imagenesPreview; let i = index" 
+                    [class.activo]="i === imagenCarruselIndex" 
+                    (click)="irAImagen(i)"></span>
+            </div>
+            <span class="carrusel-contador">{{ imagenCarruselIndex + 1 }} / {{ imagenesPreview.length }}</span>
+          </div>
         </div>
-        
-        <p class="carrusel-contador" *ngIf="imagenesPreview.length > 1">{{ imagenCarruselIndex + 1 }} / {{ imagenesPreview.length }} imagen(es)</p>
         
         <!-- Vista simple cuando hay 1 imagen -->
         <div class="imagenes-preview-container" *ngIf="imagenesPreview.length === 1">
@@ -115,6 +116,68 @@
         <span class="imagenes-count" *ngIf="archivosImagenes.length > 0">{{ archivosImagenes.length }} foto(s) seleccionada(s)</span>
       </div>
     </div>
+    
+    <!-- Asignar colores por imagen (solo resina con molde y fotos) -->
+    <div class="colores-por-imagen-section" *ngIf="esResina && getMoldeSeleccionado() && imagenesPreview.length > 0">
+      <h3>Asignar colores a las fotos</h3>
+      <p class="colores-instruccion">Podés asignar los colores de cada capa del molde a cada foto. Esto permite que los clientes apliquen los colores de la foto con un solo clic.</p>
+      
+      <div class="imagen-color-asignador">
+        <div class="imagen-color-item" *ngFor="let preview of imagenesPreview; let imgIdx = index">
+          <div class="imagen-color-header" (click)="toggleImagenColorAbierta(imgIdx)">
+            <div class="imagen-color-thumb">
+              <img [src]="preview" alt="Foto {{ imgIdx + 1 }}">
+            </div>
+            <span class="imagen-color-titulo">Foto {{ imgIdx + 1 }}</span>
+            <div class="imagen-color-dots-preview" *ngIf="imagenTieneColores(imgIdx)">
+              <span class="color-dot-header" *ngFor="let c of getColoresDeImagen(imgIdx)" 
+                    [style.background-color]="c.colorRgb" [title]="c.capaNombre + ': ' + c.colorNombre"></span>
+            </div>
+            <span class="imagen-color-estado" *ngIf="imagenTieneColores(imgIdx)">✓</span>
+            <span class="imagen-color-estado sin-colores" *ngIf="!imagenTieneColores(imgIdx)">Sin colores</span>
+            <span class="imagen-color-toggle">{{ imagenColorAbierta === imgIdx ? '▲' : '▼' }}</span>
+          </div>
+          
+          <div class="imagen-color-contenido" *ngIf="imagenColorAbierta === imgIdx">
+            <div class="capa-selector-mini" *ngFor="let capa of getMoldeSeleccionado()!.capas; let capaIdx = index">
+              <div class="capa-selector-header">
+                <span class="capa-num">{{ capaIdx + 1 }}</span>
+                <span class="capa-label">{{ capa.nombre | capitalize }}</span>
+                <span class="capa-color-asignado" *ngIf="getColorAsignado(imgIdx, capaIdx)">
+                  <span class="color-dot-mini" [style.background-color]="getColorAsignado(imgIdx, capaIdx)!.colorRgb"></span>
+                  {{ getColorAsignado(imgIdx, capaIdx)!.colorNombre | capitalize }}
+                </span>
+                <button type="button" class="btn-quitar-color" *ngIf="getColorAsignado(imgIdx, capaIdx)" (click)="quitarColorImagen(imgIdx, capaIdx)">✕</button>
+              </div>
+              <div class="colores-selector-rapido">
+                <div class="colores-categoria-mini" *ngIf="getColoresPorCategoria('translucido').length > 0">
+                  <span class="cat-label">✨</span>
+                  <div class="color-mini-opcion" 
+                       *ngFor="let color of getColoresPorCategoria('translucido')"
+                       [class.seleccionado]="getColorAsignado(imgIdx, capaIdx)?.colorId === color._id"
+                       [style.background-color]="color.rgb"
+                       [title]="color.nombre"
+                       (click)="asignarColorImagen(imgIdx, capaIdx, color)">
+                  </div>
+                </div>
+                <div class="colores-categoria-mini" *ngIf="getColoresPorCategoria('polvo').length > 0">
+                  <span class="cat-label">🌟</span>
+                  <div class="color-mini-opcion"
+                       *ngFor="let color of getColoresPorCategoria('polvo')"
+                       [class.seleccionado]="getColorAsignado(imgIdx, capaIdx)?.colorId === color._id"
+                       [style.background-color]="color.rgb"
+                       [title]="color.nombre"
+                       (click)="asignarColorImagen(imgIdx, capaIdx, color)">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button type="button" class="btn-limpiar-colores-imagen" (click)="limpiarColoresImagen(imgIdx)" *ngIf="imagenTieneColores(imgIdx)">Quitar todos los colores</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
     <button type="submit">Agregar Producto</button>
   </form>
 </div>

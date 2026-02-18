@@ -6,6 +6,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { CapitalizePipe } from '../../extras/capitalizePipe';
 import { GlobalService } from '../../services/global.service';
 import { PopupMoldeComponent } from '../popupMolde/popupMolde.component';
+import { PopupConfirmComponent } from '../popupConfirm/popupConfirm.component';
 
 interface Capa {
   nombre: string;
@@ -29,7 +30,7 @@ interface Molde {
 @Component({
   selector: 'app-agregar-svg',
   standalone: true,
-  imports: [CommonModule, FormsModule, CapitalizePipe, PopupMoldeComponent],
+  imports: [CommonModule, FormsModule, CapitalizePipe, PopupMoldeComponent, PopupConfirmComponent],
   templateUrl: './agregarSvg.component.html',
   styleUrl: './agregarSvg.component.css'
 })
@@ -40,6 +41,9 @@ export class AgregarSvgComponent implements OnInit {
   // Popup molde
   mostrarPopupMolde: boolean = false;
   moldeParaEditar: Molde | null = null;
+
+  // Popup confirmar eliminar SVG
+  mostrarPopupEliminarSvg = false;
   
   // SVG cargado
   svgContent: string = '';
@@ -310,8 +314,12 @@ export class AgregarSvgComponent implements OnInit {
 
   eliminarSvg(): void {
     if (!this.moldeSeleccionado) return;
-    
-    if (!confirm('¿Estás seguro de eliminar el SVG de este molde?')) return;
+    this.mostrarPopupEliminarSvg = true;
+  }
+
+  confirmarEliminarSvg(): void {
+    this.mostrarPopupEliminarSvg = false;
+    if (!this.moldeSeleccionado) return;
 
     this.guardando = true;
 

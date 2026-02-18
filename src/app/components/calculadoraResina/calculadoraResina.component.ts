@@ -5,7 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { PopupMoldeComponent } from '../popupMolde/popupMolde.component';
 import { PopupColorComponent } from '../popupColor/popupColor.component';
 import { PopupConfirmComponent } from '../popupConfirm/popupConfirm.component';
-import { FilterByCategoriaPipe } from '../../extras/filterByCategoria.pipe';
+import { PopupAlertaComponent } from '../popupAlerta/popupAlerta.component';
 import { CapitalizePipe } from '../../extras/capitalizePipe';
 import { GlobalService } from '../../services/global.service';
 import jsPDF from 'jspdf';
@@ -67,7 +67,7 @@ interface ResumenColor {
 @Component({
   selector: 'app-calculadora-resina',
   standalone: true,
-  imports: [CommonModule, FormsModule, PopupMoldeComponent, PopupColorComponent, PopupConfirmComponent, FilterByCategoriaPipe, CapitalizePipe],
+  imports: [CommonModule, FormsModule, PopupMoldeComponent, PopupColorComponent, PopupConfirmComponent, PopupAlertaComponent, CapitalizePipe],
   templateUrl: './calculadoraResina.component.html',
   styleUrl: './calculadoraResina.component.css'
 })
@@ -86,6 +86,23 @@ export class CalculadoraResinaComponent implements OnInit {
   resumenColores: ResumenColor[] = [];
   tooltipVisible: string | null = null;
   fases: number[] = [1, 2, 3, 4, 5];
+
+  // Popup alerta
+  mensajeAlerta = '';
+  tipoAlerta: 'exito' | 'error' | 'info' = 'info';
+  
+  // Popup confirmar eliminar tras pasar a stock
+  mostrarPopupEliminarTrasStock = false;
+  productoIdTrasStock: number | null = null;
+
+  mostrarAlerta(mensaje: string, tipo: 'exito' | 'error' | 'info' = 'info') {
+    this.mensajeAlerta = mensaje;
+    this.tipoAlerta = tipo;
+  }
+
+  cerrarAlerta() {
+    this.mensajeAlerta = '';
+  }
 
   constructor(private http: HttpClient, private globalService: GlobalService) {}
 
@@ -571,7 +588,7 @@ export class CalculadoraResinaComponent implements OnInit {
     );
 
     if (faltanColores) {
-      alert('Por favor completa todos los colores antes de pasar a stock');
+      this.mostrarAlerta('Por favor completa todos los colores antes de pasar a stock', 'error');
       return;
     }
 
@@ -585,7 +602,7 @@ export class CalculadoraResinaComponent implements OnInit {
         );
 
         if (!productoBase) {
-          alert('No se encontró un producto base con este molde. Por favor crea primero el producto en Agregar Productos.');
+          this.mostrarAlerta('No se encontró un producto base con este molde. Por favor crea primero el producto en Agregar Productos.', 'error');
           return;
         }
 
@@ -619,22 +636,21 @@ export class CalculadoraResinaComponent implements OnInit {
         this.http.post('http://localhost:5000/api/stock', stockData).subscribe({
           next: (response) => {
             console.log('✅ Respuesta del servidor:', response);
-            alert(`✓ Producto agregado al stock: ${producto.cantidad} x ${producto.moldeNombre}`);
-            // Opcionalmente eliminar de la calculadora
-            if (confirm('¿Deseas eliminar este producto de la calculadora?')) {
-              this.eliminarProducto(producto.id);
-            }
+            this.mostrarAlerta(`✓ Producto agregado al stock: ${producto.cantidad} x ${producto.moldeNombre}`, 'exito');
+            // Preguntar si desea eliminar de la calculadora
+            this.productoIdTrasStock = producto.id;
+            this.mostrarPopupEliminarTrasStock = true;
           },
           error: (err) => {
             console.error('❌ Error al agregar a stock:', err);
             console.error('Datos enviados:', stockData);
-            alert(`Error al agregar al stock: ${err.error?.mensaje || err.message}`);
+            this.mostrarAlerta(`Error al agregar al stock: ${err.error?.mensaje || err.message}`, 'error');
           }
         });
       },
       error: (err) => {
         console.error('Error al buscar productos:', err);
-        alert('Error al buscar el producto base');
+        this.mostrarAlerta('Error al buscar el producto base', 'error');
       }
     });
   }
@@ -659,5 +675,18 @@ export class CalculadoraResinaComponent implements OnInit {
     });
     
     return detalles.join(' | ');
+  }
+
+  confirmarEliminarTrasStock() {
+    if (this.productoIdTrasStock !== null) {
+      this.eliminarProducto(this.productoIdTrasStock);
+    }
+    this.mostrarPopupEliminarTrasStock = false;
+    this.productoIdTrasStock = null;
+  }
+
+  cancelarEliminarTrasStock() {
+    this.mostrarPopupEliminarTrasStock = false;
+    this.productoIdTrasStock = null;
   }
 }

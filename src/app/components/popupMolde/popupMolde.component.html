@@ -87,17 +87,19 @@
   </form>
 
   <!-- Confirmación de eliminación -->
-  <div class="confirm-eliminar" *ngIf="mostrarConfirmEliminar">
-    <div class="confirm-overlay" (click)="cancelarEliminar()"></div>
-    <div class="confirm-card">
-      <p>¿Estás seguro de eliminar el molde <strong>"{{ nombreMolde }}"</strong>?</p>
-      <p class="confirm-aviso">⚠️ Esta acción no se puede deshacer. Los productos que usen este molde podrían verse afectados.</p>
-      <div class="confirm-botones">
-        <button class="btn-confirm-cancelar" (click)="cancelarEliminar()">Cancelar</button>
-        <button class="btn-confirm-eliminar" (click)="eliminarMolde()" [disabled]="eliminando">
-          {{ eliminando ? 'Eliminando...' : 'Sí, Eliminar' }}
-        </button>
-      </div>
-    </div>
-  </div>
+  <app-popup-confirm
+    *ngIf="mostrarConfirmEliminar"
+    titulo="¿Eliminar molde?"
+    [mensaje]="'¿Estás seguro de eliminar el molde &quot;' + nombreMolde + '&quot;? Esta acción no se puede deshacer. Los productos que usen este molde podrían verse afectados.'"
+    (confirmar)="eliminarMolde()"
+    (cancelar)="cancelarEliminar()">
+  </app-popup-confirm>
+
+  <!-- Popup de alerta -->
+  <app-popup-alerta
+    *ngIf="mensajeAlerta"
+    [mensaje]="mensajeAlerta"
+    [tipo]="tipoAlerta"
+    (cerrar)="cerrarAlerta()">
+  </app-popup-alerta>
 </div>

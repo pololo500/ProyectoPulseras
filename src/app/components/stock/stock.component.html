@@ -1,36 +1,53 @@
 <div class="stock-page">
   <div class="stock-header">
-    <h1>📦 Gestión de Stock</h1>
+    <h1>Gestión de Stock</h1>
     <button class="btn-cargar-stock" (click)="abrirModalCargar()">
-      ➕ Cargar Stock
+      Cargar Stock
     </button>
   </div>
 
-  <!-- Filtros -->
-  <div class="filtros-container">
-    <div class="filtro-group">
-      <label>Buscar por nombre</label>
-      <input type="text" [(ngModel)]="filtroNombre" placeholder="Nombre del producto...">
-    </div>
-    
-    <div class="filtro-group">
-      <label>Material</label>
-      <select [(ngModel)]="filtroMaterial">
-        <option value="">Todos</option>
-        <option *ngFor="let material of materialesUnicos" [value]="material">
-          {{ material | capitalize }}
-        </option>
-      </select>
+  <!-- Botón filtros móvil -->
+  <div class="filtros-mobile-header">
+    <button class="btn-filtros-mobile" (click)="abrirFiltrosMobile()">Filtros
+      <span class="filtros-activos" *ngIf="tieneFiltrosActivos()">●</span>
+    </button>
+  </div>
+
+  <!-- Filtros Desktop -->
+  <div class="card" id="filtros-card">
+    <div class="filtros">
+      <div class="filtro-group">
+        <label>Buscar</label>
+        <input type="text" [(ngModel)]="filtroNombre" placeholder="Nombre del producto...">
+      </div>
+      
+      <div class="filtro-group">
+        <label>Tipo</label>
+        <select [(ngModel)]="filtroTipo">
+          <option value="">Todos</option>
+          <option *ngFor="let tipo of tiposUnicos" [value]="tipo">{{ tipo | capitalize }}</option>
+        </select>
+      </div>
+      
+      <div class="filtro-group">
+        <label>Material</label>
+        <select [(ngModel)]="filtroMaterial">
+          <option value="">Todos</option>
+          <option *ngFor="let material of materialesUnicos" [value]="material">{{ material | capitalize }}</option>
+        </select>
+      </div>
+      
+      <button class="btn-limpiar" (click)="limpiarFiltros()" *ngIf="tieneFiltrosActivos()">Mostrar todo</button>
     </div>
     
     <div class="stock-count">
-      Total en stock: <strong>{{ stockFiltrado.length }}</strong> productos
+      Total: <strong>{{ stockFiltrado.length }}</strong> productos
     </div>
   </div>
 
   <!-- Lista de productos en stock -->
   <div class="stock-grid">
-    <div class="stock-card" *ngFor="let item of stockFiltrado">
+    <div class="card stock-card" *ngFor="let item of stockFiltrado" (click)="abrirModalDetalle(item)">
       <!-- Encabezado de la card -->
       <div class="stock-header-card">
         <img [src]="item.imagenUrl || 'images/placeholder.png'" [alt]="item.productoNombre" class="stock-img-header">
@@ -40,9 +57,6 @@
           <p class="stock-material">{{ item.material | capitalize }}</p>
           <p class="stock-cantidad-total">Total: <strong>{{ getCantidadTotal(item) }} unid.</strong></p>
         </div>
-        <button class="btn-detalle" (click)="abrirModalDetalle(item)" title="Ver detalles completos">
-          👁️ Ver
-        </button>
       </div>
 
       <!-- Lista de variantes de color -->
@@ -67,11 +81,11 @@
                 <span class="cantidad-label">Cantidad:</span>
                 <span class="cantidad-valor">{{ variante.cantidad }}</span>
               </div>
-              <button class="btn-editar-cantidad" (click)="abrirModalEditarCantidad(item, variante)" title="Editar cantidad">
+              <button class="btn-editar-cantidad" (click)="abrirModalEditarCantidad(item, variante); $event.stopPropagation()" title="Editar cantidad">
                 ✏️ Editar
               </button>
-              <button class="btn-eliminar-variante" (click)="abrirModalEliminarVariante(item, variante)" title="Eliminar variante">
-                🗑️
+              <button class="btn-eliminar-variante" (click)="abrirModalEliminarVariante(item, variante); $event.stopPropagation()" title="Eliminar variante">
+                🗑️ Eliminar
               </button>
             </div>
 
@@ -85,10 +99,10 @@
 
       <!-- Botones de acción principales -->
       <div class="stock-acciones">
-        <button class="btn-vender" (click)="abrirModalVender(item)" title="Vender">
+        <button class="btn-vender" (click)="abrirModalVender(item); $event.stopPropagation()" title="Vender">
           💰 Vender
         </button>
-        <button class="btn-agregar-variante" (click)="abrirModalCargar()" title="Agregar variante de color">
+        <button class="btn-agregar-variante" (click)="abrirModalAgregarVariante(item); $event.stopPropagation()" title="Agregar variante de color">
           ➕ Agregar Variante
         </button>
       </div>
@@ -102,12 +116,48 @@
   </div>
 </div>
 
+<!-- Popup de Filtros Mobile -->
+<div class="popup-overlay" *ngIf="mostrarFiltrosMobile" (click)="cerrarFiltrosMobile()">
+  <div class="card popup-filtros-mobile" (click)="$event.stopPropagation()">
+    <button class="btn-cerrar-popup" (click)="cerrarFiltrosMobile()">✕</button>
+    <h2>Filtros</h2>
+    
+    <div class="filtros-mobile-contenido">
+      <div class="filtro-group">
+        <label>Buscar</label>
+        <input type="text" [(ngModel)]="filtroNombre" placeholder="Nombre del producto...">
+      </div>
+      
+      <div class="filtro-group">
+        <label>Tipo</label>
+        <select [(ngModel)]="filtroTipo">
+          <option value="">Todos</option>
+          <option *ngFor="let tipo of tiposUnicos" [value]="tipo">{{ tipo | capitalize }}</option>
+        </select>
+      </div>
+      
+      <div class="filtro-group">
+        <label>Material</label>
+        <select [(ngModel)]="filtroMaterial">
+          <option value="">Todos</option>
+          <option *ngFor="let material of materialesUnicos" [value]="material">{{ material | capitalize }}</option>
+        </select>
+      </div>
+      
+      <div class="filtros-mobile-acciones">
+        <button class="btn-limpiar" (click)="limpiarFiltros()" *ngIf="tieneFiltrosActivos()">Mostrar todo</button>
+        <button class="btn-aplicar" (click)="cerrarFiltrosMobile()">Aplicar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Modal para cargar stock -->
 <div class="modal-overlay" *ngIf="mostrarModalCargar" (click)="cerrarModalCargar()">
   <div class="modal-content" (click)="$event.stopPropagation()">
+    <button class="btn-cerrar-popup" (click)="cerrarModalCargar()">✕</button>
     <div class="modal-header">
-      <h2>➕ Cargar Producto al Stock</h2>
-      <button class="btn-cerrar" (click)="cerrarModalCargar()">✕</button>
+      <h2>Cargar Producto al Stock</h2>
     </div>
 
     <div class="modal-body">
@@ -152,20 +202,58 @@
       </div>
 
       <!-- Selección de colores por capa (si es resina) -->
-      <div class="form-group" *ngIf="esResina(nuevoStock) && nuevaVariante.coloresPorCapa && nuevaVariante.coloresPorCapa.length > 0">
-        <label>Colores por capa *</label>
-        <div class="capas-selector">
-          <div class="capa-selector" *ngFor="let capa of nuevaVariante.coloresPorCapa; let i = index">
-            <label>{{ capa.capaNombre | capitalize }}</label>
-            <select [(ngModel)]="capa.colorId" (change)="seleccionarColorCapa(i, capa.colorId)">
-              <option value="">Selecciona un color...</option>
-              <option *ngFor="let color of colores" [value]="color._id">
-                {{ color.nombre | capitalize }} ({{ color.categoria | capitalize }})
-              </option>
-            </select>
-            <span class="color-preview" 
-                  *ngIf="capa.colorRgb" 
-                  [style.background-color]="capa.colorRgb"></span>
+      <div class="selector-colores-detalle" *ngIf="esResina(nuevoStock) && nuevaVariante.coloresPorCapa && nuevaVariante.coloresPorCapa.length > 0">
+        <h4>Selecciona colores por capa:</h4>
+        <div class="capas-accordion-detalle">
+          <div class="capa-accordion" *ngFor="let capa of nuevaVariante.coloresPorCapa; let i = index">
+            <!-- Header de la capa -->
+            <div class="capa-accordion-header" 
+                 [class.abierto]="capaAbiertaCargar === i"
+                 [class.completado]="capa.colorId"
+                 (click)="toggleCapaCargar(i)">
+              <div class="capa-header-info">
+                <span class="capa-numero">{{ i + 1 }}</span>
+                <span class="capa-nombre">{{ capa.capaNombre | capitalize }}</span>
+              </div>
+              <div class="capa-header-derecha">
+                <span class="capa-color-seleccionado" *ngIf="capa.colorId">
+                  <span class="color-dot-mini" [style.background-color]="capa.colorRgb"></span>
+                  {{ capa.colorNombre | capitalize }}
+                </span>
+                <span class="capa-toggle-icon">{{ capaAbiertaCargar === i ? '▲' : '▼' }}</span>
+              </div>
+            </div>
+            
+            <!-- Contenido desplegable -->
+            <div class="capa-accordion-contenido" *ngIf="capaAbiertaCargar === i">
+              <!-- Colores Translúcidos -->
+              <div class="categoria-colores" *ngIf="getColoresPorCategoria('translucido').length > 0">
+                <h5 class="categoria-titulo">✨ Translúcidos</h5>
+                <div class="colores-grid-nuevo">
+                  <div class="color-opcion-nuevo" 
+                       *ngFor="let color of getColoresPorCategoria('translucido')" 
+                       [class.seleccionado]="capa.colorId === color._id"
+                       (click)="seleccionarColorCapaDesdeGrid(i, color, 'cargar')">
+                    <span class="color-dot-nuevo translucido" [style.background-color]="color.rgb"></span>
+                    <span class="color-nombre-nuevo">{{ color.nombre | capitalize }}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Colores Polvo -->
+              <div class="categoria-colores" *ngIf="getColoresPorCategoria('polvo').length > 0">
+                <h5 class="categoria-titulo">🌟 Polvo / Brillos</h5>
+                <div class="colores-grid-nuevo">
+                  <div class="color-opcion-nuevo" 
+                       *ngFor="let color of getColoresPorCategoria('polvo')" 
+                       [class.seleccionado]="capa.colorId === color._id"
+                       (click)="seleccionarColorCapaDesdeGrid(i, color, 'cargar')">
+                    <span class="color-dot-nuevo polvo" [style.background-color]="color.rgb"></span>
+                    <span class="color-nombre-nuevo">{{ color.nombre | capitalize }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -195,9 +283,9 @@
 <!-- Modal para vender (seleccionar variante) -->
 <div class="modal-overlay" *ngIf="mostrarModalVender && stockSeleccionado" (click)="cerrarModalVender()">
   <div class="modal-content modal-vender" (click)="$event.stopPropagation()">
+    <button class="btn-cerrar-popup" (click)="cerrarModalVender()">✕</button>
     <div class="modal-header">
-      <h2>💰 Vender Producto</h2>
-      <button class="btn-cerrar" (click)="cerrarModalVender()">✕</button>
+      <h2>Vender Producto</h2>
     </div>
 
     <div class="modal-body">
@@ -280,9 +368,9 @@
 <!-- Modal para editar cantidad de variante -->
 <div class="modal-overlay" *ngIf="mostrarModalEditarCantidad" (click)="cerrarModalEditarCantidad()">
   <div class="modal-content modal-pequeno" (click)="$event.stopPropagation()">
+    <button class="btn-cerrar-popup" (click)="cerrarModalEditarCantidad()">✕</button>
     <div class="modal-header">
       <h2>✏️ Editar Cantidad</h2>
-      <button class="btn-cerrar" (click)="cerrarModalEditarCantidad()">✕</button>
     </div>
 
     <div class="modal-body">
@@ -301,33 +389,20 @@
 </div>
 
 <!-- Modal para eliminar variante -->
-<div class="modal-overlay" *ngIf="mostrarModalEliminarVariante" (click)="cerrarModalEliminarVariante()">
-  <div class="modal-content modal-pequeno" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>⚠️ Eliminar Variante</h2>
-      <button class="btn-cerrar" (click)="cerrarModalEliminarVariante()">✕</button>
-    </div>
-
-    <div class="modal-body">
-      <p>¿Estás seguro de eliminar esta variante?</p>
-      <p class="info-variante" *ngIf="varianteAEliminar">
-        Cantidad: <strong>{{ varianteAEliminar.cantidad }}</strong> unidades
-      </p>
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn-cancelar" (click)="cerrarModalEliminarVariante()">Cancelar</button>
-      <button class="btn-eliminar" (click)="confirmarEliminarVariante()">Eliminar</button>
-    </div>
-  </div>
-</div>
+<app-popup-confirm
+  *ngIf="mostrarModalEliminarVariante"
+  titulo="¿Eliminar variante?"
+  [mensaje]="'¿Estás seguro de eliminar esta variante?' + (varianteAEliminar ? ' (' + varianteAEliminar.cantidad + ' unidades)' : '')"
+  (confirmar)="confirmarEliminarVariante()"
+  (cancelar)="cerrarModalEliminarVariante()">
+</app-popup-confirm>
 
 <!-- Modal de detalle del producto -->
 <div class="modal-overlay" *ngIf="mostrarModalDetalle && stockDetalle" (click)="cerrarModalDetalle()">
   <div class="modal-content modal-detalle" (click)="$event.stopPropagation()">
+    <button class="btn-cerrar-popup" (click)="cerrarModalDetalle()">✕</button>
     <div class="modal-header">
       <h2>📦 Detalle del Producto</h2>
-      <button class="btn-cerrar" (click)="cerrarModalDetalle()">✕</button>
     </div>
 
     <div class="modal-body">
@@ -394,3 +469,104 @@
     </div>
   </div>
 </div>
+
+<!-- Modal para agregar variante a stock existente -->
+<div class="modal-overlay" *ngIf="mostrarModalAgregarVariante && stockParaVariante" (click)="cerrarModalAgregarVariante()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <button class="btn-cerrar-popup" (click)="cerrarModalAgregarVariante()">✕</button>
+    <div class="modal-header">
+      <h2>Agregar Variante</h2>
+    </div>
+
+    <div class="modal-body">
+      <div class="producto-resumen">
+        <h3>{{ stockParaVariante.productoNombre | capitalize }}</h3>
+        <p>{{ stockParaVariante.productoTipo | capitalize }} - {{ stockParaVariante.material | capitalize }}</p>
+      </div>
+
+      <!-- Cantidad de la variante -->
+      <div class="form-group">
+        <label>Cantidad *</label>
+        <input type="number" [(ngModel)]="nuevaVarianteExistente.cantidad" min="1" required>
+      </div>
+
+      <!-- Selección de colores por capa (si es resina) -->
+      <div class="selector-colores-detalle" *ngIf="esResina(stockParaVariante) && nuevaVarianteExistente.coloresPorCapa && nuevaVarianteExistente.coloresPorCapa.length > 0">
+        <h4>Selecciona colores por capa:</h4>
+        <div class="capas-accordion-detalle">
+          <div class="capa-accordion" *ngFor="let capa of nuevaVarianteExistente.coloresPorCapa; let i = index">
+            <!-- Header de la capa -->
+            <div class="capa-accordion-header" 
+                 [class.abierto]="capaAbiertaVariante === i"
+                 [class.completado]="capa.colorId"
+                 (click)="toggleCapaVariante(i)">
+              <div class="capa-header-info">
+                <span class="capa-numero">{{ i + 1 }}</span>
+                <span class="capa-nombre">{{ capa.capaNombre | capitalize }}</span>
+              </div>
+              <div class="capa-header-derecha">
+                <span class="capa-color-seleccionado" *ngIf="capa.colorId">
+                  <span class="color-dot-mini" [style.background-color]="capa.colorRgb"></span>
+                  {{ capa.colorNombre | capitalize }}
+                </span>
+                <span class="capa-toggle-icon">{{ capaAbiertaVariante === i ? '▲' : '▼' }}</span>
+              </div>
+            </div>
+            
+            <!-- Contenido desplegable -->
+            <div class="capa-accordion-contenido" *ngIf="capaAbiertaVariante === i">
+              <!-- Colores Translúcidos -->
+              <div class="categoria-colores" *ngIf="getColoresPorCategoria('translucido').length > 0">
+                <h5 class="categoria-titulo">✨ Translúcidos</h5>
+                <div class="colores-grid-nuevo">
+                  <div class="color-opcion-nuevo" 
+                       *ngFor="let color of getColoresPorCategoria('translucido')" 
+                       [class.seleccionado]="capa.colorId === color._id"
+                       (click)="seleccionarColorCapaDesdeGrid(i, color, 'variante')">
+                    <span class="color-dot-nuevo translucido" [style.background-color]="color.rgb"></span>
+                    <span class="color-nombre-nuevo">{{ color.nombre | capitalize }}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Colores Polvo -->
+              <div class="categoria-colores" *ngIf="getColoresPorCategoria('polvo').length > 0">
+                <h5 class="categoria-titulo">🌟 Polvo / Brillos</h5>
+                <div class="colores-grid-nuevo">
+                  <div class="color-opcion-nuevo" 
+                       *ngFor="let color of getColoresPorCategoria('polvo')" 
+                       [class.seleccionado]="capa.colorId === color._id"
+                       (click)="seleccionarColorCapaDesdeGrid(i, color, 'variante')">
+                    <span class="color-dot-nuevo polvo" [style.background-color]="color.rgb"></span>
+                    <span class="color-nombre-nuevo">{{ color.nombre | capitalize }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detalles de diseño -->
+      <div class="form-group">
+        <label>Detalles de diseño (opcional)</label>
+        <textarea [(ngModel)]="nuevaVarianteExistente.detallesDiseno" 
+                  rows="2" 
+                  placeholder="Ej: Con brillantina, cadena especial, etc."></textarea>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancelar" (click)="cerrarModalAgregarVariante()">Cancelar</button>
+      <button class="btn-guardar" (click)="guardarNuevaVariante()">Agregar Variante</button>
+    </div>
+  </div>
+</div>
+
+<!-- Popup de alerta -->
+<app-popup-alerta
+  *ngIf="mensajeAlerta"
+  [mensaje]="mensajeAlerta"
+  [tipo]="tipoAlerta"
+  (cerrar)="cerrarAlerta()">
+</app-popup-alerta>

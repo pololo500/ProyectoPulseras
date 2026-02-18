@@ -249,3 +249,19 @@
   (confirmar)="confirmarLimpiar()"
   (cancelar)="cancelarLimpiar()">
 </app-popup-confirm>
+
+<app-popup-confirm
+  *ngIf="mostrarPopupEliminarTrasStock"
+  titulo="¿Eliminar de la calculadora?"
+  mensaje="El producto ya fue agregado al stock. ¿Deseas eliminarlo de la calculadora?"
+  (confirmar)="confirmarEliminarTrasStock()"
+  (cancelar)="cancelarEliminarTrasStock()">
+</app-popup-confirm>
+
+<!-- Popup de alerta -->
+<app-popup-alerta
+  *ngIf="mensajeAlerta"
+  [mensaje]="mensajeAlerta"
+  [tipo]="tipoAlerta"
+  (cerrar)="cerrarAlerta()">
+</app-popup-alerta>

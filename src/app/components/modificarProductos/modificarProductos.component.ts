@@ -8,11 +8,33 @@ import { CapitalizePipe } from '../../extras/capitalizePipe';
 import { FormatoPrecioPipe } from '../../extras/formatoPrecio.pipe';
 import { GlobalService } from '../../services/global.service';
 import { PopupSubcategoriaComponent } from '../popupSubcategoria/popupSubcategoria.component';
+import { PopupConfirmComponent } from '../popupConfirm/popupConfirm.component';
 
 interface Molde {
   _id: string;
   nombre: string;
   capas: { nombre: string; volumen: number }[];
+}
+
+interface Color {
+  _id: string;
+  nombre: string;
+  rgb: string;
+  categoria: string;
+}
+
+interface ColorPorImagenCapa {
+  capaIndex: number;
+  capaNombre: string;
+  colorId: string;
+  colorNombre: string;
+  colorRgb: string;
+  colorCategoria: string;
+}
+
+interface ColoresImagen {
+  imagenIndex: number;
+  colores: ColorPorImagenCapa[];
 }
 
 interface Producto {
@@ -27,11 +49,12 @@ interface Producto {
   subcategorias?: string[];
   moldeId?: string;
   moldeNombre?: string;
+  coloresPorImagen?: ColoresImagen[];
 }
 
 @Component({
   selector: 'app-modificarProductos',
-  imports: [CommonModule, FormsModule, ButtonComponent, CapitalizePipe, FormatoPrecioPipe, PopupSubcategoriaComponent],
+  imports: [CommonModule, FormsModule, ButtonComponent, CapitalizePipe, FormatoPrecioPipe, PopupSubcategoriaComponent, PopupConfirmComponent],
   templateUrl: './modificarProductos.component.html',
   styleUrl: './modificarProductos.component.css'
 })
@@ -45,6 +68,12 @@ export class ModificarProductosComponent implements OnInit {
   // Filtros
   filtroProducto = '';
   filtroMaterial = '';
+  filtroNombre = '';
+  filtroPrecioMin: number | null = null;
+  filtroPrecioMax: number | null = null;
+  
+  // Filtros mobile
+  mostrarFiltrosMobile = false;
   
   // Edición
   productoEditando: Producto | null = null;
@@ -78,6 +107,11 @@ export class ModificarProductosComponent implements OnInit {
   mostrarPopupEliminar = false;
   productoAEliminar: Producto | null = null;
 
+  // Colores para asignar a imágenes
+  colores: Color[] = [];
+  coloresPorImagen: ColoresImagen[] = [];
+  imagenColorAbierta: number | null = null;
+
   constructor(
     private http: HttpClient, 
     private globalService: GlobalService,
@@ -89,6 +123,7 @@ export class ModificarProductosComponent implements OnInit {
     this.cargarProductos();
     this.cargarTiposProducto();
     this.cargarMoldes();
+    this.cargarColores();
     
     // Leer queryParams para aplicar filtro inicial
     this.route.queryParams.subscribe(params => {
@@ -123,6 +158,14 @@ export class ModificarProductosComponent implements OnInit {
       });
   }
 
+  cargarColores() {
+    this.http.get<Color[]>('http://localhost:5000/api/colores')
+      .subscribe({
+        next: (data) => this.colores = data,
+        error: (err) => console.error('Error al cargar colores:', err)
+      });
+  }
+
   cargarMateriales(producto: string) {
     if (producto) {
       this.http.get<string[]>(`http://localhost:5000/api/productos/materiales/${producto}`)
@@ -142,17 +185,63 @@ export class ModificarProductosComponent implements OnInit {
 
   aplicarFiltros() {
     this.productosFiltrados = this.productos.filter(p => {
-      const coincideProducto = !this.filtroProducto || p.producto === this.filtroProducto;
-      const coincideMaterial = !this.filtroMaterial || p.material === this.filtroMaterial;
-      return coincideProducto && coincideMaterial;
+      // Filtro por tipo
+      if (this.filtroProducto && p.producto !== this.filtroProducto) {
+        return false;
+      }
+      
+      // Filtro por material
+      if (this.filtroMaterial && p.material !== this.filtroMaterial) {
+        return false;
+      }
+      
+      // Filtro por nombre
+      if (this.filtroNombre) {
+        const nombreBuscado = this.filtroNombre.toLowerCase();
+        if (!p.nombre.toLowerCase().includes(nombreBuscado)) {
+          return false;
+        }
+      }
+      
+      // Filtro por precio mínimo
+      if (this.filtroPrecioMin !== null && p.precio !== undefined) {
+        if (p.precio < this.filtroPrecioMin) {
+          return false;
+        }
+      }
+      
+      // Filtro por precio máximo
+      if (this.filtroPrecioMax !== null && p.precio !== undefined) {
+        if (p.precio > this.filtroPrecioMax) {
+          return false;
+        }
+      }
+      
+      return true;
     });
   }
 
   limpiarFiltros() {
     this.filtroProducto = '';
     this.filtroMaterial = '';
+    this.filtroNombre = '';
+    this.filtroPrecioMin = null;
+    this.filtroPrecioMax = null;
     this.materiales = [];
     this.aplicarFiltros();
+  }
+
+  tieneFiltrosActivos(): boolean {
+    return !!(this.filtroProducto || this.filtroMaterial || this.filtroNombre || 
+              this.filtroPrecioMin !== null || this.filtroPrecioMax !== null);
+  }
+
+  abrirFiltrosMobile() {
+    this.mostrarFiltrosMobile = true;
+  }
+
+  cerrarFiltrosMobile() {
+    this.mostrarFiltrosMobile = false;
   }
 
   // Helper para obtener imágenes de un producto (compatibilidad con imagenUrl e imagenesUrls)
@@ -195,6 +284,10 @@ export class ModificarProductosComponent implements OnInit {
     
     // Verificar si es resina
     this.esResina = producto.material?.toLowerCase() === 'resina';
+    
+    // Cargar colores por imagen existentes
+    this.coloresPorImagen = producto.coloresPorImagen ? JSON.parse(JSON.stringify(producto.coloresPorImagen)) : [];
+    this.imagenColorAbierta = null;
   }
 
   cancelarEdicion() {
@@ -209,6 +302,8 @@ export class ModificarProductosComponent implements OnInit {
     this.subcategoriasDisponibles = [];
     this.mostrarDropdownSubcategorias = false;
     this.esResina = false;
+    this.coloresPorImagen = [];
+    this.imagenColorAbierta = null;
   }
 
   // Subcategorías
@@ -450,16 +545,120 @@ export class ModificarProductosComponent implements OnInit {
     // Método para restaurar una imagen marcada (por si se quiere agregar en el futuro)
   }
 
+  // ==================== Colores por imagen ====================
+  
+  getMoldeSeleccionado(): Molde | null {
+    const moldeNombre = this.editForm.moldeNombre;
+    if (!moldeNombre) return null;
+    return this.moldes.find(m => m.nombre === moldeNombre) || null;
+  }
+
+  getColoresPorCategoria(categoria: string): Color[] {
+    return this.colores.filter(c => c.categoria?.toLowerCase() === categoria.toLowerCase());
+  }
+
+  trackByIndexOriginal(index: number, item: { url: string, indexOriginal: number }): number {
+    return item.indexOriginal;
+  }
+
+  toggleImagenColorAbierta(imgIdx: number) {
+    this.imagenColorAbierta = this.imagenColorAbierta === imgIdx ? null : imgIdx;
+  }
+
+  getColoresImagenEntry(imgIdx: number): ColoresImagen {
+    let entry = this.coloresPorImagen.find(c => c.imagenIndex === imgIdx);
+    if (!entry) {
+      entry = { imagenIndex: imgIdx, colores: [] };
+      this.coloresPorImagen.push(entry);
+    }
+    return entry;
+  }
+
+  asignarColorImagen(imgIdx: number, capaIdx: number, color: Color) {
+    const entry = this.getColoresImagenEntry(imgIdx);
+    const molde = this.getMoldeSeleccionado();
+    const capaNombre = molde?.capas[capaIdx]?.nombre || '';
+    
+    const existing = entry.colores.findIndex(c => c.capaIndex === capaIdx);
+    const colorData: ColorPorImagenCapa = {
+      capaIndex: capaIdx,
+      capaNombre: capaNombre,
+      colorId: color._id,
+      colorNombre: color.nombre,
+      colorRgb: color.rgb,
+      colorCategoria: color.categoria
+    };
+    
+    if (existing >= 0) {
+      entry.colores[existing] = colorData;
+    } else {
+      entry.colores.push(colorData);
+    }
+  }
+
+  quitarColorImagen(imgIdx: number, capaIdx: number) {
+    const entry = this.coloresPorImagen.find(c => c.imagenIndex === imgIdx);
+    if (entry) {
+      entry.colores = entry.colores.filter(c => c.capaIndex !== capaIdx);
+    }
+  }
+
+  getColorAsignado(imgIdx: number, capaIdx: number): ColorPorImagenCapa | null {
+    const entry = this.coloresPorImagen.find(c => c.imagenIndex === imgIdx);
+    if (!entry) return null;
+    return entry.colores.find(c => c.capaIndex === capaIdx) || null;
+  }
+
+  imagenTieneColoresIdx(imgIdx: number): boolean {
+    const entry = this.coloresPorImagen.find(c => c.imagenIndex === imgIdx);
+    return !!(entry && entry.colores.length > 0);
+  }
+
+  limpiarColoresImagen(imgIdx: number) {
+    this.coloresPorImagen = this.coloresPorImagen.filter(c => c.imagenIndex !== imgIdx);
+  }
+
+  getColoresDeImagen(imgIdx: number): ColorPorImagenCapa[] {
+    const entry = this.coloresPorImagen.find(c => c.imagenIndex === imgIdx);
+    return entry ? entry.colores : [];
+  }
+
+  getColoresImagenActualCarrusel(): ColorPorImagenCapa[] {
+    const imgIdx = this.getIndiceImagenReal(this.imagenCarruselIndex);
+    if (imgIdx === undefined || imgIdx === null || isNaN(imgIdx)) return [];
+    return this.getColoresDeImagen(imgIdx);
+  }
+
+  imagenActualTieneColoresCarrusel(): boolean {
+    return this.getColoresImagenActualCarrusel().length > 0;
+  }
+
+  // Obtener el índice real de la imagen visible para asignar colores
+  getIndiceImagenReal(visibleIdx: number): number {
+    const existentesVisibles = this.imagenesExistentesVisibles;
+    const nuevasVisibles = this.imagenesNuevasVisibles;
+    
+    if (visibleIdx < existentesVisibles.length) {
+      return existentesVisibles[visibleIdx].indexOriginal;
+    } else {
+      return existentesVisibles.length + nuevasVisibles[visibleIdx - existentesVisibles.length]?.indexOriginal;
+    }
+  }
+
   onImagenesSeleccionadas(event: any) {
     const files: FileList = event.target.files;
     
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
+      const targetIndex = this.imagenesNuevas.length;
       this.imagenesNuevas.push(file);
+      
+      // Pre-asignar el slot en el preview para mantener el orden
+      this.imagenesNuevasPreview.push('');
       
       const reader = new FileReader();
       reader.onload = (e: any) => {
-        this.imagenesNuevasPreview.push(e.target.result);
+        this.imagenesNuevasPreview[targetIndex] = e.target.result;
       };
       reader.readAsDataURL(file);
     }
@@ -495,6 +694,36 @@ export class ModificarProductosComponent implements OnInit {
       } else {
         body.moldeNombre = '';
       }
+
+      // Agregar colores por imagen - recalcular índices basados en las imágenes finales
+      // Crear mapa de índice original → índice final para imágenes existentes
+      const mapaIndicesExistentes: Map<number, number> = new Map();
+      let nuevoIdx = 0;
+      this.imagenesExistentes.forEach((_, idx) => {
+        if (!this.imagenesEliminadas.has(idx)) {
+          mapaIndicesExistentes.set(idx, nuevoIdx);
+          nuevoIdx++;
+        }
+      });
+      // Para imágenes nuevas, el índice original era imagenesExistentes.length + indexNueva
+      const mapaIndicesNuevas: Map<number, number> = new Map();
+      this.imagenesNuevasPreview.forEach((_, idx) => {
+        if (!this.imagenesNuevasEliminadas.has(idx)) {
+          const idxOriginal = this.imagenesExistentes.length + idx;
+          mapaIndicesNuevas.set(idxOriginal, nuevoIdx);
+          nuevoIdx++;
+        }
+      });
+      
+      const coloresRemapeados = this.coloresPorImagen
+        .filter(c => c.colores.length > 0)
+        .map(c => {
+          const nuevoIndex = mapaIndicesExistentes.get(c.imagenIndex) ?? mapaIndicesNuevas.get(c.imagenIndex);
+          if (nuevoIndex === undefined) return null; // imagen fue eliminada
+          return { ...c, imagenIndex: nuevoIndex };
+        })
+        .filter(c => c !== null);
+      body.coloresPorImagen = coloresRemapeados;
 
       this.http.put(`http://localhost:5000/api/productos/${this.productoEditando!._id}`, body)
         .subscribe({

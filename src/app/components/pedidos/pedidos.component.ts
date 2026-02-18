@@ -5,6 +5,8 @@ import { FormsModule } from '@angular/forms';
 import { CapitalizePipe } from '../../extras/capitalizePipe';
 import { FormatoPrecioPipe } from '../../extras/formatoPrecio.pipe';
 import { GlobalService } from '../../services/global.service';
+import { PopupConfirmComponent } from '../popupConfirm/popupConfirm.component';
+import { PopupAlertaComponent } from '../popupAlerta/popupAlerta.component';
 
 interface ColorCapa {
   capaIndex: number;
@@ -74,7 +76,7 @@ interface Color {
 @Component({
   selector: 'app-pedidos',
   standalone: true,
-  imports: [CommonModule, FormsModule, CapitalizePipe, FormatoPrecioPipe],
+  imports: [CommonModule, FormsModule, CapitalizePipe, FormatoPrecioPipe, PopupConfirmComponent, PopupAlertaComponent],
   templateUrl: './pedidos.component.html',
   styleUrl: './pedidos.component.css'
 })
@@ -108,6 +110,19 @@ export class PedidosComponent implements OnInit {
   mostrarPopupConfirmar = false;
   accionPendiente: 'entregar' | 'cancelar' | null = null;
   pedidoAccion: Pedido | null = null;
+
+  // Popup alerta
+  mensajeAlerta = '';
+  tipoAlerta: 'exito' | 'error' | 'info' = 'info';
+
+  mostrarAlerta(mensaje: string, tipo: 'exito' | 'error' | 'info' = 'info') {
+    this.mensajeAlerta = mensaje;
+    this.tipoAlerta = tipo;
+  }
+
+  cerrarAlerta() {
+    this.mensajeAlerta = '';
+  }
 
   constructor(private http: HttpClient, private globalService: GlobalService) {}
 
@@ -279,7 +294,7 @@ export class PedidosComponent implements OnInit {
   // Agregar item al pedido
   agregarItem() {
     if (!this.itemActual.productoId) {
-      alert('Selecciona un producto');
+      this.mostrarAlerta('Selecciona un producto', 'error');
       return;
     }
 
@@ -335,12 +350,12 @@ export class PedidosComponent implements OnInit {
 
   guardarPedido() {
     if (!this.nuevoPedido.cliente) {
-      alert('El nombre del cliente es requerido');
+      this.mostrarAlerta('El nombre del cliente es requerido', 'error');
       return;
     }
 
     if (this.itemsPedido.length === 0) {
-      alert('Agrega al menos un producto al pedido');
+      this.mostrarAlerta('Agrega al menos un producto al pedido', 'error');
       return;
     }
 
@@ -524,7 +539,7 @@ export class PedidosComponent implements OnInit {
     const itemToAdd = item || this.getItemsPedido(pedido)[0];
     
     if (!itemToAdd || (!itemToAdd.moldeId && !itemToAdd.moldeNombre) || !itemToAdd.coloresPorCapa?.length) {
-      alert('Este producto no tiene configuración de resina');
+      this.mostrarAlerta('Este producto no tiene configuración de resina', 'error');
       return;
     }
 
@@ -541,7 +556,7 @@ export class PedidosComponent implements OnInit {
             : this.moldes.find(m => m.nombre === itemToAdd.moldeNombre);
           
           if (!molde) {
-            alert('Molde no encontrado');
+            this.mostrarAlerta('Molde no encontrado', 'error');
             return;
           }
 
@@ -575,7 +590,7 @@ export class PedidosComponent implements OnInit {
           // Guardar memoria actualizada
           this.http.post('http://localhost:5000/api/calculadora-memoria', { productos, contadorId })
             .subscribe({
-              next: () => alert(`${itemToAdd.productoNombre} agregado a la calculadora de resina`),
+              next: () => this.mostrarAlerta(`${itemToAdd.productoNombre} agregado a la calculadora de resina`, 'exito'),
               error: (err) => console.error('Error al agregar a calculadora:', err)
             });
         },

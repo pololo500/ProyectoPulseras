@@ -47,7 +47,9 @@ const ItemCarritoSchema = new mongoose.Schema({
     cantidad: Number,
     moldeId: String,
     moldeNombre: String,
-    coloresPorCapa: [ColorCapaCarritoSchema]
+    coloresPorCapa: [ColorCapaCarritoSchema],
+    esStock: Boolean,
+    stockVarianteId: String
 }, { _id: false });
 
 // Esquema para items de favoritos
@@ -104,6 +106,21 @@ const ColorSchema = new mongoose.Schema({
 
 const Color = mongoose.model('Color', ColorSchema);
 
+// Esquema para colores asignados por imagen (para productos de resina)
+const ColorPorImagenCapaSchema = new mongoose.Schema({
+    capaIndex: Number,
+    capaNombre: String,
+    colorId: String,
+    colorNombre: String,
+    colorRgb: String,
+    colorCategoria: String
+}, { _id: false });
+
+const ColoresImagenSchema = new mongoose.Schema({
+    imagenIndex: Number,
+    colores: [ColorPorImagenCapaSchema]
+}, { _id: false });
+
 // Esquema para Productos (colección unificada)
 const ProductoSchema = new mongoose.Schema({
     producto: String,  // tipo de producto (pulsera, llavero, etc)
@@ -113,7 +130,8 @@ const ProductoSchema = new mongoose.Schema({
     precio: Number,
     imagenesUrls: [String],  // array de URLs de imágenes
     subcategorias: [String],  // array de subcategorías
-    moldeNombre: String  // Nombre del molde (para productos de resina) - es único
+    moldeNombre: String,  // Nombre del molde (para productos de resina) - es único
+    coloresPorImagen: [ColoresImagenSchema]  // colores asignados a cada imagen (resina)
 }, { versionKey: false });
 
 const Producto = mongoose.model('Producto', ProductoSchema);
@@ -152,7 +170,9 @@ const ItemPedidoSchema = new mongoose.Schema({
     estado: String, // Estado individual del item: 'A confirmar', 'Por hacer', 'En produccion', 'Armar', 'A entregar'
     moldeId: String,
     moldeNombre: String,
-    coloresPorCapa: [ColorCapaPedidoSchema]
+    coloresPorCapa: [ColorCapaPedidoSchema],
+    esStock: Boolean,
+    stockVarianteId: String
 }, { _id: false });
 
 const PedidoSchema = new mongoose.Schema({
@@ -750,8 +770,14 @@ app.get('/api/productos', async (req, res) => {
 app.post('/api/productos', async (req, res) => {
     const datos = req.body;
     try {
+        if (datos.coloresPorImagen) {
+            console.log('Guardando coloresPorImagen:', JSON.stringify(datos.coloresPorImagen));
+        }
         const nuevoProducto = new Producto(datos);
         const result = await nuevoProducto.save();
+        if (result.coloresPorImagen && result.coloresPorImagen.length > 0) {
+            console.log('Colores guardados correctamente:', result.coloresPorImagen.length, 'entradas');
+        }
         res.status(201).json({ mensaje: 'Producto guardado', id: result._id, producto: result });
     } catch (error) {
         console.error('Error al guardar producto:', error);
@@ -763,8 +789,14 @@ app.post('/api/productos', async (req, res) => {
 app.put('/api/productos/:id', async (req, res) => {
     const datos = req.body;
     try {
+        if (datos.coloresPorImagen) {
+            console.log('Actualizando coloresPorImagen:', JSON.stringify(datos.coloresPorImagen));
+        }
         const result = await Producto.findByIdAndUpdate(req.params.id, datos, { new: true });
         if (!result) return res.status(404).json({ mensaje: 'Producto no encontrado' });
+        if (result.coloresPorImagen && result.coloresPorImagen.length > 0) {
+            console.log('Colores actualizados correctamente:', result.coloresPorImagen.length, 'entradas');
+        }
         res.status(200).json({ mensaje: 'Producto actualizado', producto: result });
     } catch (error) {
         console.error('Error al actualizar producto:', error);
@@ -816,6 +848,46 @@ app.post('/api/pedidos', async (req, res) => {
     try {
         const nuevoPedido = new Pedido(datos);
         const result = await nuevoPedido.save();
+
+        // Descontar stock para items que vienen de stock disponible
+        if (datos.items && datos.items.length > 0) {
+            const itemsDeStock = datos.items.filter(item => item.esStock && item.stockVarianteId);
+            for (const item of itemsDeStock) {
+                try {
+                    // Buscar el documento de stock que contiene esta variante
+                    const stockDoc = await Stock.findOne({
+                        productoId: item.productoId,
+                        'variantes._id': item.stockVarianteId
+                    });
+                    if (stockDoc) {
+                        const variante = stockDoc.variantes.find(v => v._id === item.stockVarianteId);
+                        if (variante) {
+                            variante.cantidad = Math.max(0, variante.cantidad - item.cantidad);
+                            console.log(`📦 Stock descontado: ${item.productoNombre} variante ${item.stockVarianteId} -> cantidad restante: ${variante.cantidad}`);
+
+                            // Si la variante llega a 0, eliminarla
+                            if (variante.cantidad === 0) {
+                                stockDoc.variantes = stockDoc.variantes.filter(v => v._id !== item.stockVarianteId);
+                                console.log(`🗑️ Variante ${item.stockVarianteId} eliminada del stock (cantidad 0)`);
+                            }
+
+                            // Si no quedan variantes, eliminar el documento de stock completo
+                            if (stockDoc.variantes.length === 0) {
+                                await Stock.findByIdAndDelete(stockDoc._id);
+                                console.log(`🗑️ Producto ${item.productoNombre} eliminado del stock (sin variantes)`);
+                            } else {
+                                stockDoc.ultimaActualizacion = new Date();
+                                await stockDoc.save();
+                            }
+                        }
+                    }
+                } catch (stockError) {
+                    console.error(`Error al descontar stock para variante ${item.stockVarianteId}:`, stockError);
+                    // No fallar el pedido por error de stock
+                }
+            }
+        }
+
         res.status(201).json({ mensaje: 'Pedido guardado', id: result._id, pedido: result });
     } catch (error) {
         console.error('Error al guardar pedido:', error);
@@ -1008,10 +1080,42 @@ app.delete('/api/compras/:id', async (req, res) => {
 app.get('/api/stock', async (req, res) => {
     try {
         const stock = await Stock.find().sort({ fechaCreacion: -1 });
-        res.status(200).json(stock);
+
+        // Limpiar variantes con cantidad 0 y documentos vacíos
+        for (const item of stock) {
+            const antes = item.variantes.length;
+            item.variantes = item.variantes.filter(v => v.cantidad > 0);
+            if (item.variantes.length === 0) {
+                await Stock.findByIdAndDelete(item._id);
+            } else if (item.variantes.length !== antes) {
+                item.ultimaActualizacion = new Date();
+                await item.save();
+            }
+        }
+
+        // Re-obtener stock limpio
+        const stockLimpio = await Stock.find().sort({ fechaCreacion: -1 });
+        res.status(200).json(stockLimpio);
     } catch (error) {
         console.error('Error al obtener stock:', error);
         res.status(500).json({ mensaje: 'Error al obtener stock' });
+    }
+});
+
+// Obtener stock por productoId (para mostrar disponibilidad en la tienda)
+app.get('/api/stock/producto/:productoId', async (req, res) => {
+    try {
+        const items = await Stock.find({ productoId: req.params.productoId });
+        // Filtrar solo variantes con cantidad > 0
+        const itemsConStock = items.map(item => {
+            const obj = item.toObject();
+            obj.variantes = obj.variantes.filter(v => v.cantidad > 0);
+            return obj;
+        }).filter(item => item.variantes.length > 0);
+        res.status(200).json(itemsConStock);
+    } catch (error) {
+        console.error('Error al obtener stock por producto:', error);
+        res.status(500).json({ mensaje: 'Error al obtener stock por producto' });
     }
 });
 
@@ -1060,6 +1164,34 @@ app.post('/api/stock', async (req, res) => {
     }
 });
 
+// Agregar una nueva variante a un stock existente
+app.post('/api/stock/:id/variante', async (req, res) => {
+    try {
+        const stock = await Stock.findById(req.params.id);
+        if (!stock) {
+            return res.status(404).json({ mensaje: 'Item de stock no encontrado' });
+        }
+
+        const nuevaVariante = req.body;
+        if (!nuevaVariante._id) {
+            nuevaVariante._id = `var-${Date.now()}`;
+        }
+        if (!nuevaVariante.cantidad || nuevaVariante.cantidad < 1) {
+            return res.status(400).json({ mensaje: 'La cantidad debe ser mayor a 0' });
+        }
+
+        stock.variantes.push(nuevaVariante);
+        stock.ultimaActualizacion = new Date();
+        await stock.save();
+
+        console.log(`➕ Variante agregada a ${stock.productoNombre}: ${nuevaVariante._id}`);
+        res.status(201).json({ mensaje: 'Variante agregada', stock });
+    } catch (error) {
+        console.error('Error al agregar variante:', error);
+        res.status(500).json({ mensaje: 'Error al agregar variante' });
+    }
+});
+
 // Actualizar cantidad de una variante específica
 app.put('/api/stock/:id/variante/:varianteId/cantidad', async (req, res) => {
     try {
@@ -1076,6 +1208,18 @@ app.put('/api/stock/:id/variante/:varianteId/cantidad', async (req, res) => {
         }
         
         variante.cantidad = cantidad;
+
+        // Si la cantidad es 0, eliminar la variante
+        if (cantidad === 0) {
+            stock.variantes = stock.variantes.filter(v => v._id !== req.params.varianteId);
+        }
+
+        // Si no quedan variantes, eliminar el documento completo
+        if (stock.variantes.length === 0) {
+            await Stock.findByIdAndDelete(req.params.id);
+            return res.status(200).json({ mensaje: 'Producto eliminado del stock (sin variantes)' });
+        }
+
         stock.ultimaActualizacion = new Date();
         await stock.save();
         

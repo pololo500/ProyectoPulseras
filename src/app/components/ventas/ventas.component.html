@@ -214,3 +214,11 @@
     </div>
   </div>
 </div>
+
+<!-- Popup de alerta -->
+<app-popup-alerta
+  *ngIf="mensajeAlerta"
+  [mensaje]="mensajeAlerta"
+  [tipo]="tipoAlerta"
+  (cerrar)="cerrarAlerta()">
+</app-popup-alerta>

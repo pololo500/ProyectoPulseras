@@ -5,6 +5,8 @@ import { FormsModule } from '@angular/forms';
 import { CapitalizePipe } from '../../extras/capitalizePipe';
 import { FormatoPrecioPipe } from '../../extras/formatoPrecio.pipe';
 import { GlobalService } from '../../services/global.service';
+import { PopupConfirmComponent } from '../popupConfirm/popupConfirm.component';
+import { PopupAlertaComponent } from '../popupAlerta/popupAlerta.component';
 
 interface Compra {
   _id?: string;
@@ -21,7 +23,7 @@ interface Compra {
 @Component({
   selector: 'app-compras',
   standalone: true,
-  imports: [CommonModule, FormsModule, CapitalizePipe, FormatoPrecioPipe],
+  imports: [CommonModule, FormsModule, CapitalizePipe, FormatoPrecioPipe, PopupConfirmComponent, PopupAlertaComponent],
   templateUrl: './compras.component.html',
   styleUrl: './compras.component.css'
 })
@@ -45,6 +47,19 @@ export class ComprasComponent implements OnInit {
   // Importar JSON
   mostrarImportarJson = false;
   archivoSeleccionado: File | null = null;
+
+  // Popup alerta
+  mensajeAlerta = '';
+  tipoAlerta: 'exito' | 'error' | 'info' = 'info';
+
+  mostrarAlerta(mensaje: string, tipo: 'exito' | 'error' | 'info' = 'info') {
+    this.mensajeAlerta = mensaje;
+    this.tipoAlerta = tipo;
+  }
+
+  cerrarAlerta() {
+    this.mensajeAlerta = '';
+  }
 
   constructor(private http: HttpClient, private globalService: GlobalService) {}
 
@@ -132,7 +147,7 @@ export class ComprasComponent implements OnInit {
     const lugarFinal = this.nuevaCompra.lugar === '__nuevo__' ? this.nuevoLugarNombre.trim() : this.nuevaCompra.lugar;
     
     if (!this.nuevaCompra.producto || !lugarFinal) {
-      alert('Producto y lugar son requeridos');
+      this.mostrarAlerta('Producto y lugar son requeridos', 'error');
       return;
     }
 
@@ -229,14 +244,14 @@ export class ComprasComponent implements OnInit {
     if (file && file.type === 'application/json') {
       this.archivoSeleccionado = file;
     } else {
-      alert('Por favor selecciona un archivo .json válido');
+      this.mostrarAlerta('Por favor selecciona un archivo .json válido', 'error');
       this.archivoSeleccionado = null;
     }
   }
 
   importarJson() {
     if (!this.archivoSeleccionado) {
-      alert('Por favor selecciona un archivo .json');
+      this.mostrarAlerta('Por favor selecciona un archivo .json', 'error');
       return;
     }
 
@@ -247,7 +262,7 @@ export class ComprasComponent implements OnInit {
         const compras = Array.isArray(datos) ? datos : datos.compras;
         
         if (!Array.isArray(compras)) {
-          alert('El JSON debe ser un array de compras o un objeto con propiedad "compras"');
+          this.mostrarAlerta('El JSON debe ser un array de compras o un objeto con propiedad "compras"', 'error');
           return;
         }
 
@@ -266,18 +281,18 @@ export class ComprasComponent implements OnInit {
         this.http.post('http://localhost:5000/api/compras/importar', { compras: comprasProcesadas })
           .subscribe({
             next: (res: any) => {
-              alert(`${res.cantidad || comprasProcesadas.length} compras importadas correctamente`);
+              this.mostrarAlerta(`${res.cantidad || comprasProcesadas.length} compras importadas correctamente`, 'exito');
               this.cargarCompras();
               this.cargarLugares();
               this.cerrarImportarJson();
             },
             error: (err) => {
               console.error('Error al importar:', err);
-              alert('Error al importar compras');
+              this.mostrarAlerta('Error al importar compras', 'error');
             }
           });
       } catch (e) {
-        alert('Error al leer el archivo JSON. Verifica el formato.');
+        this.mostrarAlerta('Error al leer el archivo JSON. Verifica el formato.', 'error');
       }
     };
     reader.readAsText(this.archivoSeleccionado);

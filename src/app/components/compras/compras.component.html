@@ -116,17 +116,13 @@
 </div>
 
 <!-- Popup Eliminar -->
-<div class="popup-overlay" *ngIf="mostrarPopupEliminar" (click)="cancelarEliminar()">
-  <div class="popup-content popup-eliminar" (click)="$event.stopPropagation()">
-    <h3>¿Eliminar compra?</h3>
-    <p>¿Estás seguro de que deseas eliminar la compra de <strong>{{ compraAEliminar?.producto }}</strong>?</p>
-    <p class="popup-warning">Esta acción no se puede deshacer.</p>
-    <div class="popup-acciones">
-      <button class="btn-confirmar-eliminar" (click)="eliminarCompra()">Sí, eliminar</button>
-      <button class="btn-cancelar-popup" (click)="cancelarEliminar()">Cancelar</button>
-    </div>
-  </div>
-</div>
+<app-popup-confirm
+  *ngIf="mostrarPopupEliminar"
+  titulo="¿Eliminar compra?"
+  [mensaje]="'¿Estás seguro de que deseas eliminar la compra de ' + compraAEliminar?.producto + '? Esta acción no se puede deshacer.'"
+  (confirmar)="eliminarCompra()"
+  (cancelar)="cancelarEliminar()">
+</app-popup-confirm>
 
 <!-- Popup Importar JSON -->
 <div class="popup-overlay" *ngIf="mostrarImportarJson" (click)="cerrarImportarJson()">
@@ -151,3 +147,11 @@
     </div>
   </div>
 </div>
+
+<!-- Popup de alerta -->
+<app-popup-alerta
+  *ngIf="mensajeAlerta"
+  [mensaje]="mensajeAlerta"
+  [tipo]="tipoAlerta"
+  (cerrar)="cerrarAlerta()">
+</app-popup-alerta>

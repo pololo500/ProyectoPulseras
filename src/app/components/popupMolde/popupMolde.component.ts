@@ -2,6 +2,8 @@ import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChange
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { PopupConfirmComponent } from '../popupConfirm/popupConfirm.component';
+import { PopupAlertaComponent } from '../popupAlerta/popupAlerta.component';
 
 interface Capa {
   nombre: string;
@@ -19,7 +21,7 @@ interface MoldeEditar {
 @Component({
   selector: 'app-popup-molde',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PopupConfirmComponent, PopupAlertaComponent],
   templateUrl: './popupMolde.component.html',
   styleUrl: './popupMolde.component.css'
 })
@@ -38,6 +40,19 @@ export class PopupMoldeComponent implements OnInit, OnChanges {
   error: string = '';
   modoEdicion: boolean = false;
   mostrarConfirmEliminar: boolean = false;
+
+  // Popup alerta
+  mensajeAlerta = '';
+  tipoAlerta: 'exito' | 'error' | 'info' = 'info';
+
+  mostrarAlerta(mensaje: string, tipo: 'exito' | 'error' | 'info' = 'info') {
+    this.mensajeAlerta = mensaje;
+    this.tipoAlerta = tipo;
+  }
+
+  cerrarAlerta() {
+    this.mensajeAlerta = '';
+  }
 
   constructor(private http: HttpClient) {}
 
@@ -245,7 +260,7 @@ export class PopupMoldeComponent implements OnInit, OnChanges {
           next: (res) => {
             this.moldesImportados.emit(res.moldes);
             this.error = '';
-            alert(`${res.moldes.length} moldes importados correctamente`);
+            this.mostrarAlerta(`${res.moldes.length} moldes importados correctamente`, 'exito');
           },
           error: (err) => {
             console.error('Error al importar moldes:', err);

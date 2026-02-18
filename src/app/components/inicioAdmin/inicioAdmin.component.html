@@ -1,9 +1,3 @@
-<div class="header-admin">
-    <button class="btn-logout" (click)="cerrarSesion()" title="Cerrar Sesión">
-        🚪 Cerrar Sesión
-    </button>
-</div>
-
 <div class="agregar">
     <app-button buttonClass="degrade" etiqueta="Agregar Producto" link="agregarProducto"></app-button>
     <app-button buttonClass="degrade" etiqueta="Gestionar SVGs" link="agregarSvg"></app-button>
@@ -17,34 +11,40 @@
              (mouseenter)="onMouseEnter(carrusel)" 
              (mouseleave)="onMouseLeave(carrusel)"
              (click)="$event.stopPropagation()">
-            <button class="arrow left" (click)="previous(carrusel); $event.stopPropagation()" *ngIf="carrusel.productos.length > 1">❮</button>
-
-            <div class="carrusel-viewport">
+             <button class="arrow left" (click)="previous(carrusel); $event.stopPropagation()" *ngIf="carrusel.productos.length > 1">❮</button>
+             
+             <div class="carrusel-viewport">
                 <div class="carrusel-track">
                     <div class="carrusel-item" 
-                         *ngFor="let producto of carrusel.productos; let i = index"
-                         [class]="getItemClass(carrusel, i)">
-                        <img [src]="getPrimeraImagen(producto)" [alt]="producto.nombre" />
-                        <div class="producto-nombre">{{ producto.nombre }}</div>
-                    </div>
+                    *ngFor="let producto of carrusel.productos; let i = index"
+                    [class]="getItemClass(carrusel, i)">
+                    <img [src]="getPrimeraImagen(producto)" [alt]="producto.nombre" />
+                    <div class="producto-nombre">{{ producto.nombre }}</div>
+                </div>
                 </div>
             </div>
-
+            
             <button class="arrow right" (click)="next(carrusel); $event.stopPropagation()" *ngIf="carrusel.productos.length > 1">❯</button>
         </div>
         
         <div class="carrusel-indicadores" *ngIf="carrusel.productos.length > 1">
             <span class="indicador" 
-                  *ngFor="let producto of carrusel.productos; let i = index" 
+            *ngFor="let producto of carrusel.productos; let i = index" 
                   [class.activo]="i === carrusel.currentIndex"
                   (click)="carrusel.currentIndex = i; $event.stopPropagation()"></span>
-        </div>
-        
-        <p class="producto-count" *ngIf="carrusel.productos.length === 1">{{ carrusel.productos.length }} producto</p>
+                </div>
+                
+                <p class="producto-count" *ngIf="carrusel.productos.length === 1">{{ carrusel.productos.length }} producto</p>
         <p class="producto-count" *ngIf="carrusel.productos.length > 1">{{ carrusel.productos.length }} productos</p>
     </div>
     
     <div class="sin-productos" *ngIf="carruseles.length === 0">
         <p>No hay productos cargados aún.</p>
     </div>
+</div>
+
+<div class="header-admin">
+    <button class="btn-logout" (click)="cerrarSesion()" title="Cerrar Sesión">
+        Cerrar Sesión
+    </button>
 </div>

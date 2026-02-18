@@ -321,7 +321,7 @@
 
 .producto-info .tipo {
     font-size: 14px;
-    color: #D6B435;
+    color: rgba(0, 4, 71, 0.5);
     font-weight: 500;
 }
 
@@ -430,7 +430,7 @@
 .producto-info-lista p {
     margin: 10px 0;
     font-size: 16px;
-    color: #D6B435;
+    color: rgba(0, 4, 71, 0.5);
 }
 
 .producto-info-lista p:last-child {
@@ -536,7 +536,7 @@
     justify-content: space-between; 
     width: 100%; 
     box-sizing: border-box; 
-    padding-right: 10px;
+    padding-right: 0px;
     gap: 0; 
     overflow-y: auto;
     height: 100%;
@@ -565,6 +565,7 @@
     justify-content: center;
     overflow-y: auto;
     align-self: flex-start;
+    padding: 0px 20px;
 }
 
 .popup-contenido.layout-horizontal.foto-svg .popup-panel-derecho {
@@ -585,6 +586,39 @@
     flex-direction: column;
     justify-content: space-between;
     gap: 15px;
+}
+
+/* Botón colores de la foto */
+.btn-colores-foto {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    max-width: 300px;
+    padding: 10px 20px;
+    margin: 10px auto;
+    background: linear-gradient(135deg, #000447, #080e81);
+    color: #D6B435;
+    border: 2px solid #D6B435;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    letter-spacing: 0.5px;
+}
+
+.btn-colores-foto:hover {
+    background: linear-gradient(135deg, #f0ea4c, #D6B435);
+    color: #000447;
+    border-color: #000447;
+    transform: scale(1.03);
+    box-shadow: 0 4px 15px rgba(214, 180, 53, 0.4);
+}
+
+.btn-colores-foto:active {
+    transform: scale(0.98);
 }
 
 /* SVG Panel en detalle */
@@ -628,9 +662,8 @@
 
 .svg-preview-grande ::ng-deep svg * {
     cursor: pointer !important;
-    transition: all 0.2s ease;
+    transition: filter 0.2s ease, stroke-width 0.2s ease;
     pointer-events: all !important;
-    transform-origin: center;
 }
 
 .svg-preview-grande ::ng-deep svg *:hover {
@@ -1883,5 +1916,257 @@
     
     .login-form input {
         padding: 10px 12px;
+    }
+}
+
+/* ========== BADGE STOCK DISPONIBLE ========== */
+.badge-stock {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #02C028;
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 20px;
+    z-index: 10;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(46, 204, 113, 0.4);
+    animation: pulseStock 2s ease-in-out infinite;
+}
+
+.badge-stock-lista {
+    top: 10px;
+    left: 198px;
+}
+
+@keyframes pulseStock {
+    0%, 100% { box-shadow: 0 2px 8px rgba(46, 204, 113, 0.4); }
+    50% { box-shadow: 0 2px 16px rgba(46, 204, 113, 0.7); }
+}
+
+/* ========== BOTÓN VER STOCK EN DETALLE ========== */
+.btn-ver-stock {
+    width: 100%;
+    padding: 12px 20px;
+    background: #02C028;
+    color: white;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-ver-stock:hover {
+    background: #06d22f;
+    box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);
+}
+
+/* ========== POPUP STOCK ========== */
+.popup-stock-overlay {
+    z-index: 1100;
+}
+
+.popup-stock {
+    max-width: 700px;
+    width: 95%;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 30px;
+    position: relative;
+}
+
+.popup-stock h2 {
+    margin: 0 0 5px 0;
+    font-size: 22px;
+    color: #333;
+}
+
+.stock-subtitle {
+    color: #888;
+    font-size: 14px;
+    margin: 0 0 20px 0;
+}
+
+.stock-variantes-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.stock-variante-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 1px solid #eee;
+    transition: all 0.2s ease;
+}
+
+.stock-variante-card:hover {
+    border-color: #d6b435;
+    box-shadow: 0 2px 12px rgba(214, 180, 53, 0.15);
+}
+
+.stock-variante-visual {
+    flex-shrink: 0;
+    width: 90px;
+    height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #e0e0e0;
+}
+
+.stock-variante-svg {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stock-variante-svg ::ng-deep svg {
+    width: 100%;
+    height: 100%;
+    max-width: 75px;
+    max-height: 75px;
+}
+
+.stock-variante-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.stock-variante-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.stock-colores-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.stock-color-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px 3px 5px;
+    background: white;
+    border-radius: 20px;
+    font-size: 12px;
+    border: 1px solid #e0e0e0;
+}
+
+.stock-color-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,0,0,0.15);
+    flex-shrink: 0;
+}
+
+.stock-color-nombre {
+    color: #555;
+    white-space: nowrap;
+}
+
+.stock-variante-detalles {
+    font-size: 12px;
+    color: #888;
+    margin: 4px 0;
+}
+
+.stock-variante-cantidad {
+    margin: 4px 0 0 0;
+}
+
+.stock-disponible {
+    font-size: 13px;
+    font-weight: 600;
+    color: #02C028;
+}
+
+.stock-variante-acciones {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.stock-cantidad-selector {
+    transform: scale(0.85);
+}
+
+.btn-comprar-stock {
+    padding: 8px 20px;
+    background: linear-gradient(to right, #d4a017, #d6b435);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.btn-comprar-stock:hover {
+    background: linear-gradient(to right, #c4940f, #d4a017);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(214, 180, 53, 0.3);
+}
+
+/* Responsive stock popup */
+@media (max-width: 600px) {
+    .popup-stock {
+        padding: 20px;
+    }
+
+    .stock-variante-card {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+
+    .stock-variante-visual {
+        width: 100%;
+        height: 120px;
+    }
+
+    .stock-variante-svg {
+        width: 100px;
+        height: 100px;
+    }
+
+    .stock-colores-chips {
+        justify-content: center;
+    }
+
+    .stock-variante-acciones {
+        flex-direction: row;
+        justify-content: center;
+    }
+
+    .stock-cantidad-selector {
+        transform: scale(1);
+    }
+
+    .badge-stock-lista {
+        top: 8px;
+        left: 8px;
+        transform: none;
     }
 }

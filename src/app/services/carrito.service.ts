@@ -23,6 +23,9 @@ export interface ItemCarrito {
   moldeNombre?: string;
   // Colores por capa (array completo)
   coloresPorCapa?: ColorPorCapa[];
+  // Para productos de stock disponible
+  esStock?: boolean;
+  stockVarianteId?: string;
 }
 
 @Injectable({
@@ -142,6 +145,8 @@ export class CarritoService {
     moldeId?: string;
     moldeNombre?: string;
     coloresPorCapa?: ColorPorCapa[];
+    esStock?: boolean;
+    stockVarianteId?: string;
   }, cantidad: number = 1): void {
     const items = [...this.getItems()];
     
@@ -149,10 +154,14 @@ export class CarritoService {
     const coloresKey = producto.coloresPorCapa 
       ? producto.coloresPorCapa.map(c => c.colorId).join('-')
       : '';
+
+    // Para items de stock, también diferenciar por stockVarianteId
+    const stockKey = producto.stockVarianteId || '';
     
     const index = items.findIndex(item => 
       item._id === producto._id && 
-      (item.coloresPorCapa?.map(c => c.colorId).join('-') || '') === coloresKey
+      (item.coloresPorCapa?.map(c => c.colorId).join('-') || '') === coloresKey &&
+      (item.stockVarianteId || '') === stockKey
     );
     
     if (index >= 0) {

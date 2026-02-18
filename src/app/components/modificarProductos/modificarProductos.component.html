@@ -1,23 +1,48 @@
 <div class="container">
   <h1>Modificar Productos</h1>
   
-  <!-- Filtros -->
-  <div class="filtros">
-    <div class="filtro-grupo">
-      <label for="filtroProducto">Filtrar por Producto</label>
-      <select id="filtroProducto" [(ngModel)]="filtroProducto" (change)="onFiltroProductoChange()" [ngClass]="{ 'filled': filtroProducto }">
-        <option value="">Todos los productos</option>
-        <option *ngFor="let tipo of tiposProducto" [value]="tipo">{{ tipo | capitalize }}</option>
-      </select>
+  <!-- Botón filtros móvil -->
+  <div class="filtros-mobile-header">
+    <button class="btn-filtros-mobile" (click)="abrirFiltrosMobile()">Filtros
+      <span class="filtros-activos" *ngIf="tieneFiltrosActivos()">●</span>
+    </button>
+  </div>
+  
+  <!-- Filtros Desktop -->
+  <div class="card" id="filtros-card">
+    <div class="filtros">
+      <div class="filtro-group">
+        <label>Buscar</label>
+        <input type="text" [(ngModel)]="filtroNombre" (input)="aplicarFiltros()" placeholder="Nombre del producto...">
+      </div>
+      
+      <div class="filtro-group">
+        <label>Tipo</label>
+        <select [(ngModel)]="filtroProducto" (change)="onFiltroProductoChange()">
+          <option value="">Todos</option>
+          <option *ngFor="let tipo of tiposProducto" [value]="tipo">{{ tipo | capitalize }}</option>
+        </select>
+      </div>
+      
+      <div class="filtro-group">
+        <label>Material</label>
+        <select [(ngModel)]="filtroMaterial" (change)="aplicarFiltros()" [disabled]="!filtroProducto">
+          <option value="">Todos</option>
+          <option *ngFor="let mat of materiales" [value]="mat">{{ mat | capitalize }}</option>
+        </select>
+      </div>
+      
+      <div class="filtro-group filtro-precio">
+        <label>Precio</label>
+        <div class="precio-inputs">
+          <input type="number" [(ngModel)]="filtroPrecioMin" (input)="aplicarFiltros()" placeholder="Mín">
+          <span>-</span>
+          <input type="number" [(ngModel)]="filtroPrecioMax" (input)="aplicarFiltros()" placeholder="Máx">
+        </div>
+      </div>
+      
+      <button class="btn-limpiar" (click)="limpiarFiltros()" *ngIf="tieneFiltrosActivos()">Mostrar todo</button>
     </div>
-    <div class="filtro-grupo">
-      <label for="filtroMaterial">Filtrar por Material</label>
-      <select id="filtroMaterial" [(ngModel)]="filtroMaterial" (change)="aplicarFiltros()" [disabled]="!filtroProducto" [ngClass]="{ 'filled': filtroMaterial }">
-        <option value="">Todos los materiales</option>
-        <option *ngFor="let mat of materiales" [value]="mat">{{ mat | capitalize }}</option>
-      </select>
-    </div>
-    <button class="btn-limpiar" (click)="limpiarFiltros()" *ngIf="filtroProducto || filtroMaterial">Limpiar filtros</button>
   </div>
 
   <!-- Lista de productos -->
@@ -134,6 +159,14 @@
           <img [src]="imagenActual" alt="Imagen del producto" class="carrusel-imagen"/>
           <button class="btn-eliminar-imagen-carrusel" (click)="eliminarImagenActual()" title="Eliminar imagen">✕</button>
           <span class="carrusel-badge-nueva" *ngIf="esImagenNueva">Nueva</span>
+          <!-- Colores asignados a esta foto -->
+          <div class="carrusel-colores-overlay" *ngIf="esResina && getMoldeSeleccionado() && imagenActualTieneColoresCarrusel()">
+            <div class="carrusel-colores-dots">
+              <div class="carrusel-color-dot" *ngFor="let colorCapa of getColoresImagenActualCarrusel()" 
+                   [style.background-color]="colorCapa.colorRgb" 
+                   [title]="colorCapa.capaNombre + ': ' + colorCapa.colorNombre"></div>
+            </div>
+          </div>
           <div class="carrusel-orden-btns">
             <button type="button" class="btn-orden" (click)="moverImagenIzquierda()" [disabled]="!puedeIzquierda" title="Mover a la izquierda">◀</button>
             <button type="button" class="btn-orden" (click)="moverImagenDerecha()" [disabled]="!puedeDerecha" title="Mover a la derecha">▶</button>
@@ -144,10 +177,10 @@
       </div>
       
       <div class="carrusel-indicadores" *ngIf="totalImagenes > 1">
-        <span class="indicador" *ngFor="let img of imagenesExistentesVisibles; let i = index" 
+        <span class="indicador" *ngFor="let img of imagenesExistentesVisibles; let i = index; trackBy: trackByIndexOriginal" 
               [class.activo]="i === imagenCarruselIndex" 
               (click)="imagenCarruselIndex = i"></span>
-        <span class="indicador nueva" *ngFor="let img of imagenesNuevasVisibles; let i = index" 
+        <span class="indicador nueva" *ngFor="let img of imagenesNuevasVisibles; let i = index; trackBy: trackByIndexOriginal" 
               [class.activo]="(i + imagenesExistentesVisibles.length) === imagenCarruselIndex" 
               (click)="imagenCarruselIndex = i + imagenesExistentesVisibles.length"></span>
       </div>
@@ -166,6 +199,122 @@
       <p class="imagenes-warning" *ngIf="totalImagenes === 0">⚠️ El producto debe tener al menos una imagen</p>
     </div>
 
+    <!-- Asignar colores por imagen (solo resina con molde) -->
+    <div class="colores-por-imagen-section" *ngIf="esResina && getMoldeSeleccionado() && totalImagenes > 0">
+      <h3>Asignar colores a las fotos</h3>
+      <p class="colores-instruccion">Podés asignar los colores de cada capa del molde a cada foto. Esto permite que los clientes apliquen los colores de la foto con un solo clic.</p>
+      
+      <div class="imagen-color-asignador">
+        <!-- Imágenes existentes visibles -->
+        <div class="imagen-color-item" *ngFor="let img of imagenesExistentesVisibles; let visIdx = index; trackBy: trackByIndexOriginal">
+          <div class="imagen-color-header" (click)="toggleImagenColorAbierta(visIdx)">
+            <div class="imagen-color-thumb">
+              <img [src]="img.url" alt="Foto {{ visIdx + 1 }}">
+            </div>
+            <span class="imagen-color-titulo">Foto {{ visIdx + 1 }}</span>
+            <div class="imagen-color-dots-preview" *ngIf="getColoresDeImagen(img.indexOriginal).length > 0">
+              <span class="color-dot-header" *ngFor="let c of getColoresDeImagen(img.indexOriginal)" 
+                    [style.background-color]="c.colorRgb" [title]="c.capaNombre + ': ' + c.colorNombre"></span>
+            </div>
+            <span class="imagen-color-estado" *ngIf="imagenTieneColoresIdx(img.indexOriginal)">✓</span>
+            <span class="imagen-color-estado sin-colores" *ngIf="!imagenTieneColoresIdx(img.indexOriginal)">Sin colores</span>
+            <span class="imagen-color-toggle">{{ imagenColorAbierta === visIdx ? '▲' : '▼' }}</span>
+          </div>
+          
+          <div class="imagen-color-contenido" *ngIf="imagenColorAbierta === visIdx">
+            <div class="capa-selector-mini" *ngFor="let capa of getMoldeSeleccionado()!.capas; let capaIdx = index">
+              <div class="capa-selector-header">
+                <span class="capa-num">{{ capaIdx + 1 }}</span>
+                <span class="capa-label">{{ capa.nombre | capitalize }}</span>
+                <span class="capa-color-asignado" *ngIf="getColorAsignado(img.indexOriginal, capaIdx)">
+                  <span class="color-dot-mini" [style.background-color]="getColorAsignado(img.indexOriginal, capaIdx)!.colorRgb"></span>
+                  {{ getColorAsignado(img.indexOriginal, capaIdx)!.colorNombre | capitalize }}
+                </span>
+                <button type="button" class="btn-quitar-color" *ngIf="getColorAsignado(img.indexOriginal, capaIdx)" (click)="quitarColorImagen(img.indexOriginal, capaIdx)">✕</button>
+              </div>
+              <div class="colores-selector-rapido">
+                <div class="colores-categoria-mini" *ngIf="getColoresPorCategoria('translucido').length > 0">
+                  <span class="cat-label">✨</span>
+                  <div class="color-mini-opcion" 
+                       *ngFor="let color of getColoresPorCategoria('translucido')"
+                       [class.seleccionado]="getColorAsignado(img.indexOriginal, capaIdx)?.colorId === color._id"
+                       [style.background-color]="color.rgb"
+                       [title]="color.nombre"
+                       (click)="asignarColorImagen(img.indexOriginal, capaIdx, color)">
+                  </div>
+                </div>
+                <div class="colores-categoria-mini" *ngIf="getColoresPorCategoria('polvo').length > 0">
+                  <span class="cat-label">🌟</span>
+                  <div class="color-mini-opcion"
+                       *ngFor="let color of getColoresPorCategoria('polvo')"
+                       [class.seleccionado]="getColorAsignado(img.indexOriginal, capaIdx)?.colorId === color._id"
+                       [style.background-color]="color.rgb"
+                       [title]="color.nombre"
+                       (click)="asignarColorImagen(img.indexOriginal, capaIdx, color)">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button type="button" class="btn-limpiar-colores-imagen" (click)="limpiarColoresImagen(img.indexOriginal)" *ngIf="imagenTieneColoresIdx(img.indexOriginal)">Quitar todos los colores</button>
+          </div>
+        </div>
+
+        <!-- Imágenes nuevas visibles -->
+        <div class="imagen-color-item nueva" *ngFor="let img of imagenesNuevasVisibles; let visIdx = index; trackBy: trackByIndexOriginal">
+          <div class="imagen-color-header" (click)="toggleImagenColorAbierta(imagenesExistentesVisibles.length + visIdx)">
+            <div class="imagen-color-thumb">
+              <img [src]="img.url" alt="Foto nueva {{ visIdx + 1 }}">
+            </div>
+            <span class="imagen-color-titulo">Foto nueva {{ visIdx + 1 }}</span>
+            <div class="imagen-color-dots-preview" *ngIf="getColoresDeImagen(imagenesExistentes.length + img.indexOriginal).length > 0">
+              <span class="color-dot-header" *ngFor="let c of getColoresDeImagen(imagenesExistentes.length + img.indexOriginal)" 
+                    [style.background-color]="c.colorRgb" [title]="c.capaNombre + ': ' + c.colorNombre"></span>
+            </div>
+            <span class="imagen-color-estado" *ngIf="imagenTieneColoresIdx(imagenesExistentes.length + img.indexOriginal)">✓</span>
+            <span class="imagen-color-estado sin-colores" *ngIf="!imagenTieneColoresIdx(imagenesExistentes.length + img.indexOriginal)">Sin colores</span>
+            <span class="imagen-color-toggle">{{ imagenColorAbierta === (imagenesExistentesVisibles.length + visIdx) ? '▲' : '▼' }}</span>
+          </div>
+          
+          <div class="imagen-color-contenido" *ngIf="imagenColorAbierta === (imagenesExistentesVisibles.length + visIdx)">
+            <div class="capa-selector-mini" *ngFor="let capa of getMoldeSeleccionado()!.capas; let capaIdx = index">
+              <div class="capa-selector-header">
+                <span class="capa-num">{{ capaIdx + 1 }}</span>
+                <span class="capa-label">{{ capa.nombre | capitalize }}</span>
+                <span class="capa-color-asignado" *ngIf="getColorAsignado(imagenesExistentes.length + img.indexOriginal, capaIdx)">
+                  <span class="color-dot-mini" [style.background-color]="getColorAsignado(imagenesExistentes.length + img.indexOriginal, capaIdx)!.colorRgb"></span>
+                  {{ getColorAsignado(imagenesExistentes.length + img.indexOriginal, capaIdx)!.colorNombre | capitalize }}
+                </span>
+                <button type="button" class="btn-quitar-color" *ngIf="getColorAsignado(imagenesExistentes.length + img.indexOriginal, capaIdx)" (click)="quitarColorImagen(imagenesExistentes.length + img.indexOriginal, capaIdx)">✕</button>
+              </div>
+              <div class="colores-selector-rapido">
+                <div class="colores-categoria-mini" *ngIf="getColoresPorCategoria('translucido').length > 0">
+                  <span class="cat-label">✨</span>
+                  <div class="color-mini-opcion" 
+                       *ngFor="let color of getColoresPorCategoria('translucido')"
+                       [class.seleccionado]="getColorAsignado(imagenesExistentes.length + img.indexOriginal, capaIdx)?.colorId === color._id"
+                       [style.background-color]="color.rgb"
+                       [title]="color.nombre"
+                       (click)="asignarColorImagen(imagenesExistentes.length + img.indexOriginal, capaIdx, color)">
+                  </div>
+                </div>
+                <div class="colores-categoria-mini" *ngIf="getColoresPorCategoria('polvo').length > 0">
+                  <span class="cat-label">🌟</span>
+                  <div class="color-mini-opcion"
+                       *ngFor="let color of getColoresPorCategoria('polvo')"
+                       [class.seleccionado]="getColorAsignado(imagenesExistentes.length + img.indexOriginal, capaIdx)?.colorId === color._id"
+                       [style.background-color]="color.rgb"
+                       [title]="color.nombre"
+                       (click)="asignarColorImagen(imagenesExistentes.length + img.indexOriginal, capaIdx, color)">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button type="button" class="btn-limpiar-colores-imagen" (click)="limpiarColoresImagen(imagenesExistentes.length + img.indexOriginal)" *ngIf="imagenTieneColoresIdx(imagenesExistentes.length + img.indexOriginal)">Quitar todos los colores</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="form-acciones">
       <button class="btn-guardar" (click)="guardarCambios()">💾 Guardar Cambios</button>
       <button class="btn-cancelar-edit" (click)="cancelarEdicion()">Cancelar</button>
@@ -174,19 +323,60 @@
 </div>
 
 <!-- Popup confirmar eliminar -->
-<div class="popup-overlay" *ngIf="mostrarPopupEliminar" (click)="cancelarEliminar()">
-  <div class="popup-content" (click)="$event.stopPropagation()">
-    <h3>¿Eliminar producto?</h3>
-    <p>¿Estás seguro de que deseas eliminar <strong>{{ productoAEliminar?.nombre }}</strong>?</p>
-    <p class="popup-warning">Esta acción no se puede deshacer.</p>
-    <div class="popup-acciones">
-      <button class="btn-confirmar-eliminar" (click)="eliminarProducto()">Sí, eliminar</button>
-      <button class="btn-cancelar-popup" (click)="cancelarEliminar()">Cancelar</button>
+<app-popup-confirm
+  *ngIf="mostrarPopupEliminar"
+  titulo="¿Eliminar producto?"
+  [mensaje]="'¿Estás seguro de que deseas eliminar ' + productoAEliminar?.nombre + '? Esta acción no se puede deshacer.'"
+  (confirmar)="eliminarProducto()"
+  (cancelar)="cancelarEliminar()">
+</app-popup-confirm>
+
+<app-button buttonClass="modificarProductos" etiqueta="Agregar Producto" link="/agregarProducto"></app-button>
+
+<!-- Popup de Filtros Mobile -->
+<div class="popup-overlay popup-overlay-filtros" *ngIf="mostrarFiltrosMobile" (click)="cerrarFiltrosMobile()">
+  <div class="card popup-filtros-mobile" (click)="$event.stopPropagation()">
+    <button class="btn-cerrar-popup" (click)="cerrarFiltrosMobile()">✕</button>
+    <h2>Filtros</h2>
+    
+    <div class="filtros-mobile-contenido">
+      <div class="filtro-group">
+        <label>Buscar</label>
+        <input type="text" [(ngModel)]="filtroNombre" (input)="aplicarFiltros()" placeholder="Nombre del producto...">
+      </div>
+      
+      <div class="filtro-group">
+        <label>Tipo</label>
+        <select [(ngModel)]="filtroProducto" (change)="onFiltroProductoChange()">
+          <option value="">Todos</option>
+          <option *ngFor="let tipo of tiposProducto" [value]="tipo">{{ tipo | capitalize }}</option>
+        </select>
+      </div>
+      
+      <div class="filtro-group">
+        <label>Material</label>
+        <select [(ngModel)]="filtroMaterial" (change)="aplicarFiltros()" [disabled]="!filtroProducto">
+          <option value="">Todos</option>
+          <option *ngFor="let mat of materiales" [value]="mat">{{ mat | capitalize }}</option>
+        </select>
+      </div>
+      
+      <div class="filtro-group filtro-precio">
+        <label>Precio</label>
+        <div class="precio-inputs">
+          <input type="number" [(ngModel)]="filtroPrecioMin" (input)="aplicarFiltros()" placeholder="Mín">
+          <span>-</span>
+          <input type="number" [(ngModel)]="filtroPrecioMax" (input)="aplicarFiltros()" placeholder="Máx">
+        </div>
+      </div>
+      
+      <div class="filtros-mobile-acciones">
+        <button class="btn-limpiar" (click)="limpiarFiltros()" *ngIf="tieneFiltrosActivos()">Mostrar todo</button>
+        <button class="btn-aplicar" (click)="cerrarFiltrosMobile()">Aplicar</button>
+      </div>
     </div>
   </div>
 </div>
-
-<app-button buttonClass="modificarProductos" etiqueta="Agregar Producto" link="/agregarProducto"></app-button>
 
 <!-- Popup para agregar nueva sub-categoría -->
 <app-popup-subcategoria 

@@ -13,6 +13,27 @@ interface Molde {
   capas: { nombre: string; volumen: number }[];
 }
 
+interface Color {
+  _id: string;
+  nombre: string;
+  rgb: string;
+  categoria: string;
+}
+
+interface ColorPorImagenCapa {
+  capaIndex: number;
+  capaNombre: string;
+  colorId: string;
+  colorNombre: string;
+  colorRgb: string;
+  colorCategoria: string;
+}
+
+interface ColoresImagen {
+  imagenIndex: number;
+  colores: ColorPorImagenCapa[];
+}
+
 @Component({
     selector: 'app-agregarProducto',
     imports: [CommonModule, FormsModule, ReactiveFormsModule, ButtonComponent, CapitalizePipe, PopupSubcategoriaComponent],
@@ -47,6 +68,11 @@ export class AgregarProductoComponent implements OnInit {
   // Para resina
   esResina = false;
 
+  // Colores para asignar a imágenes
+  colores: Color[] = [];
+  coloresPorImagen: ColoresImagen[] = [];
+  imagenColorAbierta: number | null = null;
+
   constructor(private fb: FormBuilder, private http: HttpClient, private globalService: GlobalService) {
     this.addProductForm = this.fb.group({
       producto: [''],
@@ -64,6 +90,7 @@ export class AgregarProductoComponent implements OnInit {
     this.globalService.checkLoggedIn("/agregarProducto");
     this.obtenerTiposProducto();
     this.cargarMoldes();
+    this.cargarColores();
     
     this.addProductForm.get('producto')?.valueChanges.subscribe(producto => {
       if (producto === '__nuevo__') {
@@ -127,6 +154,14 @@ export class AgregarProductoComponent implements OnInit {
       .subscribe({
         next: (data) => this.moldes = data,
         error: (err) => console.error('Error al cargar moldes:', err)
+      });
+  }
+
+  cargarColores() {
+    this.http.get<Color[]>('http://localhost:5000/api/colores')
+      .subscribe({
+        next: (data) => this.colores = data,
+        error: (err) => console.error('Error al cargar colores:', err)
       });
   }
 
@@ -223,12 +258,16 @@ export class AgregarProductoComponent implements OnInit {
     
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
+      const targetIndex = this.archivosImagenes.length;
       this.archivosImagenes.push(file);
+      
+      // Pre-asignar el slot en el preview para mantener el orden
+      this.imagenesPreview.push('');
       
       // Crear preview de imagen
       const reader = new FileReader();
       reader.onload = (e: any) => {
-        this.imagenesPreview.push(e.target.result);
+        this.imagenesPreview[targetIndex] = e.target.result;
       };
       reader.readAsDataURL(file);
     }
@@ -241,6 +280,18 @@ export class AgregarProductoComponent implements OnInit {
   eliminarImagen(index: number) {
     this.archivosImagenes.splice(index, 1);
     this.imagenesPreview.splice(index, 1);
+    // Sincronizar coloresPorImagen
+    this.coloresPorImagen = this.coloresPorImagen
+      .filter(c => c.imagenIndex !== index)
+      .map(c => ({
+        ...c,
+        imagenIndex: c.imagenIndex > index ? c.imagenIndex - 1 : c.imagenIndex
+      }));
+    if (this.imagenColorAbierta === index) {
+      this.imagenColorAbierta = null;
+    } else if (this.imagenColorAbierta !== null && this.imagenColorAbierta > index) {
+      this.imagenColorAbierta--;
+    }
     this.addProductForm.patchValue({ imagenes: this.archivosImagenes });
     // Ajustar índice del carrusel si es necesario
     if (this.imagenCarruselIndex >= this.imagenesPreview.length && this.imagenesPreview.length > 0) {
@@ -280,6 +331,12 @@ export class AgregarProductoComponent implements OnInit {
       // Intercambiar en imagenesPreview
       [this.imagenesPreview[index - 1], this.imagenesPreview[index]] = 
         [this.imagenesPreview[index], this.imagenesPreview[index - 1]];
+      // Sincronizar coloresPorImagen
+      this.coloresPorImagen = this.coloresPorImagen.map(c => {
+        if (c.imagenIndex === index) return { ...c, imagenIndex: index - 1 };
+        if (c.imagenIndex === index - 1) return { ...c, imagenIndex: index };
+        return c;
+      });
       // Actualizar el índice del carrusel si estamos viendo esta imagen
       if (this.imagenCarruselIndex === index) {
         this.imagenCarruselIndex = index - 1;
@@ -297,6 +354,12 @@ export class AgregarProductoComponent implements OnInit {
       // Intercambiar en imagenesPreview
       [this.imagenesPreview[index], this.imagenesPreview[index + 1]] = 
         [this.imagenesPreview[index + 1], this.imagenesPreview[index]];
+      // Sincronizar coloresPorImagen
+      this.coloresPorImagen = this.coloresPorImagen.map(c => {
+        if (c.imagenIndex === index) return { ...c, imagenIndex: index + 1 };
+        if (c.imagenIndex === index + 1) return { ...c, imagenIndex: index };
+        return c;
+      });
       // Actualizar el índice del carrusel si estamos viendo esta imagen
       if (this.imagenCarruselIndex === index) {
         this.imagenCarruselIndex = index + 1;
@@ -308,6 +371,80 @@ export class AgregarProductoComponent implements OnInit {
 
   eliminarImagenCarrusel() {
     this.eliminarImagen(this.imagenCarruselIndex);
+  }
+
+  // ==================== Colores por imagen ====================
+  
+  getMoldeSeleccionado(): Molde | null {
+    const moldeNombre = this.addProductForm.get('molde')?.value;
+    if (!moldeNombre) return null;
+    return this.moldes.find(m => m.nombre === moldeNombre) || null;
+  }
+
+  getColoresPorCategoria(categoria: string): Color[] {
+    return this.colores.filter(c => c.categoria?.toLowerCase() === categoria.toLowerCase());
+  }
+
+  toggleImagenColorAbierta(imgIdx: number) {
+    this.imagenColorAbierta = this.imagenColorAbierta === imgIdx ? null : imgIdx;
+  }
+
+  getColoresImagenEntry(imgIdx: number): ColoresImagen {
+    let entry = this.coloresPorImagen.find(c => c.imagenIndex === imgIdx);
+    if (!entry) {
+      entry = { imagenIndex: imgIdx, colores: [] };
+      this.coloresPorImagen.push(entry);
+    }
+    return entry;
+  }
+
+  asignarColorImagen(imgIdx: number, capaIdx: number, color: Color) {
+    const entry = this.getColoresImagenEntry(imgIdx);
+    const molde = this.getMoldeSeleccionado();
+    const capaNombre = molde?.capas[capaIdx]?.nombre || '';
+    
+    const existing = entry.colores.findIndex(c => c.capaIndex === capaIdx);
+    const colorData: ColorPorImagenCapa = {
+      capaIndex: capaIdx,
+      capaNombre: capaNombre,
+      colorId: color._id,
+      colorNombre: color.nombre,
+      colorRgb: color.rgb,
+      colorCategoria: color.categoria
+    };
+    
+    if (existing >= 0) {
+      entry.colores[existing] = colorData;
+    } else {
+      entry.colores.push(colorData);
+    }
+  }
+
+  quitarColorImagen(imgIdx: number, capaIdx: number) {
+    const entry = this.coloresPorImagen.find(c => c.imagenIndex === imgIdx);
+    if (entry) {
+      entry.colores = entry.colores.filter(c => c.capaIndex !== capaIdx);
+    }
+  }
+
+  getColorAsignado(imgIdx: number, capaIdx: number): ColorPorImagenCapa | null {
+    const entry = this.coloresPorImagen.find(c => c.imagenIndex === imgIdx);
+    if (!entry) return null;
+    return entry.colores.find(c => c.capaIndex === capaIdx) || null;
+  }
+
+  imagenTieneColores(imgIdx: number): boolean {
+    const entry = this.coloresPorImagen.find(c => c.imagenIndex === imgIdx);
+    return !!(entry && entry.colores.length > 0);
+  }
+
+  getColoresDeImagen(imgIdx: number): ColorPorImagenCapa[] {
+    const entry = this.coloresPorImagen.find(c => c.imagenIndex === imgIdx);
+    return entry ? entry.colores : [];
+  }
+
+  limpiarColoresImagen(imgIdx: number) {
+    this.coloresPorImagen = this.coloresPorImagen.filter(c => c.imagenIndex !== imgIdx);
   }
 
   submit() {
@@ -363,6 +500,12 @@ export class AgregarProductoComponent implements OnInit {
           body.moldeNombre = formValue.molde;
         }
 
+        // Agregar colores por imagen si hay asignaciones
+        const coloresConDatos = this.coloresPorImagen.filter(c => c.colores.length > 0);
+        if (coloresConDatos.length > 0) {
+          body.coloresPorImagen = coloresConDatos;
+        }
+
         this.http.post('http://localhost:5000/api/productos', body)
           .subscribe({
             next: (res) => {
@@ -377,6 +520,8 @@ export class AgregarProductoComponent implements OnInit {
               this.esResina = false;
               this.subcategoriasSeleccionadas = [];
               this.mostrarDropdownSubcategorias = false;
+              this.coloresPorImagen = [];
+              this.imagenColorAbierta = null;
               this.cargarSubcategorias();
               // Recargar tipos de producto por si se agregó uno nuevo
               this.obtenerTiposProducto();

@@ -168,3 +168,12 @@
     (moldeEliminado)="onMoldeEliminado($event)"
     (moldesImportados)="onMoldesImportados($event)">
 </app-popup-molde>
+
+<!-- Popup confirmar eliminar SVG -->
+<app-popup-confirm
+  *ngIf="mostrarPopupEliminarSvg"
+  titulo="¿Eliminar SVG?"
+  mensaje="¿Estás seguro de eliminar el SVG de este molde? Esta acción no se puede deshacer."
+  (confirmar)="confirmarEliminarSvg()"
+  (cancelar)="mostrarPopupEliminarSvg = false">
+</app-popup-confirm>

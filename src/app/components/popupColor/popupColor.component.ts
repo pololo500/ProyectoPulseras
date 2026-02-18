@@ -2,6 +2,8 @@ import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChange
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { PopupConfirmComponent } from '../popupConfirm/popupConfirm.component';
+import { PopupAlertaComponent } from '../popupAlerta/popupAlerta.component';
 
 interface ColorEditar {
   _id: string;
@@ -13,7 +15,7 @@ interface ColorEditar {
 @Component({
   selector: 'app-popup-color',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PopupConfirmComponent, PopupAlertaComponent],
   templateUrl: './popupColor.component.html',
   styleUrl: './popupColor.component.css'
 })
@@ -33,6 +35,19 @@ export class PopupColorComponent implements OnInit, OnChanges {
   error: string = '';
   modoEdicion: boolean = false;
   mostrarConfirmEliminar: boolean = false;
+
+  // Popup alerta
+  mensajeAlerta = '';
+  tipoAlerta: 'exito' | 'error' | 'info' = 'info';
+
+  mostrarAlertaPopup(mensaje: string, tipo: 'exito' | 'error' | 'info' = 'info') {
+    this.mensajeAlerta = mensaje;
+    this.tipoAlerta = tipo;
+  }
+
+  cerrarAlerta() {
+    this.mensajeAlerta = '';
+  }
 
   constructor(private http: HttpClient) {}
 
@@ -166,7 +181,7 @@ export class PopupColorComponent implements OnInit, OnChanges {
           next: (res) => {
             this.coloresImportados.emit(res.colores);
             this.error = '';
-            alert(`${res.colores.length} colores importados correctamente`);
+            this.mostrarAlertaPopup(`${res.colores.length} colores importados correctamente`, 'exito');
           },
           error: (err) => {
             console.error('Error al importar colores:', err);

@@ -6,12 +6,13 @@ import { HttpClient } from '@angular/common/http';
 import { CapitalizePipe } from '../../extras/capitalizePipe';
 import { FormatoPrecioPipe } from '../../extras/formatoPrecio.pipe';
 import { CarritoService, ItemCarrito } from '../../services/carrito.service';
+import { PopupAlertaComponent } from '../popupAlerta/popupAlerta.component';
 import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-carrito',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, CapitalizePipe, FormatoPrecioPipe],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, CapitalizePipe, FormatoPrecioPipe, PopupAlertaComponent],
   templateUrl: './carrito.component.html',
   styleUrl: './carrito.component.css'
 })
@@ -37,6 +38,19 @@ export class CarritoComponent implements OnInit, OnDestroy {
 
   // Popup vaciar carrito
   mostrarPopupVaciar = false;
+
+  // Popup alerta
+  mensajeAlerta = '';
+  tipoAlerta: 'exito' | 'error' | 'info' = 'info';
+
+  mostrarAlerta(mensaje: string, tipo: 'exito' | 'error' | 'info' = 'info') {
+    this.mensajeAlerta = mensaje;
+    this.tipoAlerta = tipo;
+  }
+
+  cerrarAlerta() {
+    this.mensajeAlerta = '';
+  }
 
   // Popup Login/Registro
   mostrarPopupLogin = false;
@@ -173,7 +187,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
 
   guardarTelefono(): void {
     if (!this.telefonoInput || this.telefonoInput.trim() === '') {
-      alert('Por favor ingresa un número de teléfono válido');
+      this.mostrarAlerta('Por favor ingresa un número de teléfono válido', 'error');
       return;
     }
     
@@ -195,7 +209,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
         error: (err) => {
           console.error('Error al guardar teléfono:', err);
           this.guardandoTelefono = false;
-          alert('Error al guardar el teléfono. Intenta nuevamente.');
+          this.mostrarAlerta('Error al guardar el teléfono. Intenta nuevamente.', 'error');
         }
       });
   }
@@ -231,6 +245,12 @@ export class CarritoComponent implements OnInit, OnDestroy {
       // Si tiene colores por capa (resina)
       if (item.coloresPorCapa && item.coloresPorCapa.length > 0) {
         itemPedido.coloresPorCapa = item.coloresPorCapa;
+      }
+
+      // Si es producto de stock disponible
+      if (item.esStock) {
+        itemPedido.esStock = true;
+        itemPedido.stockVarianteId = item.stockVarianteId;
       }
       
       return itemPedido;
@@ -271,9 +291,9 @@ export class CarritoComponent implements OnInit, OnDestroy {
           console.error('Error al crear pedido:', error);
           this.procesando = false;
           if (error.status === 0) {
-            alert('No se pudo conectar con el servidor. Verifica que esté en ejecución.');
+            this.mostrarAlerta('No se pudo conectar con el servidor. Verifica que esté en ejecución.', 'error');
           } else {
-            alert(`Error al procesar el pedido: ${error.message || 'Intenta nuevamente.'}`);
+            this.mostrarAlerta(`Error al procesar el pedido: ${error.message || 'Intenta nuevamente.'}`, 'error');
           }
         }
       });
