@@ -95,6 +95,13 @@ export class ModificarProductosComponent implements OnInit {
   // Resina
   esResina = false;
   
+  // Para nuevos tipos/materiales en edición
+  mostrarInputNuevoProducto = false;
+  mostrarInputNuevoMaterial = false;
+  nuevoProductoNombre = '';
+  nuevoMaterialNombre = '';
+  materialesEdicion: string[] = [];
+  
   // Imágenes múltiples
   imagenesExistentes: string[] = [];
   imagenesEliminadas: Set<number> = new Set(); // Índices de imágenes marcadas para eliminar
@@ -278,6 +285,13 @@ export class ModificarProductosComponent implements OnInit {
     this.imagenesNuevasEliminadas = new Set();
     this.imagenCarruselIndex = 0;
     
+    // Cargar materiales para el tipo de producto actual
+    this.cargarMaterialesEdicion(producto.producto);
+    this.mostrarInputNuevoProducto = false;
+    this.mostrarInputNuevoMaterial = false;
+    this.nuevoProductoNombre = '';
+    this.nuevoMaterialNombre = '';
+    
     // Cargar subcategorías
     this.subcategoriasSeleccionadas = [...(producto.subcategorias || [])];
     this.cargarSubcategoriasDisponibles();
@@ -304,12 +318,17 @@ export class ModificarProductosComponent implements OnInit {
     this.esResina = false;
     this.coloresPorImagen = [];
     this.imagenColorAbierta = null;
+    this.mostrarInputNuevoProducto = false;
+    this.mostrarInputNuevoMaterial = false;
+    this.nuevoProductoNombre = '';
+    this.nuevoMaterialNombre = '';
+    this.materialesEdicion = [];
   }
 
   // Subcategorías
   cargarSubcategoriasDisponibles() {
-    const producto = this.editForm.producto;
-    const material = this.editForm.material;
+    const producto = this.mostrarInputNuevoProducto ? this.nuevoProductoNombre.trim() : this.editForm.producto;
+    const material = this.mostrarInputNuevoMaterial ? this.nuevoMaterialNombre.trim() : this.editForm.material;
     
     if (!producto || !material) {
       this.subcategoriasDisponibles = [];
@@ -376,6 +395,77 @@ export class ModificarProductosComponent implements OnInit {
       this.editForm.moldeNombre = '';
     }
     this.cargarSubcategoriasDisponibles();
+  }
+
+  onEditProductoChange() {
+    if (this.editForm.producto === '__nuevo__') {
+      this.mostrarInputNuevoProducto = true;
+      this.editForm.producto = '';
+      this.materialesEdicion = [];
+      this.editForm.material = '';
+      this.esResina = false;
+    } else {
+      this.mostrarInputNuevoProducto = false;
+      this.nuevoProductoNombre = '';
+      if (this.editForm.producto) {
+        this.cargarMaterialesEdicion(this.editForm.producto);
+      }
+      this.editForm.material = '';
+      this.esResina = false;
+      this.subcategoriasSeleccionadas = [];
+      this.cargarSubcategoriasDisponibles();
+    }
+  }
+
+  onEditMaterialChange() {
+    if (this.editForm.material === '__nuevo__') {
+      this.mostrarInputNuevoMaterial = true;
+      this.editForm.material = '';
+      this.esResina = false;
+    } else {
+      this.mostrarInputNuevoMaterial = false;
+      this.nuevoMaterialNombre = '';
+      this.esResina = this.editForm.material?.toLowerCase() === 'resina';
+      if (!this.esResina) {
+        this.editForm.moldeNombre = '';
+      }
+      this.subcategoriasSeleccionadas = [];
+      this.cargarSubcategoriasDisponibles();
+    }
+  }
+
+  onNuevoMaterialChange() {
+    this.esResina = this.nuevoMaterialNombre?.toLowerCase() === 'resina';
+    if (!this.esResina) {
+      this.editForm.moldeNombre = '';
+    }
+  }
+
+  cancelarNuevoProducto() {
+    this.mostrarInputNuevoProducto = false;
+    this.nuevoProductoNombre = '';
+    this.editForm.producto = '';
+    this.materialesEdicion = [];
+    this.editForm.material = '';
+    this.esResina = false;
+  }
+
+  cancelarNuevoMaterial() {
+    this.mostrarInputNuevoMaterial = false;
+    this.nuevoMaterialNombre = '';
+    this.editForm.material = '';
+    this.esResina = false;
+  }
+
+  cargarMaterialesEdicion(producto: string) {
+    if (producto) {
+      this.http.get<string[]>(`http://localhost:5000/api/productos/materiales/${producto}`)
+        .subscribe(data => {
+          this.materialesEdicion = data;
+        });
+    } else {
+      this.materialesEdicion = [];
+    }
   }
 
   // Carrusel - obtener imágenes visibles (no marcadas para eliminar)
@@ -678,9 +768,11 @@ export class ModificarProductosComponent implements OnInit {
       .filter((_, index) => !this.imagenesNuevasEliminadas.has(index));
 
     const guardar = (imagenesUrls: string[]) => {
+      const productoFinal = this.mostrarInputNuevoProducto ? this.nuevoProductoNombre.trim().toLowerCase() : this.editForm.producto;
+      const materialFinal = this.mostrarInputNuevoMaterial ? this.nuevoMaterialNombre.trim().toLowerCase() : this.editForm.material;
       const body: any = {
-        producto: this.editForm.producto,
-        material: this.editForm.material,
+        producto: productoFinal,
+        material: materialFinal,
         nombre: this.editForm.nombre,
         descripcion: this.editForm.descripcion,
         precio: this.editForm.precio,

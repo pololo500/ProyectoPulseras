@@ -245,32 +245,46 @@
                             
                             <!-- Contenido desplegable -->
                             <div class="capa-accordion-contenido" *ngIf="capaAbiertaDetalle === i">
-                                <!-- Colores Translúcidos -->
-                                <div class="categoria-colores" *ngIf="getColoresPorCategoria('translucido').length > 0">
-                                    <h5 class="categoria-titulo">✨ Translúcidos</h5>
-                                    <div class="colores-grid-nuevo">
-                                        <div class="color-opcion-nuevo" 
-                                             *ngFor="let color of getColoresPorCategoria('translucido')" 
-                                             [class.seleccionado]="coloresPorCapaDetalle[i]?._id === color._id"
-                                             (click)="seleccionarColorCapaDetalle(i, color); $event.stopPropagation()"
-                                             [title]="color.nombre">
-                                            <span class="color-dot-nuevo translucido" [style.background-color]="color.rgb"></span>
-                                            <span class="color-nombre-nuevo">{{ color.nombre | capitalize }}</span>
+                                <!-- Sub-accordion: Colores Translúcidos -->
+                                <div class="subcategoria-accordion" *ngIf="getColoresPorCategoria('translucido').length > 0">
+                                    <div class="subcategoria-header" 
+                                         [class.abierto]="categoriaAbiertaDetalle === 'translucido'"
+                                         (click)="toggleCategoriaDetalle('translucido'); $event.stopPropagation()">
+                                        <span class="subcategoria-titulo">✨ Translúcidos</span>
+                                        <span class="subcategoria-toggle">{{ categoriaAbiertaDetalle === 'translucido' ? '▲' : '▼' }}</span>
+                                    </div>
+                                    <div class="subcategoria-contenido" *ngIf="categoriaAbiertaDetalle === 'translucido'">
+                                        <div class="colores-grid-nuevo">
+                                            <div class="color-opcion-nuevo" 
+                                                 *ngFor="let color of getColoresPorCategoria('translucido')" 
+                                                 [class.seleccionado]="coloresPorCapaDetalle[i]?._id === color._id"
+                                                 (click)="seleccionarColorCapaDetalle(i, color); $event.stopPropagation()"
+                                                 [title]="color.nombre">
+                                                <span class="color-dot-nuevo translucido" [style.background-color]="color.rgb"></span>
+                                                <span class="color-nombre-nuevo">{{ color.nombre | capitalize }}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                                 
-                                <!-- Colores Polvo -->
-                                <div class="categoria-colores" *ngIf="getColoresPorCategoria('polvo').length > 0">
-                                    <h5 class="categoria-titulo">🌟 Polvo / Brillos</h5>
-                                    <div class="colores-grid-nuevo">
-                                        <div class="color-opcion-nuevo" 
-                                             *ngFor="let color of getColoresPorCategoria('polvo')" 
-                                             [class.seleccionado]="coloresPorCapaDetalle[i]?._id === color._id"
-                                             (click)="seleccionarColorCapaDetalle(i, color); $event.stopPropagation()"
-                                             [title]="color.nombre">
-                                            <span class="color-dot-nuevo polvo" [style.background-color]="color.rgb"></span>
-                                            <span class="color-nombre-nuevo">{{ color.nombre | capitalize }}</span>
+                                <!-- Sub-accordion: Colores Polvo / Brillos -->
+                                <div class="subcategoria-accordion" *ngIf="getColoresPorCategoria('polvo').length > 0">
+                                    <div class="subcategoria-header" 
+                                         [class.abierto]="categoriaAbiertaDetalle === 'polvo'"
+                                         (click)="toggleCategoriaDetalle('polvo'); $event.stopPropagation()">
+                                        <span class="subcategoria-titulo">🌟 Polvo / Brillos</span>
+                                        <span class="subcategoria-toggle">{{ categoriaAbiertaDetalle === 'polvo' ? '▲' : '▼' }}</span>
+                                    </div>
+                                    <div class="subcategoria-contenido" *ngIf="categoriaAbiertaDetalle === 'polvo'">
+                                        <div class="colores-grid-nuevo">
+                                            <div class="color-opcion-nuevo" 
+                                                 *ngFor="let color of getColoresPorCategoria('polvo')" 
+                                                 [class.seleccionado]="coloresPorCapaDetalle[i]?._id === color._id"
+                                                 (click)="seleccionarColorCapaDetalle(i, color); $event.stopPropagation()"
+                                                 [title]="color.nombre">
+                                                <span class="color-dot-nuevo polvo" [style.background-color]="color.rgb"></span>
+                                                <span class="color-nombre-nuevo">{{ color.nombre | capitalize }}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

@@ -79,11 +79,27 @@
     <div class="form-row">
       <div class="form-group">
         <label for="editProducto">Producto</label>
-        <input type="text" id="editProducto" [(ngModel)]="editForm.producto" class="filled"/>
+        <select id="editProducto" [(ngModel)]="editForm.producto" (ngModelChange)="onEditProductoChange()" [ngClass]="{ 'filled': editForm.producto }" *ngIf="!mostrarInputNuevoProducto">
+          <option value="" disabled>Seleccionar tipo</option>
+          <option *ngFor="let tipo of tiposProducto" [value]="tipo">{{ tipo | capitalize }}</option>
+          <option value="__nuevo__">+ Agregar nuevo tipo</option>
+        </select>
+        <div class="nuevo-input-container" *ngIf="mostrarInputNuevoProducto">
+          <input type="text" [(ngModel)]="nuevoProductoNombre" placeholder="Nombre del nuevo tipo" class="filled"/>
+          <button type="button" class="btn-cancelar" (click)="cancelarNuevoProducto()">✕</button>
+        </div>
       </div>
       <div class="form-group">
         <label for="editMaterial">Material</label>
-        <input type="text" id="editMaterial" [(ngModel)]="editForm.material" (ngModelChange)="onMaterialChange()" class="filled"/>
+        <select id="editMaterial" [(ngModel)]="editForm.material" (ngModelChange)="onEditMaterialChange()" [ngClass]="{ 'filled': editForm.material }" [disabled]="!editForm.producto || mostrarInputNuevoProducto" *ngIf="!mostrarInputNuevoMaterial">
+          <option value="" disabled>Seleccionar material</option>
+          <option *ngFor="let mat of materialesEdicion" [value]="mat">{{ mat | capitalize }}</option>
+          <option value="__nuevo__">+ Agregar nuevo material</option>
+        </select>
+        <div class="nuevo-input-container" *ngIf="mostrarInputNuevoMaterial">
+          <input type="text" [(ngModel)]="nuevoMaterialNombre" placeholder="Nombre del nuevo material" class="filled" (ngModelChange)="onNuevoMaterialChange()"/>
+          <button type="button" class="btn-cancelar" (click)="cancelarNuevoMaterial()">✕</button>
+        </div>
       </div>
     </div>
 

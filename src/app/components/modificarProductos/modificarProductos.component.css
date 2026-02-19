@@ -399,6 +399,41 @@ h1 {
   display: none;
 }
 
+/* Estilos para inputs de nuevo tipo/material */
+.nuevo-input-container {
+  display: flex;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.nuevo-input-container input {
+  flex: 1;
+}
+
+.btn-cancelar {
+  width: auto !important;
+  min-width: 36px !important;
+  height: 36px;
+  padding: 0;
+  border: none;
+  background-color: #dc3545;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto !important;
+}
+
+.btn-cancelar:hover {
+  background-color: #c82333;
+}
+
 /* Subcategorías */
 .subcategorias-container {
   position: relative;

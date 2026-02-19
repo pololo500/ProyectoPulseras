@@ -1267,6 +1267,18 @@
         margin-bottom: 8px;
     }
 
+    .subcategoria-header {
+        padding: 8px 10px;
+    }
+
+    .subcategoria-titulo {
+        font-size: 12px;
+    }
+
+    .subcategoria-contenido {
+        padding: 8px;
+    }
+
     .colores-grid-nuevo {
         grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
         gap: 6px;
@@ -1477,6 +1489,57 @@
     margin: 0 0 10px 0;
     padding-bottom: 5px;
     border-bottom: 1px dashed #ddd;
+}
+
+/* Sub-accordion de categorías de colores dentro de cada capa */
+.subcategoria-accordion {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.subcategoria-accordion:last-child {
+    margin-bottom: 0;
+}
+
+.subcategoria-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #f8f8ff;
+    border-left: 3px solid #ddd;
+}
+
+.subcategoria-header:hover {
+    background: #eeeeff;
+}
+
+.subcategoria-header.abierto {
+    background: #e0e0ff;
+    border-left-color: #D6B435;
+}
+
+.subcategoria-titulo {
+    font-size: 13px;
+    font-weight: 600;
+    color: #444;
+}
+
+.subcategoria-toggle {
+    color: #888;
+    font-size: 10px;
+}
+
+.subcategoria-contenido {
+    padding: 12px;
+    background: #fafafa;
+    border-top: 1px solid #eee;
+    animation: slideDown 0.2s ease-out;
 }
 
 /* Grid de colores nuevo */

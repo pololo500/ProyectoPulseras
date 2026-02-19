@@ -111,6 +111,7 @@ export class ProductosComponent implements OnInit {
   coloresPorCapaDetalle: (Color | null)[] = [];
   svgPreviewDetalle: SafeHtml | null = null;
   capaAbiertaDetalle: number | null = null;  // Índice de la capa abierta
+  categoriaAbiertaDetalle: string | null = null;  // Categoría de color abierta dentro de la capa
   
   // Popup de selección de color por capas
   mostrarPopupColor = false;
@@ -399,7 +400,18 @@ export class ProductosComponent implements OnInit {
 
   // Toggle capa abierta en detalle
   toggleCapaDetalle(capaIndex: number): void {
-    this.capaAbiertaDetalle = this.capaAbiertaDetalle === capaIndex ? null : capaIndex;
+    if (this.capaAbiertaDetalle === capaIndex) {
+      this.capaAbiertaDetalle = null;
+      this.categoriaAbiertaDetalle = null;
+    } else {
+      this.capaAbiertaDetalle = capaIndex;
+      this.categoriaAbiertaDetalle = null;
+    }
+  }
+
+  // Toggle categoría de color abierta dentro de una capa
+  toggleCategoriaDetalle(categoria: string): void {
+    this.categoriaAbiertaDetalle = this.categoriaAbiertaDetalle === categoria ? null : categoria;
   }
 
   // Obtener colores por categoría (polvo o translucido)
@@ -828,6 +840,7 @@ export class ProductosComponent implements OnInit {
     this.coloresPorCapaDetalle = [];
     this.svgPreviewDetalle = null;
     this.capaAbiertaDetalle = null;
+    this.categoriaAbiertaDetalle = null;
     this.mostrarLightbox = false;
     this.imagenLightboxIndex = 0;
   }
@@ -902,6 +915,7 @@ export class ProductosComponent implements OnInit {
     this.coloresPorCapaDetalle[capaIndex] = color;
     this.actualizarSvgPreviewDetalle();
     // Cerrar el accordion después de seleccionar el color
+    this.categoriaAbiertaDetalle = null;
     this.capaAbiertaDetalle = null;
   }
 
