@@ -297,7 +297,7 @@
                 <button class="btn-ver-stock" 
                         *ngIf="productoTieneStock(productoDetalle._id)"
                         (click)="abrirPopupStock()">
-                    📦 Ver disponibles para retirar ({{ getStockTotal(productoDetalle._id) }})
+                    Ver disponibles para retirar ({{ getStockTotal(productoDetalle._id) }})
                 </button>
 
                 <div class="popup-acciones">
@@ -329,7 +329,7 @@
 <div class="popup-overlay popup-stock-overlay" *ngIf="mostrarPopupStock && productoDetalle" (click)="cerrarPopupStock()">
     <div class="card popup-stock" (click)="$event.stopPropagation()">
         <button class="btn-cerrar-popup" (click)="cerrarPopupStock()">✕</button>
-        <h2>📦 Disponibles para retirar</h2>
+        <h2>Disponibles para retirar</h2>
         <p class="stock-subtitle">{{ productoDetalle.nombre }}</p>
 
         <div class="stock-variantes-lista">
