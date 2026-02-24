@@ -29,17 +29,19 @@
       </div>
     </div>
 
-    <label for="categoria">Categoría</label>
-    <select 
-      id="categoria" 
-      [(ngModel)]="categoria" 
-      name="categoria"
-      [class.filled]="categoria"
-    >
-      <option value="" disabled>Seleccione una categoría</option>
-      <option value="translucido">Translúcido</option>
-      <option value="polvo">Polvo</option>
-    </select>
+    <ng-container *ngIf="tipoColor !== 'hilo'">
+      <label for="categoria">Categoría</label>
+      <select 
+        id="categoria" 
+        [(ngModel)]="categoria" 
+        name="categoria"
+        [class.filled]="categoria"
+      >
+        <option value="" disabled>Seleccione una categoría</option>
+        <option value="translucido">Translúcido</option>
+        <option value="polvo">Polvo</option>
+      </select>
+    </ng-container>
 
     <p class="error" *ngIf="error">{{ error }}</p>
 

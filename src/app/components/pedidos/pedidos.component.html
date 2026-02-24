@@ -204,6 +204,28 @@
           </div>
         </div>
 
+        <!-- Sección Hilo Encerado -->
+        <div class="resina-section" *ngIf="esHiloEncerado && moldeSeleccionado">
+          <h4>Colores de Hilo Encerado</h4>
+          
+          <div class="capas-container">
+            <div class="capa-row" *ngFor="let capa of moldeSeleccionado.capas; let i = index">
+              <label>{{ capa.nombre | capitalize }}</label>
+              <select [(ngModel)]="coloresPorCapa[i]" (ngModelChange)="onColorCapaChange(i, $event)">
+                <option value="">Sin color</option>
+                <option *ngFor="let color of coloresHilo" [value]="color._id">
+                  {{ color.nombre | capitalize }}
+                </option>
+              </select>
+              <span 
+                class="color-preview" 
+                *ngIf="coloresPorCapa[i] && getColorHiloById(coloresPorCapa[i])"
+                [style.background-color]="getColorHiloById(coloresPorCapa[i])?.rgb">
+              </span>
+            </div>
+          </div>
+        </div>
+
         <button class="btn-agregar-item" (click)="agregarItem()" [disabled]="!itemActual.productoId">
           + Agregar al pedido
         </button>

@@ -114,6 +114,17 @@
       </div>
     </div>
 
+    <!-- Molde (solo si es hilo encerado) -->
+    <div class="form-row" *ngIf="esHiloEncerado">
+      <div class="form-group full-width">
+        <label for="editMoldeHilo">Molde</label>
+        <select id="editMoldeHilo" [(ngModel)]="editForm.moldeNombre" [ngClass]="{ 'filled': editForm.moldeNombre }">
+          <option value="" disabled>Seleccionar molde</option>
+          <option *ngFor="let molde of moldesHilo" [value]="molde.nombre">{{ molde.nombre | capitalize }}</option>
+        </select>
+      </div>
+    </div>
+
     <!-- Subcategorías -->
     <div class="form-row">
       <div class="form-group full-width subcategorias-container">
@@ -176,7 +187,7 @@
           <button class="btn-eliminar-imagen-carrusel" (click)="eliminarImagenActual()" title="Eliminar imagen">✕</button>
           <span class="carrusel-badge-nueva" *ngIf="esImagenNueva">Nueva</span>
           <!-- Colores asignados a esta foto -->
-          <div class="carrusel-colores-overlay" *ngIf="esResina && getMoldeSeleccionado() && imagenActualTieneColoresCarrusel()">
+          <div class="carrusel-colores-overlay" *ngIf="puedeAsignarColores() && imagenActualTieneColoresCarrusel()">
             <div class="carrusel-colores-dots">
               <div class="carrusel-color-dot" *ngFor="let colorCapa of getColoresImagenActualCarrusel()" 
                    [style.background-color]="colorCapa.colorRgb" 
@@ -215,10 +226,10 @@
       <p class="imagenes-warning" *ngIf="totalImagenes === 0">⚠️ El producto debe tener al menos una imagen</p>
     </div>
 
-    <!-- Asignar colores por imagen (solo resina con molde) -->
-    <div class="colores-por-imagen-section" *ngIf="esResina && getMoldeSeleccionado() && totalImagenes > 0">
+    <!-- Asignar colores por imagen -->
+    <div class="colores-por-imagen-section" *ngIf="puedeAsignarColores() && totalImagenes > 0">
       <h3>Asignar colores a las fotos</h3>
-      <p class="colores-instruccion">Podés asignar los colores de cada capa del molde a cada foto. Esto permite que los clientes apliquen los colores de la foto con un solo clic.</p>
+      <p class="colores-instruccion">Podés asignar los colores de cada capa a cada foto. Esto permite que los clientes apliquen los colores de la foto con un solo clic.</p>
       
       <div class="imagen-color-asignador">
         <!-- Imágenes existentes visibles -->
@@ -238,7 +249,7 @@
           </div>
           
           <div class="imagen-color-contenido" *ngIf="imagenColorAbierta === visIdx">
-            <div class="capa-selector-mini" *ngFor="let capa of getMoldeSeleccionado()!.capas; let capaIdx = index">
+            <div class="capa-selector-mini" *ngFor="let capa of getCapasParaColorAsignacion(); let capaIdx = index">
               <div class="capa-selector-header">
                 <span class="capa-num">{{ capaIdx + 1 }}</span>
                 <span class="capa-label">{{ capa.nombre | capitalize }}</span>
@@ -249,20 +260,32 @@
                 <button type="button" class="btn-quitar-color" *ngIf="getColorAsignado(img.indexOriginal, capaIdx)" (click)="quitarColorImagen(img.indexOriginal, capaIdx)">✕</button>
               </div>
               <div class="colores-selector-rapido">
-                <div class="colores-categoria-mini" *ngIf="getColoresPorCategoria('translucido').length > 0">
-                  <span class="cat-label">✨</span>
-                  <div class="color-mini-opcion" 
-                       *ngFor="let color of getColoresPorCategoria('translucido')"
-                       [class.seleccionado]="getColorAsignado(img.indexOriginal, capaIdx)?.colorId === color._id"
-                       [style.background-color]="color.rgb"
-                       [title]="color.nombre"
-                       (click)="asignarColorImagen(img.indexOriginal, capaIdx, color)">
+                <ng-container *ngIf="esResina">
+                  <div class="colores-categoria-mini" *ngIf="getColoresPorCategoria('translucido').length > 0">
+                    <span class="cat-label">✨</span>
+                    <div class="color-mini-opcion" 
+                         *ngFor="let color of getColoresPorCategoria('translucido')"
+                         [class.seleccionado]="getColorAsignado(img.indexOriginal, capaIdx)?.colorId === color._id"
+                         [style.background-color]="color.rgb"
+                         [title]="color.nombre"
+                         (click)="asignarColorImagen(img.indexOriginal, capaIdx, color)">
+                    </div>
                   </div>
-                </div>
-                <div class="colores-categoria-mini" *ngIf="getColoresPorCategoria('polvo').length > 0">
-                  <span class="cat-label">🌟</span>
+                  <div class="colores-categoria-mini" *ngIf="getColoresPorCategoria('polvo').length > 0">
+                    <span class="cat-label">🌟</span>
+                    <div class="color-mini-opcion"
+                         *ngFor="let color of getColoresPorCategoria('polvo')"
+                         [class.seleccionado]="getColorAsignado(img.indexOriginal, capaIdx)?.colorId === color._id"
+                         [style.background-color]="color.rgb"
+                         [title]="color.nombre"
+                         (click)="asignarColorImagen(img.indexOriginal, capaIdx, color)">
+                    </div>
+                  </div>
+                </ng-container>
+                <div class="colores-categoria-mini" *ngIf="esHiloEncerado && coloresHilo.length > 0">
+                  <span class="cat-label">🧵</span>
                   <div class="color-mini-opcion"
-                       *ngFor="let color of getColoresPorCategoria('polvo')"
+                       *ngFor="let color of coloresHilo"
                        [class.seleccionado]="getColorAsignado(img.indexOriginal, capaIdx)?.colorId === color._id"
                        [style.background-color]="color.rgb"
                        [title]="color.nombre"
@@ -292,7 +315,7 @@
           </div>
           
           <div class="imagen-color-contenido" *ngIf="imagenColorAbierta === (imagenesExistentesVisibles.length + visIdx)">
-            <div class="capa-selector-mini" *ngFor="let capa of getMoldeSeleccionado()!.capas; let capaIdx = index">
+            <div class="capa-selector-mini" *ngFor="let capa of getCapasParaColorAsignacion(); let capaIdx = index">
               <div class="capa-selector-header">
                 <span class="capa-num">{{ capaIdx + 1 }}</span>
                 <span class="capa-label">{{ capa.nombre | capitalize }}</span>
@@ -303,20 +326,32 @@
                 <button type="button" class="btn-quitar-color" *ngIf="getColorAsignado(imagenesExistentes.length + img.indexOriginal, capaIdx)" (click)="quitarColorImagen(imagenesExistentes.length + img.indexOriginal, capaIdx)">✕</button>
               </div>
               <div class="colores-selector-rapido">
-                <div class="colores-categoria-mini" *ngIf="getColoresPorCategoria('translucido').length > 0">
-                  <span class="cat-label">✨</span>
-                  <div class="color-mini-opcion" 
-                       *ngFor="let color of getColoresPorCategoria('translucido')"
-                       [class.seleccionado]="getColorAsignado(imagenesExistentes.length + img.indexOriginal, capaIdx)?.colorId === color._id"
-                       [style.background-color]="color.rgb"
-                       [title]="color.nombre"
-                       (click)="asignarColorImagen(imagenesExistentes.length + img.indexOriginal, capaIdx, color)">
+                <ng-container *ngIf="esResina">
+                  <div class="colores-categoria-mini" *ngIf="getColoresPorCategoria('translucido').length > 0">
+                    <span class="cat-label">✨</span>
+                    <div class="color-mini-opcion" 
+                         *ngFor="let color of getColoresPorCategoria('translucido')"
+                         [class.seleccionado]="getColorAsignado(imagenesExistentes.length + img.indexOriginal, capaIdx)?.colorId === color._id"
+                         [style.background-color]="color.rgb"
+                         [title]="color.nombre"
+                         (click)="asignarColorImagen(imagenesExistentes.length + img.indexOriginal, capaIdx, color)">
+                    </div>
                   </div>
-                </div>
-                <div class="colores-categoria-mini" *ngIf="getColoresPorCategoria('polvo').length > 0">
-                  <span class="cat-label">🌟</span>
+                  <div class="colores-categoria-mini" *ngIf="getColoresPorCategoria('polvo').length > 0">
+                    <span class="cat-label">🌟</span>
+                    <div class="color-mini-opcion"
+                         *ngFor="let color of getColoresPorCategoria('polvo')"
+                         [class.seleccionado]="getColorAsignado(imagenesExistentes.length + img.indexOriginal, capaIdx)?.colorId === color._id"
+                         [style.background-color]="color.rgb"
+                         [title]="color.nombre"
+                         (click)="asignarColorImagen(imagenesExistentes.length + img.indexOriginal, capaIdx, color)">
+                    </div>
+                  </div>
+                </ng-container>
+                <div class="colores-categoria-mini" *ngIf="esHiloEncerado && coloresHilo.length > 0">
+                  <span class="cat-label">🧵</span>
                   <div class="color-mini-opcion"
-                       *ngFor="let color of getColoresPorCategoria('polvo')"
+                       *ngFor="let color of coloresHilo"
                        [class.seleccionado]="getColorAsignado(imagenesExistentes.length + img.indexOriginal, capaIdx)?.colorId === color._id"
                        [style.background-color]="color.rgb"
                        [title]="color.nombre"

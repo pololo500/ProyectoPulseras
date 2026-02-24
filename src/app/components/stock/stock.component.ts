@@ -71,7 +71,9 @@ export class StockComponent implements OnInit {
   stock: StockItem[] = [];
   productos: Producto[] = [];
   moldes: Molde[] = [];
+  moldesHilo: Molde[] = [];
   colores: Color[] = [];
+  coloresHilo: Color[] = [];
   
   // Modal para cargar stock
   mostrarModalCargar = false;
@@ -137,7 +139,9 @@ export class StockComponent implements OnInit {
     this.cargarStock();
     this.cargarProductos();
     this.cargarMoldes();
+    this.cargarMoldesHilo();
     this.cargarColores();
+    this.cargarColoresHilo();
   }
 
   crearNuevoStock(): StockItem {
@@ -186,11 +190,27 @@ export class StockComponent implements OnInit {
       });
   }
 
+  cargarMoldesHilo(): void {
+    this.http.get<Molde[]>('http://localhost:5000/api/moldes-hilo')
+      .subscribe({
+        next: (data) => this.moldesHilo = data,
+        error: (err) => console.error('Error al cargar moldes de hilo:', err)
+      });
+  }
+
   cargarColores(): void {
     this.http.get<Color[]>('http://localhost:5000/api/colores')
       .subscribe({
         next: (data) => this.colores = data,
         error: (err) => console.error('Error al cargar colores:', err)
+      });
+  }
+
+  cargarColoresHilo(): void {
+    this.http.get<Color[]>('http://localhost:5000/api/colores-hilo')
+      .subscribe({
+        next: (data) => this.coloresHilo = data,
+        error: (err) => console.error('Error al cargar colores hilo:', err)
       });
   }
 
@@ -261,7 +281,7 @@ export class StockComponent implements OnInit {
       this.nuevoStock.material = producto.material;
       this.nuevoStock.imagenUrl = producto.imagenesUrls?.[0] || producto.imagenUrl || '';
       
-      // Si es resina, preparar array de colores por capa
+      // Si es resina, preparar array de colores por capa desde molde
       if (producto.material.toLowerCase() === 'resina' && producto.moldeNombre) {
         const molde = this.moldes.find(m => m.nombre === producto.moldeNombre);
         if (molde) {
@@ -275,6 +295,30 @@ export class StockComponent implements OnInit {
             colorRgb: ''
           }));
         }
+      } else if (producto.material.toLowerCase() === 'hilo encerado') {
+        // Hilo encerado: buscar molde en moldesHilo
+        if (producto.moldeNombre) {
+          const moldeHilo = this.moldesHilo.find(m => m.nombre === producto.moldeNombre);
+          if (moldeHilo) {
+            this.nuevoStock.moldeId = moldeHilo._id;
+            this.nuevoStock.moldeNombre = moldeHilo.nombre;
+            this.nuevaVariante.coloresPorCapa = moldeHilo.capas.map((capa, index) => ({
+              capaIndex: index,
+              capaNombre: capa.nombre,
+              colorId: '',
+              colorNombre: '',
+              colorRgb: ''
+            }));
+          } else {
+            this.nuevoStock.moldeId = '';
+            this.nuevoStock.moldeNombre = '';
+            this.nuevaVariante.coloresPorCapa = [];
+          }
+        } else {
+          this.nuevoStock.moldeId = '';
+          this.nuevoStock.moldeNombre = '';
+          this.nuevaVariante.coloresPorCapa = [];
+        }
       } else {
         this.nuevaVariante.coloresPorCapa = [];
       }
@@ -282,7 +326,7 @@ export class StockComponent implements OnInit {
   }
 
   seleccionarColorCapa(capaIndex: number, colorId: string): void {
-    const color = this.colores.find(c => c._id === colorId);
+    const color = this.colores.find(c => c._id === colorId) || this.coloresHilo.find(c => c._id === colorId);
     if (color && this.nuevaVariante.coloresPorCapa) {
       this.nuevaVariante.coloresPorCapa[capaIndex].colorId = color._id;
       this.nuevaVariante.coloresPorCapa[capaIndex].colorNombre = color.nombre;
@@ -292,6 +336,14 @@ export class StockComponent implements OnInit {
 
   esResina(item: StockItem): boolean {
     return item.material.toLowerCase() === 'resina';
+  }
+
+  esHiloEncerado(item: StockItem): boolean {
+    return item.material.toLowerCase() === 'hilo encerado';
+  }
+
+  requiereColores(item: StockItem): boolean {
+    return this.esResina(item) || this.esHiloEncerado(item);
   }
 
   getColoresPorCategoria(categoria: string): Color[] {
@@ -325,7 +377,7 @@ export class StockComponent implements OnInit {
   }
 
   agregarVarianteAlModal(): void {
-    if (this.esResina(this.nuevoStock) && this.nuevaVariante.coloresPorCapa) {
+    if (this.requiereColores(this.nuevoStock) && this.nuevaVariante.coloresPorCapa) {
       const faltanColores = this.nuevaVariante.coloresPorCapa.some(c => !c.colorId);
       if (faltanColores) {
         this.mostrarAlerta('Por favor selecciona un color para cada capa', 'error');
@@ -342,7 +394,7 @@ export class StockComponent implements OnInit {
     this.nuevoStock.variantes.push({ ...this.nuevaVariante });
     this.nuevaVariante = this.crearNuevaVariante();
 
-    // Reinicializar colores si es resina
+    // Reinicializar colores si requiere colores
     if (this.esResina(this.nuevoStock) && this.nuevoStock.moldeId) {
       const molde = this.moldes.find(m => m._id === this.nuevoStock.moldeId);
       if (molde) {
@@ -353,6 +405,19 @@ export class StockComponent implements OnInit {
           colorNombre: '',
           colorRgb: ''
         }));
+      }
+    } else if (this.esHiloEncerado(this.nuevoStock)) {
+      if (this.nuevoStock.moldeNombre) {
+        const moldeHilo = this.moldesHilo.find(m => m.nombre === this.nuevoStock.moldeNombre);
+        if (moldeHilo) {
+          this.nuevaVariante.coloresPorCapa = moldeHilo.capas.map((capa, index) => ({
+            capaIndex: index,
+            capaNombre: capa.nombre,
+            colorId: '',
+            colorNombre: '',
+            colorRgb: ''
+          }));
+        }
       }
     }
   }
@@ -521,7 +586,7 @@ export class StockComponent implements OnInit {
     this.stockParaVariante = item;
     this.nuevaVarianteExistente = this.crearNuevaVariante();
 
-    // Si es resina, preparar array de colores por capa
+    // Si es resina o hilo encerado, preparar array de colores por capa
     if (this.esResina(item) && item.moldeNombre) {
       const molde = this.moldes.find(m => m.nombre === item.moldeNombre);
       if (molde) {
@@ -532,6 +597,19 @@ export class StockComponent implements OnInit {
           colorNombre: '',
           colorRgb: ''
         }));
+      }
+    } else if (this.esHiloEncerado(item)) {
+      if (item.moldeNombre) {
+        const moldeHilo = this.moldesHilo.find(m => m.nombre === item.moldeNombre);
+        if (moldeHilo) {
+          this.nuevaVarianteExistente.coloresPorCapa = moldeHilo.capas.map((capa, index) => ({
+            capaIndex: index,
+            capaNombre: capa.nombre,
+            colorId: '',
+            colorNombre: '',
+            colorRgb: ''
+          }));
+        }
       }
     }
 
@@ -545,7 +623,7 @@ export class StockComponent implements OnInit {
   }
 
   seleccionarColorCapaVarianteExistente(capaIndex: number, colorId: string): void {
-    const color = this.colores.find(c => c._id === colorId);
+    const color = this.colores.find(c => c._id === colorId) || this.coloresHilo.find(c => c._id === colorId);
     if (color && this.nuevaVarianteExistente.coloresPorCapa) {
       this.nuevaVarianteExistente.coloresPorCapa[capaIndex].colorId = color._id;
       this.nuevaVarianteExistente.coloresPorCapa[capaIndex].colorNombre = color.nombre;
@@ -556,7 +634,7 @@ export class StockComponent implements OnInit {
   guardarNuevaVariante(): void {
     if (!this.stockParaVariante?._id) return;
 
-    if (this.esResina(this.stockParaVariante) && this.nuevaVarianteExistente.coloresPorCapa) {
+    if (this.requiereColores(this.stockParaVariante) && this.nuevaVarianteExistente.coloresPorCapa) {
       const faltanColores = this.nuevaVarianteExistente.coloresPorCapa.some(c => !c.colorId);
       if (faltanColores) {
         this.mostrarAlerta('Por favor selecciona un color para cada capa', 'error');

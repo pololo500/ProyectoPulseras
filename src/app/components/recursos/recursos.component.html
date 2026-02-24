@@ -5,17 +5,31 @@
   <div class="tabs">
     <button class="tab" [class.activa]="tabActiva === 'colores'" (click)="cambiarTab('colores')">
       <span class="tab-icon">🎨</span>
-      <span class="tab-texto">Colores</span>
+      <span class="tab-texto">Colores Resina</span>
       <span class="tab-badge">{{ colores.length }}</span>
+    </button>
+    <button class="tab" [class.activa]="tabActiva === 'coloresHilo'" (click)="cambiarTab('coloresHilo')">
+      <span class="tab-icon">🧵</span>
+      <span class="tab-texto">Colores Hilo</span>
+      <span class="tab-badge">{{ coloresHilo.length }}</span>
     </button>
     <button class="tab" [class.activa]="tabActiva === 'moldes'" (click)="cambiarTab('moldes')">
       <span class="tab-icon">📐</span>
-      <span class="tab-texto">Moldes</span>
+      <span class="tab-texto">Moldes Resina</span>
       <span class="tab-badge">{{ moldes.length }}</span>
+    </button>
+    <button class="tab" [class.activa]="tabActiva === 'moldesHilo'" (click)="cambiarTab('moldesHilo')">
+      <span class="tab-icon">🧶</span>
+      <span class="tab-texto">Moldes Hilo</span>
+      <span class="tab-badge">{{ moldesHilo.length }}</span>
     </button>
     <button class="tab" [class.activa]="tabActiva === 'svgs'" (click)="cambiarTab('svgs')">
       <span class="tab-icon">🖼️</span>
-      <span class="tab-texto">SVGs</span>
+      <span class="tab-texto">SVGs Resina</span>
+    </button>
+    <button class="tab" [class.activa]="tabActiva === 'svgsHilo'" (click)="cambiarTab('svgsHilo')">
+      <span class="tab-icon">🖼️</span>
+      <span class="tab-texto">SVGs Hilo</span>
     </button>
   </div>
 
@@ -88,11 +102,51 @@
     </div>
   </div>
 
+  <!-- ==================== TAB COLORES HILO ENCERADO ==================== -->
+  <div class="tab-content" *ngIf="tabActiva === 'coloresHilo'">
+    <div class="seccion-header">
+      <div class="header-izq">
+        <h2>Gestionar Colores de Hilo Encerado</h2>
+        <input type="text" [(ngModel)]="busquedaColorHilo" placeholder="🔍 Buscar color..." class="input-busqueda">
+      </div>
+      <button class="btn-crear" (click)="abrirPopupCrearColorHilo()">+ Nuevo Color</button>
+    </div>
+
+    <div class="cargando" *ngIf="cargandoColoresHilo">
+      <p>Cargando colores de hilo...</p>
+    </div>
+
+    <div class="sin-datos" *ngIf="!cargandoColoresHilo && coloresHilo.length === 0">
+      <span class="sin-datos-icon">🧵</span>
+      <p>No hay colores de hilo registrados</p>
+      <button class="btn-crear" (click)="abrirPopupCrearColorHilo()">+ Crear primer color</button>
+    </div>
+
+    <div class="colores-contenido" *ngIf="!cargandoColoresHilo && coloresHiloFiltrados.length > 0">
+      <div class="colores-grid">
+        <div class="color-card" *ngFor="let color of coloresHiloFiltrados" (click)="abrirPopupEditarColorHilo(color)">
+          <div class="color-muestra" [style.background-color]="color.rgb">
+            <span class="color-hex" [style.color]="getTextColor(color.rgb)">{{ color.rgb }}</span>
+          </div>
+          <div class="color-datos">
+            <span class="color-nombre">{{ color.nombre }}</span>
+            <span class="color-categoria">Hilo encerado</span>
+          </div>
+          <button class="btn-editar-item" (click)="abrirPopupEditarColorHilo(color); $event.stopPropagation()" title="Editar color">✏️</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sin-resultados" *ngIf="!cargandoColoresHilo && coloresHilo.length > 0 && coloresHiloFiltrados.length === 0">
+      <p>No se encontraron colores que coincidan con "{{ busquedaColorHilo }}"</p>
+    </div>
+  </div>
+
   <!-- ==================== TAB MOLDES ==================== -->
   <div class="tab-content" *ngIf="tabActiva === 'moldes'">
     <div class="seccion-header">
       <div class="header-izq">
-        <h2>Gestionar Moldes</h2>
+        <h2>Gestionar Moldes Resina</h2>
         <input type="text" [(ngModel)]="busquedaMolde" placeholder="🔍 Buscar molde..." class="input-busqueda">
       </div>
       <button class="btn-crear" (click)="abrirPopupCrearMolde()">+ Nuevo Molde</button>
@@ -131,11 +185,54 @@
     </div>
   </div>
 
+  <!-- ==================== TAB MOLDES HILO ==================== -->
+  <div class="tab-content" *ngIf="tabActiva === 'moldesHilo'">
+    <div class="seccion-header">
+      <div class="header-izq">
+        <h2>Gestionar Moldes Hilo Encerado</h2>
+        <input type="text" [(ngModel)]="busquedaMoldeHilo" placeholder="🔍 Buscar molde..." class="input-busqueda">
+      </div>
+      <button class="btn-crear" (click)="abrirPopupCrearMoldeHilo()">+ Nuevo Molde</button>
+    </div>
+
+    <div class="cargando" *ngIf="cargandoMoldesHilo">
+      <p>Cargando moldes de hilo...</p>
+    </div>
+
+    <div class="sin-datos" *ngIf="!cargandoMoldesHilo && moldesHilo.length === 0">
+      <span class="sin-datos-icon">🧶</span>
+      <p>No hay moldes de hilo registrados</p>
+      <button class="btn-crear" (click)="abrirPopupCrearMoldeHilo()">+ Crear primer molde</button>
+    </div>
+
+    <div class="moldes-grid" *ngIf="!cargandoMoldesHilo && moldesHiloFiltrados.length > 0">
+      <div class="molde-card" *ngFor="let molde of moldesHiloFiltrados" (click)="abrirPopupEditarMoldeHilo(molde)">
+        <div class="molde-card-header">
+          <h3>{{ molde.nombre | capitalize }}</h3>
+          <div class="molde-badges">
+            <span class="badge-capas">{{ molde.capas.length }} capa(s)</span>
+            <span class="badge-svg" *ngIf="tieneSvg(molde)">✓ SVG</span>
+          </div>
+        </div>
+        <div class="molde-card-capas">
+          <span class="capa-tag" *ngFor="let capa of molde.capas">
+            {{ capa.nombre | capitalize }} <small>({{ capa.volumen }}ml)</small>
+          </span>
+        </div>
+        <button class="btn-editar-item" (click)="abrirPopupEditarMoldeHilo(molde); $event.stopPropagation()" title="Editar molde">✏️</button>
+      </div>
+    </div>
+
+    <div class="sin-resultados" *ngIf="!cargandoMoldesHilo && moldesHilo.length > 0 && moldesHiloFiltrados.length === 0">
+      <p>No se encontraron moldes que coincidan con "{{ busquedaMoldeHilo }}"</p>
+    </div>
+  </div>
+
   <!-- ==================== TAB SVGs ==================== -->
   <div class="tab-content" *ngIf="tabActiva === 'svgs'">
     <div class="seccion-header">
       <div class="header-izq">
-        <h2>Gestionar SVGs de Moldes</h2>
+        <h2>Gestionar SVGs de Moldes Resina</h2>
       </div>
     </div>
 
@@ -261,12 +358,144 @@
       </div>
     </div>
   </div>
+
+  <!-- ==================== TAB SVGs HILO ==================== -->
+  <div class="tab-content" *ngIf="tabActiva === 'svgsHilo'">
+    <div class="seccion-header">
+      <div class="header-izq">
+        <h2>Gestionar SVGs de Moldes Hilo Encerado</h2>
+      </div>
+    </div>
+
+    <!-- Instrucciones -->
+    <div class="instrucciones">
+      <h3>📋 Instrucciones para subir un SVG</h3>
+      <div class="instrucciones-contenido">
+        <p><strong>El SVG debe estar preparado de la siguiente manera:</strong></p>
+        <ol>
+          <li>
+            <strong>Cada área coloreable debe tener un ID único</strong><br>
+            <code>&lt;path id="capa-base" d="..."&gt;</code>
+          </li>
+          <li>
+            <strong>Nombra los IDs de forma descriptiva</strong><br>
+            Ejemplo: <code>layer-base</code>, <code>layer-relleno</code>, <code>layer-tapa</code>
+          </li>
+          <li>
+            <strong>Agrupa elementos relacionados con &lt;g&gt;</strong><br>
+            <code>&lt;g id="area-decoracion"&gt;...paths...&lt;/g&gt;</code>
+          </li>
+          <li>
+            <strong>Evita estilos inline de fill</strong><br>
+            Los colores se aplicarán dinámicamente
+          </li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="svg-contenido-principal">
+      <!-- Lista de moldes hilo para SVG -->
+      <div class="panel-moldes-svg">
+        <h3>Moldes Hilo Disponibles</h3>
+        <div class="lista-moldes-svg" *ngIf="!cargandoMoldesHilo">
+          <div class="molde-svg-item"
+               *ngFor="let molde of moldesHilo"
+               [class.seleccionado]="moldeHiloSeleccionado?._id === molde._id"
+               [class.con-svg]="tieneSvg(molde)"
+               (click)="seleccionarMoldeHiloSvg(molde)">
+            <div class="molde-svg-info">
+              <span class="molde-svg-nombre">{{ molde.nombre | capitalize }}</span>
+              <span class="molde-svg-capas">{{ molde.capas.length }} capa(s)</span>
+            </div>
+            <span class="badge-svg-small" *ngIf="tieneSvg(molde)">✓</span>
+          </div>
+        </div>
+        <div class="sin-datos-mini" *ngIf="!cargandoMoldesHilo && moldesHilo.length === 0">
+          <p>No hay moldes de hilo. Crea uno primero en la pestaña Moldes Hilo.</p>
+        </div>
+      </div>
+
+      <!-- Panel de edición SVG Hilo -->
+      <div class="panel-svg" *ngIf="moldeHiloSeleccionado">
+        <div class="panel-svg-header">
+          <h3>{{ moldeHiloSeleccionado.nombre | capitalize }}</h3>
+          <button class="btn-cerrar-svg" (click)="limpiarSeleccionSvgHilo()">✕</button>
+        </div>
+
+        <!-- Cargar SVG -->
+        <div class="seccion-cargar">
+          <label class="btn-cargar-svg" for="inputSvgHiloRecursos">
+            📁 {{ svgContentHilo ? 'Cambiar SVG' : 'Cargar SVG' }}
+          </label>
+          <input type="file" id="inputSvgHiloRecursos" accept=".svg" (change)="onFileSelectedHilo($event)" hidden>
+          <button class="btn-eliminar-svg" *ngIf="svgContentHilo" (click)="eliminarSvgHilo()">
+            🗑️ Eliminar SVG
+          </button>
+        </div>
+
+        <!-- Preview SVG -->
+        <div class="seccion-preview" *ngIf="svgPreviewHilo">
+          <h4>Vista Previa</h4>
+          <div class="svg-preview-container" [innerHTML]="svgPreviewHilo"></div>
+          <p class="preview-nota">Los colores son de ejemplo.</p>
+        </div>
+
+        <!-- Elementos detectados -->
+        <div class="seccion-elementos" *ngIf="svgElementIdsHilo.length > 0">
+          <h4>Elementos SVG Detectados</h4>
+          <div class="elementos-lista">
+            <span class="elemento-tag" *ngFor="let id of svgElementIdsHilo">{{ id }}</span>
+          </div>
+        </div>
+
+        <!-- Mapeo de capas -->
+        <div class="seccion-mapeo" *ngIf="svgContentHilo && areaMappingsHilo.length > 0">
+          <h4>Asignar Capas a Elementos SVG</h4>
+          <div class="mapeo-lista">
+            <div class="mapeo-item" *ngFor="let mapping of areaMappingsHilo; let i = index">
+              <div class="mapeo-capa">
+                <span class="color-dot" [style.background-color]="coloresPreview[i % coloresPreview.length]"></span>
+                <span class="capa-nombre">{{ mapping.capaNombre | capitalize }}</span>
+              </div>
+              <select [(ngModel)]="mapping.svgElementId"
+                      (ngModelChange)="onMappingChangeHilo()"
+                      [class.asignado]="mapping.svgElementId">
+                <option value="">-- Seleccionar elemento --</option>
+                <option *ngFor="let id of svgElementIdsHilo" [value]="id">{{ id }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mensaje SVG -->
+        <div class="mensaje" *ngIf="mensajeSvgHilo" [class.exito]="tipoMensajeSvgHilo === 'exito'" [class.error]="tipoMensajeSvgHilo === 'error'">
+          {{ mensajeSvgHilo }}
+        </div>
+
+        <!-- Botón guardar SVG -->
+        <div class="acciones-svg" *ngIf="svgContentHilo">
+          <button class="btn-guardar-svg"
+                  (click)="guardarSvgHilo()"
+                  [disabled]="guardandoSvgHilo || !todosLosMapeosCompletosHilo()">
+            {{ guardandoSvgHilo ? 'Guardando...' : '💾 Guardar SVG' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Placeholder -->
+      <div class="panel-placeholder" *ngIf="!moldeHiloSeleccionado">
+        <span class="placeholder-icon">🖼️</span>
+        <p>Selecciona un molde de hilo para gestionar su SVG</p>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Popup Color -->
 <app-popup-color
   *ngIf="mostrarPopupColor"
   [colorEditar]="colorParaEditar"
+  tipoColor="resina"
   (cerrar)="cerrarPopupColor()"
   (colorGuardado)="onColorGuardado($event)"
   (colorActualizado)="onColorActualizado($event)"
@@ -274,15 +503,40 @@
   (coloresImportados)="onColoresImportados($event)">
 </app-popup-color>
 
+<!-- Popup Color Hilo Encerado -->
+<app-popup-color
+  *ngIf="mostrarPopupColorHilo"
+  [colorEditar]="colorHiloParaEditar"
+  tipoColor="hilo"
+  (cerrar)="cerrarPopupColorHilo()"
+  (colorGuardado)="onColorHiloGuardado($event)"
+  (colorActualizado)="onColorHiloActualizado($event)"
+  (colorEliminado)="onColorHiloEliminado($event)"
+  (coloresImportados)="onColoresHiloImportados($event)">
+</app-popup-color>
+
 <!-- Popup Molde -->
 <app-popup-molde
   *ngIf="mostrarPopupMolde"
   [moldeEditar]="moldeParaEditar"
+  tipoMolde="resina"
   (cerrar)="cerrarPopupMolde()"
   (moldeGuardado)="onMoldeGuardado($event)"
   (moldeActualizado)="onMoldeActualizado($event)"
   (moldeEliminado)="onMoldeEliminado($event)"
   (moldesImportados)="onMoldesImportados($event)">
+</app-popup-molde>
+
+<!-- Popup Molde Hilo -->
+<app-popup-molde
+  *ngIf="mostrarPopupMoldeHilo"
+  [moldeEditar]="moldeHiloParaEditar"
+  tipoMolde="hilo"
+  (cerrar)="cerrarPopupMoldeHilo()"
+  (moldeGuardado)="onMoldeHiloGuardado($event)"
+  (moldeActualizado)="onMoldeHiloActualizado($event)"
+  (moldeEliminado)="onMoldeHiloEliminado($event)"
+  (moldesImportados)="onMoldesHiloImportados($event)">
 </app-popup-molde>
 
 <!-- Popup confirmar eliminar SVG -->
@@ -292,4 +546,13 @@
   mensaje="¿Estás seguro de eliminar el SVG de este molde? Esta acción no se puede deshacer."
   (confirmar)="confirmarEliminarSvg()"
   (cancelar)="mostrarPopupEliminarSvg = false">
+</app-popup-confirm>
+
+<!-- Popup confirmar eliminar SVG Hilo -->
+<app-popup-confirm
+  *ngIf="mostrarPopupEliminarSvgHilo"
+  titulo="¿Eliminar SVG?"
+  mensaje="¿Estás seguro de eliminar el SVG de este molde de hilo? Esta acción no se puede deshacer."
+  (confirmar)="confirmarEliminarSvgHilo()"
+  (cancelar)="mostrarPopupEliminarSvgHilo = false">
 </app-popup-confirm>

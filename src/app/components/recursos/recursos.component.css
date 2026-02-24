@@ -12,14 +12,6 @@
   padding: 20px;
 }
 
-h1 {
-  font-family: 'Dancing Script', cursive;
-  font-size: 42px;
-  color: #000447;
-  text-align: center;
-  margin-bottom: 25px;
-}
-
 /* ==================== TABS ==================== */
 .tabs {
   display: flex;
@@ -29,6 +21,7 @@ h1 {
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  flex-wrap: wrap;
 }
 
 .tab {
@@ -801,6 +794,7 @@ h1 {
 @media (max-width: 768px) {
   .tabs {
     border-radius: 12px;
+    flex-wrap: wrap;
   }
 
   .tab {
@@ -808,6 +802,7 @@ h1 {
     font-size: 14px;
     flex-direction: column;
     gap: 4px;
+    flex: 0 0 33.33%;
   }
 
   .tab-texto {

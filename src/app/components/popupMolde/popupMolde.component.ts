@@ -27,6 +27,7 @@ interface MoldeEditar {
 })
 export class PopupMoldeComponent implements OnInit, OnChanges {
   @Input() moldeEditar: MoldeEditar | null = null;
+  @Input() tipoMolde: 'resina' | 'hilo' = 'resina';
   @Output() cerrar = new EventEmitter<void>();
   @Output() moldeGuardado = new EventEmitter<any>();
   @Output() moldeActualizado = new EventEmitter<any>();
@@ -52,6 +53,10 @@ export class PopupMoldeComponent implements OnInit, OnChanges {
 
   cerrarAlerta() {
     this.mensajeAlerta = '';
+  }
+
+  get apiBase(): string {
+    return this.tipoMolde === 'hilo' ? 'http://localhost:5000/api/moldes-hilo' : 'http://localhost:5000/api/moldes';
   }
 
   constructor(private http: HttpClient) {}
@@ -154,7 +159,7 @@ export class PopupMoldeComponent implements OnInit, OnChanges {
         moldeActualizado.svgAreaMappings = this.recalcularMappings(capasValidas);
       }
 
-      this.http.put<any>(`http://localhost:5000/api/moldes/${this.moldeEditar._id}`, moldeActualizado)
+      this.http.put<any>(`${this.apiBase}/${this.moldeEditar._id}`, moldeActualizado)
         .subscribe({
           next: (result) => {
             this.guardando = false;
@@ -174,7 +179,7 @@ export class PopupMoldeComponent implements OnInit, OnChanges {
         capas: capasValidas.map(c => ({ nombre: c.nombre.trim(), volumen: c.volumen }))
       };
 
-      this.http.post<any>('http://localhost:5000/api/moldes', molde).subscribe({
+      this.http.post<any>(this.apiBase, molde).subscribe({
         next: (result) => {
           this.guardando = false;
           this.moldeGuardado.emit(result.molde);
@@ -219,7 +224,7 @@ export class PopupMoldeComponent implements OnInit, OnChanges {
     this.eliminando = true;
     this.error = '';
 
-    this.http.delete<any>(`http://localhost:5000/api/moldes/${this.moldeEditar._id}`)
+    this.http.delete<any>(`${this.apiBase}/${this.moldeEditar._id}`)
       .subscribe({
         next: () => {
           this.eliminando = false;
@@ -256,7 +261,7 @@ export class PopupMoldeComponent implements OnInit, OnChanges {
           return;
         }
 
-        this.http.post<{ moldes: any[] }>('http://localhost:5000/api/moldes/importar', { moldes: moldesArray }).subscribe({
+        this.http.post<{ moldes: any[] }>(`${this.apiBase}/importar`, { moldes: moldesArray }).subscribe({
           next: (res) => {
             this.moldesImportados.emit(res.moldes);
             this.error = '';

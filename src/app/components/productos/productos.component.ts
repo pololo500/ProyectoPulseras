@@ -100,7 +100,9 @@ export class ProductosComponent implements OnInit {
   productos: Producto[] = [];
   productosFiltrados: Producto[] = [];
   colores: Color[] = [];
+  coloresHilo: Color[] = [];
   moldes: Molde[] = [];
+  moldesHilo: Molde[] = [];
   
   // Modal de detalle
   mostrarDetalle = false;
@@ -200,19 +202,23 @@ export class ProductosComponent implements OnInit {
   }
 
   cargarDatos(): void {
-    // Cargar productos, colores, moldes y stock en paralelo
+    // Cargar productos, colores, coloresHilo, moldes, moldesHilo y stock en paralelo
     forkJoin({
       productos: this.http.get<Producto[]>('http://localhost:5000/api/productos'),
       colores: this.http.get<Color[]>('http://localhost:5000/api/colores'),
+      coloresHilo: this.http.get<Color[]>('http://localhost:5000/api/colores-hilo'),
       moldes: this.http.get<Molde[]>('http://localhost:5000/api/moldes'),
+      moldesHilo: this.http.get<Molde[]>('http://localhost:5000/api/moldes-hilo'),
       stock: this.http.get<StockItem[]>('http://localhost:5000/api/stock')
     }).subscribe({
       next: (data) => {
         // Cargar colores
         this.colores = data.colores;
+        this.coloresHilo = data.coloresHilo;
         
         // Cargar moldes
         this.moldes = data.moldes;
+        this.moldesHilo = data.moldesHilo;
         
         // Cargar productos
         this.productos = data.productos.map(p => ({ ...p, cantidad: 1 }));
@@ -276,6 +282,10 @@ export class ProductosComponent implements OnInit {
 
   getMoldeByNombre(nombre: string): Molde | null {
     return this.moldes.find(m => m.nombre === nombre) || null;
+  }
+
+  getMoldeHiloByNombre(nombre: string): Molde | null {
+    return this.moldesHilo.find(m => m.nombre === nombre) || null;
   }
 
   cargarProductos(): void {
@@ -362,11 +372,36 @@ export class ProductosComponent implements OnInit {
     return producto.material?.toLowerCase() === 'resina';
   }
 
+  // Verificar si es producto de hilo encerado
+  esHiloEncerado(producto: Producto): boolean {
+    return producto.material?.toLowerCase() === 'hilo encerado';
+  }
+
+  // Verificar si el producto requiere selección de colores (resina o hilo encerado)
+  requiereColores(producto: Producto): boolean {
+    return this.esResina(producto) || this.esHiloEncerado(producto);
+  }
+
+  // Obtener colores según material del producto
+  getColoresParaProducto(producto: Producto | null): Color[] {
+    if (!producto) return this.colores;
+    if (this.esHiloEncerado(producto)) return this.coloresHilo;
+    return this.colores;
+  }
+
+  // Obtener capas para el detalle (de molde para resina, de moldeHilo para hilo encerado)
+  getCapasDetalle(): { nombre: string; volumen: number }[] {
+    if (this.productoDetalle && this.esHiloEncerado(this.productoDetalle)) {
+      return this.moldeDetalle?.capas || [];
+    }
+    return this.moldeDetalle?.capas || [];
+  }
+
   agregarAlCarrito(producto: Producto): void {
     const cantidad = producto.cantidad || 1;
     
-    // Si es resina, abrir popup de detalle para seleccionar colores
-    if (this.esResina(producto) && producto.moldeNombre) {
+    // Si requiere colores, abrir popup de detalle para seleccionar colores
+    if ((this.esResina(producto) && producto.moldeNombre) || (this.esHiloEncerado(producto) && producto.moldeNombre)) {
       this.abrirDetalle(producto, new Event('click'));
       this.cantidadDetalle = cantidad;
       return;
@@ -414,7 +449,7 @@ export class ProductosComponent implements OnInit {
     this.categoriaAbiertaDetalle = this.categoriaAbiertaDetalle === categoria ? null : categoria;
   }
 
-  // Obtener colores por categoría (polvo o translucido)
+  // Obtener colores por categoría (polvo o translucido) - usa el producto actual para determinar set de colores
   getColoresPorCategoria(categoria: string): Color[] {
     return this.colores.filter(c => c.categoria?.toLowerCase() === categoria.toLowerCase());
   }
@@ -819,11 +854,26 @@ export class ProductosComponent implements OnInit {
       this.moldeDetalle = this.getMoldeByNombre(producto.moldeNombre);
       if (this.moldeDetalle) {
         this.coloresPorCapaDetalle = new Array(this.moldeDetalle.capas.length).fill(null);
-        // Inicializar SVG en blanco con bordes negros
         if (this.moldeTieneSvg(this.moldeDetalle)) {
           this.svgPreviewDetalle = this.getSvgInicial(this.moldeDetalle);
         }
       }
+    } else if (this.esHiloEncerado(producto) && producto.moldeNombre) {
+      // Hilo encerado: buscar molde en moldesHilo
+      this.moldeDetalle = this.getMoldeHiloByNombre(producto.moldeNombre);
+      if (this.moldeDetalle) {
+        this.coloresPorCapaDetalle = new Array(this.moldeDetalle.capas.length).fill(null);
+        if (this.moldeTieneSvg(this.moldeDetalle)) {
+          this.svgPreviewDetalle = this.getSvgInicial(this.moldeDetalle);
+        }
+      } else {
+        this.coloresPorCapaDetalle = [];
+      }
+    } else if (this.esHiloEncerado(producto)) {
+      // Hilo encerado sin molde asignado
+      this.moldeDetalle = null;
+      this.coloresPorCapaDetalle = [];
+      this.svgPreviewDetalle = null;
     } else {
       this.moldeDetalle = null;
       this.coloresPorCapaDetalle = [];
@@ -913,7 +963,10 @@ export class ProductosComponent implements OnInit {
   // Seleccionar color para una capa en el modal de detalle
   seleccionarColorCapaDetalle(capaIndex: number, color: Color): void {
     this.coloresPorCapaDetalle[capaIndex] = color;
-    this.actualizarSvgPreviewDetalle();
+    // Actualizar SVG para productos con molde que tiene SVG
+    if (this.productoDetalle && this.moldeTieneSvg(this.moldeDetalle)) {
+      this.actualizarSvgPreviewDetalle();
+    }
     // Cerrar el accordion después de seleccionar el color
     this.categoriaAbiertaDetalle = null;
     this.capaAbiertaDetalle = null;
@@ -928,39 +981,43 @@ export class ProductosComponent implements OnInit {
 
   // Aplicar los colores asignados a la foto actual
   aplicarColoresDeFoto(): void {
-    if (!this.productoDetalle?.coloresPorImagen || !this.moldeDetalle) return;
+    if (!this.productoDetalle?.coloresPorImagen) return;
+    if (!this.moldeDetalle && !this.esHiloEncerado(this.productoDetalle)) return;
     
     const entry = this.productoDetalle.coloresPorImagen.find(c => c.imagenIndex === this.imagenActualIndex);
     if (!entry || entry.colores.length === 0) return;
     
     // Para cada color asignado a la imagen, buscar el color completo y asignarlo
     entry.colores.forEach(colorData => {
-      const colorCompleto = this.colores.find(c => c._id === colorData.colorId);
+      const colorCompleto = this.colores.find(c => c._id === colorData.colorId) || this.coloresHilo.find(c => c._id === colorData.colorId);
       if (colorCompleto && colorData.capaIndex < this.coloresPorCapaDetalle.length) {
         this.coloresPorCapaDetalle[colorData.capaIndex] = colorCompleto;
       }
     });
     
-    this.actualizarSvgPreviewDetalle();
+    if (this.productoDetalle && this.moldeTieneSvg(this.moldeDetalle)) {
+      this.actualizarSvgPreviewDetalle();
+    }
   }
 
   // Verificar si todas las capas tienen color seleccionado en detalle
   todasCapasConColorDetalle(): boolean {
-    if (!this.moldeDetalle) return true; // No es resina
+    if (this.coloresPorCapaDetalle.length === 0) return true;
     return this.coloresPorCapaDetalle.every(c => c !== null);
   }
 
   agregarDesdeDetalle(): void {
     if (!this.productoDetalle) return;
     
-    // Si es resina, verificar que todas las capas tengan color
-    if (this.esResina(this.productoDetalle) && this.moldeDetalle) {
+    // Si requiere colores (resina o hilo encerado), verificar que todas las capas tengan color
+    const capas = this.getCapasDetalle();
+    if (this.requiereColores(this.productoDetalle) && capas.length > 0) {
       if (!this.todasCapasConColorDetalle()) {
         return;
       }
       
       // Construir array de colores por capa
-      const coloresPorCapa: ColorPorCapa[] = this.moldeDetalle.capas.map((capa, index) => {
+      const coloresPorCapa: ColorPorCapa[] = capas.map((capa, index) => {
         const color = this.coloresPorCapaDetalle[index]!;
         return {
           capaIndex: index,
@@ -987,7 +1044,7 @@ export class ProductosComponent implements OnInit {
       this.cerrarDetalle();
       this.mostrarMensajeExito(mensaje, coloresGuardados);
     } else {
-      // Producto sin resina
+      // Producto sin colores
       this.carritoService.agregarProducto({
         _id: this.productoDetalle._id,
         nombre: this.productoDetalle.nombre,
@@ -1081,7 +1138,7 @@ export class ProductosComponent implements OnInit {
 
   generarSvgParaVariante(variante: StockVariante, moldeNombre?: string): SafeHtml | null {
     if (!moldeNombre) return null;
-    const molde = this.getMoldeByNombre(moldeNombre);
+    const molde = this.getMoldeByNombre(moldeNombre) || this.getMoldeHiloByNombre(moldeNombre);
     if (!molde?.svgContent || !molde?.svgAreaMappings) return null;
     
     // Construir array de colores a partir de la variante
@@ -1093,7 +1150,7 @@ export class ProductosComponent implements OnInit {
           _id: cc.colorId,
           nombre: cc.colorNombre,
           rgb: cc.colorRgb,
-          categoria: this.colores.find(c => c._id === cc.colorId)?.categoria || ''
+          categoria: this.colores.find(c => c._id === cc.colorId)?.categoria || this.coloresHilo.find(c => c._id === cc.colorId)?.categoria || ''
         };
       }
     });

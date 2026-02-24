@@ -64,7 +64,7 @@
         <div class="variante-card" *ngFor="let variante of item.variantes">
           <div class="variante-content">
             <!-- Colores de la variante -->
-            <div class="variante-colores" *ngIf="esResina(item) && variante.coloresPorCapa && variante.coloresPorCapa.length > 0">
+            <div class="variante-colores" *ngIf="requiereColores(item) && variante.coloresPorCapa && variante.coloresPorCapa.length > 0">
               <div class="capas-preview">
                 <div class="capa-item-preview" *ngFor="let capa of variante.coloresPorCapa">
                   <span class="color-chip" 
@@ -201,8 +201,8 @@
         <input type="number" [(ngModel)]="nuevaVariante.cantidad" min="1" required>
       </div>
 
-      <!-- Selección de colores por capa (si es resina) -->
-      <div class="selector-colores-detalle" *ngIf="esResina(nuevoStock) && nuevaVariante.coloresPorCapa && nuevaVariante.coloresPorCapa.length > 0">
+      <!-- Selección de colores por capa (si requiere colores) -->
+      <div class="selector-colores-detalle" *ngIf="requiereColores(nuevoStock) && nuevaVariante.coloresPorCapa && nuevaVariante.coloresPorCapa.length > 0">
         <h4>Selecciona colores por capa:</h4>
         <div class="capas-accordion-detalle">
           <div class="capa-accordion" *ngFor="let capa of nuevaVariante.coloresPorCapa; let i = index">
@@ -226,29 +226,45 @@
             
             <!-- Contenido desplegable -->
             <div class="capa-accordion-contenido" *ngIf="capaAbiertaCargar === i">
-              <!-- Colores Translúcidos -->
-              <div class="categoria-colores" *ngIf="getColoresPorCategoria('translucido').length > 0">
-                <h5 class="categoria-titulo">✨ Translúcidos</h5>
-                <div class="colores-grid-nuevo">
-                  <div class="color-opcion-nuevo" 
-                       *ngFor="let color of getColoresPorCategoria('translucido')" 
-                       [class.seleccionado]="capa.colorId === color._id"
-                       (click)="seleccionarColorCapaDesdeGrid(i, color, 'cargar')">
-                    <span class="color-dot-nuevo translucido" [style.background-color]="color.rgb"></span>
-                    <span class="color-nombre-nuevo">{{ color.nombre | capitalize }}</span>
+              <ng-container *ngIf="esResina(nuevoStock)">
+                <!-- Colores Translúcidos -->
+                <div class="categoria-colores" *ngIf="getColoresPorCategoria('translucido').length > 0">
+                  <h5 class="categoria-titulo">✨ Translúcidos</h5>
+                  <div class="colores-grid-nuevo">
+                    <div class="color-opcion-nuevo" 
+                         *ngFor="let color of getColoresPorCategoria('translucido')" 
+                         [class.seleccionado]="capa.colorId === color._id"
+                         (click)="seleccionarColorCapaDesdeGrid(i, color, 'cargar')">
+                      <span class="color-dot-nuevo translucido" [style.background-color]="color.rgb"></span>
+                      <span class="color-nombre-nuevo">{{ color.nombre | capitalize }}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
+                
+                <!-- Colores Polvo -->
+                <div class="categoria-colores" *ngIf="getColoresPorCategoria('polvo').length > 0">
+                  <h5 class="categoria-titulo">🌟 Polvo / Brillos</h5>
+                  <div class="colores-grid-nuevo">
+                    <div class="color-opcion-nuevo" 
+                         *ngFor="let color of getColoresPorCategoria('polvo')" 
+                         [class.seleccionado]="capa.colorId === color._id"
+                         (click)="seleccionarColorCapaDesdeGrid(i, color, 'cargar')">
+                      <span class="color-dot-nuevo polvo" [style.background-color]="color.rgb"></span>
+                      <span class="color-nombre-nuevo">{{ color.nombre | capitalize }}</span>
+                    </div>
+                  </div>
+                </div>
+              </ng-container>
               
-              <!-- Colores Polvo -->
-              <div class="categoria-colores" *ngIf="getColoresPorCategoria('polvo').length > 0">
-                <h5 class="categoria-titulo">🌟 Polvo / Brillos</h5>
+              <!-- Colores Hilo Encerado -->
+              <div class="categoria-colores" *ngIf="esHiloEncerado(nuevoStock) && coloresHilo.length > 0">
+                <h5 class="categoria-titulo">🧵 Hilo Encerado</h5>
                 <div class="colores-grid-nuevo">
                   <div class="color-opcion-nuevo" 
-                       *ngFor="let color of getColoresPorCategoria('polvo')" 
+                       *ngFor="let color of coloresHilo" 
                        [class.seleccionado]="capa.colorId === color._id"
                        (click)="seleccionarColorCapaDesdeGrid(i, color, 'cargar')">
-                    <span class="color-dot-nuevo polvo" [style.background-color]="color.rgb"></span>
+                    <span class="color-dot-nuevo" [style.background-color]="color.rgb"></span>
                     <span class="color-nombre-nuevo">{{ color.nombre | capitalize }}</span>
                   </div>
                 </div>
@@ -490,8 +506,8 @@
         <input type="number" [(ngModel)]="nuevaVarianteExistente.cantidad" min="1" required>
       </div>
 
-      <!-- Selección de colores por capa (si es resina) -->
-      <div class="selector-colores-detalle" *ngIf="esResina(stockParaVariante) && nuevaVarianteExistente.coloresPorCapa && nuevaVarianteExistente.coloresPorCapa.length > 0">
+      <!-- Selección de colores por capa (si requiere colores) -->
+      <div class="selector-colores-detalle" *ngIf="requiereColores(stockParaVariante) && nuevaVarianteExistente.coloresPorCapa && nuevaVarianteExistente.coloresPorCapa.length > 0">
         <h4>Selecciona colores por capa:</h4>
         <div class="capas-accordion-detalle">
           <div class="capa-accordion" *ngFor="let capa of nuevaVarianteExistente.coloresPorCapa; let i = index">
@@ -515,29 +531,45 @@
             
             <!-- Contenido desplegable -->
             <div class="capa-accordion-contenido" *ngIf="capaAbiertaVariante === i">
-              <!-- Colores Translúcidos -->
-              <div class="categoria-colores" *ngIf="getColoresPorCategoria('translucido').length > 0">
-                <h5 class="categoria-titulo">✨ Translúcidos</h5>
-                <div class="colores-grid-nuevo">
-                  <div class="color-opcion-nuevo" 
-                       *ngFor="let color of getColoresPorCategoria('translucido')" 
-                       [class.seleccionado]="capa.colorId === color._id"
-                       (click)="seleccionarColorCapaDesdeGrid(i, color, 'variante')">
-                    <span class="color-dot-nuevo translucido" [style.background-color]="color.rgb"></span>
-                    <span class="color-nombre-nuevo">{{ color.nombre | capitalize }}</span>
+              <ng-container *ngIf="esResina(stockParaVariante)">
+                <!-- Colores Translúcidos -->
+                <div class="categoria-colores" *ngIf="getColoresPorCategoria('translucido').length > 0">
+                  <h5 class="categoria-titulo">✨ Translúcidos</h5>
+                  <div class="colores-grid-nuevo">
+                    <div class="color-opcion-nuevo" 
+                         *ngFor="let color of getColoresPorCategoria('translucido')" 
+                         [class.seleccionado]="capa.colorId === color._id"
+                         (click)="seleccionarColorCapaDesdeGrid(i, color, 'variante')">
+                      <span class="color-dot-nuevo translucido" [style.background-color]="color.rgb"></span>
+                      <span class="color-nombre-nuevo">{{ color.nombre | capitalize }}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
+                
+                <!-- Colores Polvo -->
+                <div class="categoria-colores" *ngIf="getColoresPorCategoria('polvo').length > 0">
+                  <h5 class="categoria-titulo">🌟 Polvo / Brillos</h5>
+                  <div class="colores-grid-nuevo">
+                    <div class="color-opcion-nuevo" 
+                         *ngFor="let color of getColoresPorCategoria('polvo')" 
+                         [class.seleccionado]="capa.colorId === color._id"
+                         (click)="seleccionarColorCapaDesdeGrid(i, color, 'variante')">
+                      <span class="color-dot-nuevo polvo" [style.background-color]="color.rgb"></span>
+                      <span class="color-nombre-nuevo">{{ color.nombre | capitalize }}</span>
+                    </div>
+                  </div>
+                </div>
+              </ng-container>
               
-              <!-- Colores Polvo -->
-              <div class="categoria-colores" *ngIf="getColoresPorCategoria('polvo').length > 0">
-                <h5 class="categoria-titulo">🌟 Polvo / Brillos</h5>
+              <!-- Colores Hilo Encerado -->
+              <div class="categoria-colores" *ngIf="esHiloEncerado(stockParaVariante) && coloresHilo.length > 0">
+                <h5 class="categoria-titulo">🧵 Hilo Encerado</h5>
                 <div class="colores-grid-nuevo">
                   <div class="color-opcion-nuevo" 
-                       *ngFor="let color of getColoresPorCategoria('polvo')" 
+                       *ngFor="let color of coloresHilo" 
                        [class.seleccionado]="capa.colorId === color._id"
                        (click)="seleccionarColorCapaDesdeGrid(i, color, 'variante')">
-                    <span class="color-dot-nuevo polvo" [style.background-color]="color.rgb"></span>
+                    <span class="color-dot-nuevo" [style.background-color]="color.rgb"></span>
                     <span class="color-nombre-nuevo">{{ color.nombre | capitalize }}</span>
                   </div>
                 </div>

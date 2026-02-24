@@ -44,31 +44,56 @@ interface Color {
 })
 export class RecursosComponent implements OnInit {
   // Tab activa
-  tabActiva: 'colores' | 'moldes' | 'svgs' = 'colores';
+  tabActiva: 'colores' | 'coloresHilo' | 'moldes' | 'moldesHilo' | 'svgs' | 'svgsHilo' = 'colores';
 
   // Datos
   colores: Color[] = [];
+  coloresHilo: Color[] = [];
   moldes: Molde[] = [];
+  moldesHilo: Molde[] = [];
   cargandoColores = false;
+  cargandoColoresHilo = false;
   cargandoMoldes = false;
+  cargandoMoldesHilo = false;
 
   // Búsquedas
   busquedaColor = '';
+  busquedaColorHilo = '';
   busquedaMolde = '';
+  busquedaMoldeHilo = '';
 
   // Popup Color
   mostrarPopupColor = false;
   colorParaEditar: Color | null = null;
 
+  // Popup Color Hilo
+  mostrarPopupColorHilo = false;
+  colorHiloParaEditar: Color | null = null;
+
   // Popup Molde
   mostrarPopupMolde = false;
   moldeParaEditar: Molde | null = null;
 
+  // Popup Molde Hilo
+  mostrarPopupMoldeHilo = false;
+  moldeHiloParaEditar: Molde | null = null;
+
   // SVG (reusar lógica de agregarSvg)
   moldeSeleccionado: Molde | null = null;
 
+  // SVG Hilo
+  moldeHiloSeleccionado: Molde | null = null;
+  svgContentHilo = '';
+  svgPreviewHilo: SafeHtml | null = null;
+  svgElementIdsHilo: string[] = [];
+  areaMappingsHilo: SvgAreaMapping[] = [];
+  guardandoSvgHilo = false;
+  mensajeSvgHilo = '';
+  tipoMensajeSvgHilo: 'exito' | 'error' | '' = '';
+
   // Popup confirmar eliminar SVG
   mostrarPopupEliminarSvg = false;
+  mostrarPopupEliminarSvgHilo = false;
   svgContent = '';
   svgPreview: SafeHtml | null = null;
   svgElementIds: string[] = [];
@@ -90,11 +115,13 @@ export class RecursosComponent implements OnInit {
   ngOnInit(): void {
     this.globalService.checkLoggedIn('/recursos', true);
     this.cargarColores();
+    this.cargarColoresHilo();
     this.cargarMoldes();
+    this.cargarMoldesHilo();
   }
 
   // ==================== TAB ====================
-  cambiarTab(tab: 'colores' | 'moldes' | 'svgs'): void {
+  cambiarTab(tab: 'colores' | 'coloresHilo' | 'moldes' | 'moldesHilo' | 'svgs' | 'svgsHilo'): void {
     this.tabActiva = tab;
   }
 
@@ -123,6 +150,56 @@ export class RecursosComponent implements OnInit {
 
   get coloresPolvo(): Color[] {
     return this.coloresFiltrados.filter(c => c.categoria === 'polvo');
+  }
+
+  // ==================== COLORES HILO ENCERADO ====================
+  cargarColoresHilo(): void {
+    this.cargandoColoresHilo = true;
+    this.http.get<Color[]>('http://localhost:5000/api/colores-hilo').subscribe({
+      next: (data) => { this.coloresHilo = data; this.cargandoColoresHilo = false; },
+      error: (err) => { console.error('Error al cargar colores de hilo:', err); this.cargandoColoresHilo = false; }
+    });
+  }
+
+  get coloresHiloFiltrados(): Color[] {
+    if (!this.busquedaColorHilo.trim()) return this.coloresHilo;
+    const busqueda = this.busquedaColorHilo.toLowerCase();
+    return this.coloresHilo.filter(c =>
+      c.nombre.toLowerCase().includes(busqueda) ||
+      c.rgb.toLowerCase().includes(busqueda)
+    );
+  }
+
+  abrirPopupCrearColorHilo(): void {
+    this.colorHiloParaEditar = null;
+    this.mostrarPopupColorHilo = true;
+  }
+
+  abrirPopupEditarColorHilo(color: Color): void {
+    this.colorHiloParaEditar = { ...color };
+    this.mostrarPopupColorHilo = true;
+  }
+
+  cerrarPopupColorHilo(): void {
+    this.mostrarPopupColorHilo = false;
+    this.colorHiloParaEditar = null;
+  }
+
+  onColorHiloGuardado(color: Color): void {
+    this.coloresHilo.push(color);
+  }
+
+  onColorHiloActualizado(color: Color): void {
+    const index = this.coloresHilo.findIndex(c => c._id === color._id);
+    if (index !== -1) this.coloresHilo[index] = color;
+  }
+
+  onColorHiloEliminado(colorId: string): void {
+    this.coloresHilo = this.coloresHilo.filter(c => c._id !== colorId);
+  }
+
+  onColoresHiloImportados(colores: Color[]): void {
+    this.coloresHilo.push(...colores);
   }
 
   abrirPopupCrearColor(): void {
@@ -224,6 +301,62 @@ export class RecursosComponent implements OnInit {
 
   tieneSvg(molde: Molde): boolean {
     return !!molde.svgContent;
+  }
+
+  // ==================== MOLDES HILO ====================
+  cargarMoldesHilo(): void {
+    this.cargandoMoldesHilo = true;
+    this.http.get<Molde[]>('http://localhost:5000/api/moldes-hilo').subscribe({
+      next: (data) => { this.moldesHilo = data; this.cargandoMoldesHilo = false; },
+      error: (err) => { console.error('Error al cargar moldes hilo:', err); this.cargandoMoldesHilo = false; }
+    });
+  }
+
+  get moldesHiloFiltrados(): Molde[] {
+    if (!this.busquedaMoldeHilo.trim()) return this.moldesHilo;
+    const busqueda = this.busquedaMoldeHilo.toLowerCase();
+    return this.moldesHilo.filter(m =>
+      m.nombre.toLowerCase().includes(busqueda) ||
+      m.capas.some(c => c.nombre.toLowerCase().includes(busqueda))
+    );
+  }
+
+  abrirPopupCrearMoldeHilo(): void {
+    this.moldeHiloParaEditar = null;
+    this.mostrarPopupMoldeHilo = true;
+  }
+
+  abrirPopupEditarMoldeHilo(molde: Molde): void {
+    this.moldeHiloParaEditar = { ...molde, capas: molde.capas.map(c => ({ ...c })) };
+    this.mostrarPopupMoldeHilo = true;
+  }
+
+  cerrarPopupMoldeHilo(): void {
+    this.mostrarPopupMoldeHilo = false;
+    this.moldeHiloParaEditar = null;
+  }
+
+  onMoldeHiloGuardado(molde: Molde): void {
+    this.moldesHilo.push(molde);
+  }
+
+  onMoldeHiloActualizado(molde: Molde): void {
+    const index = this.moldesHilo.findIndex(m => m._id === molde._id);
+    if (index !== -1) this.moldesHilo[index] = molde;
+    if (this.moldeHiloSeleccionado && this.moldeHiloSeleccionado._id === molde._id) {
+      this.seleccionarMoldeHiloSvg(molde);
+    }
+  }
+
+  onMoldeHiloEliminado(moldeId: string): void {
+    this.moldesHilo = this.moldesHilo.filter(m => m._id !== moldeId);
+    if (this.moldeHiloSeleccionado && this.moldeHiloSeleccionado._id === moldeId) {
+      this.limpiarSeleccionSvgHilo();
+    }
+  }
+
+  onMoldesHiloImportados(moldes: Molde[]): void {
+    this.moldesHilo.push(...moldes);
   }
 
   // ==================== SVGs ====================
@@ -441,5 +574,164 @@ export class RecursosComponent implements OnInit {
     this.mensajeSvg = texto;
     this.tipoMensajeSvg = tipo;
     setTimeout(() => { this.mensajeSvg = ''; this.tipoMensajeSvg = ''; }, 4000);
+  }
+
+  // ==================== SVGs HILO ====================
+  seleccionarMoldeHiloSvg(molde: Molde): void {
+    this.moldeHiloSeleccionado = molde;
+    this.mensajeSvgHilo = '';
+    this.tipoMensajeSvgHilo = '';
+
+    if (molde.svgContent) {
+      this.svgContentHilo = molde.svgContent;
+      this.procesarSvgHilo();
+      if (molde.svgAreaMappings && molde.svgAreaMappings.length > 0) {
+        this.areaMappingsHilo = [...molde.svgAreaMappings];
+      } else {
+        this.inicializarMappingsHilo();
+      }
+    } else {
+      this.svgContentHilo = '';
+      this.svgPreviewHilo = null;
+      this.svgElementIdsHilo = [];
+      this.inicializarMappingsHilo();
+    }
+  }
+
+  inicializarMappingsHilo(): void {
+    if (!this.moldeHiloSeleccionado) return;
+    this.areaMappingsHilo = this.moldeHiloSeleccionado.capas.map((capa, index) => ({
+      capaIndex: index,
+      capaNombre: capa.nombre,
+      svgElementId: ''
+    }));
+  }
+
+  onFileSelectedHilo(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    if (!file.name.endsWith('.svg')) {
+      this.mostrarMensajeSvgHilo('Por favor selecciona un archivo SVG válido', 'error');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.svgContentHilo = e.target?.result as string;
+      this.procesarSvgHilo();
+      this.inicializarMappingsHilo();
+    };
+    reader.readAsText(file);
+    input.value = '';
+  }
+
+  procesarSvgHilo(): void {
+    if (!this.svgContentHilo) return;
+    let svgLimpio = this.prepararSvg(this.svgContentHilo);
+    this.svgElementIdsHilo = this.extraerElementIds(svgLimpio);
+    this.actualizarPreviewHilo();
+  }
+
+  actualizarPreviewHilo(): void {
+    if (!this.svgContentHilo) { this.svgPreviewHilo = null; return; }
+    let svgConColores = this.svgContentHilo;
+    this.areaMappingsHilo.forEach((mapping, index) => {
+      if (mapping.svgElementId) {
+        const color = this.coloresPreview[index % this.coloresPreview.length];
+        svgConColores = this.aplicarColorAElemento(svgConColores, mapping.svgElementId, color);
+      }
+    });
+    this.svgPreviewHilo = this.sanitizer.bypassSecurityTrustHtml(svgConColores);
+  }
+
+  onMappingChangeHilo(): void {
+    this.actualizarPreviewHilo();
+  }
+
+  guardarSvgHilo(): void {
+    if (!this.moldeHiloSeleccionado || !this.svgContentHilo) {
+      this.mostrarMensajeSvgHilo('Selecciona un molde y carga un SVG primero', 'error');
+      return;
+    }
+    const mappingsIncompletos = this.areaMappingsHilo.filter(m => !m.svgElementId);
+    if (mappingsIncompletos.length > 0) {
+      this.mostrarMensajeSvgHilo('Asigna un elemento SVG a cada capa del molde', 'error');
+      return;
+    }
+    this.guardandoSvgHilo = true;
+    const datosActualizados = {
+      svgContent: this.prepararSvg(this.svgContentHilo),
+      svgAreaMappings: this.areaMappingsHilo
+    };
+    this.http.put(`http://localhost:5000/api/moldes-hilo/${this.moldeHiloSeleccionado._id}`, datosActualizados)
+      .subscribe({
+        next: () => {
+          this.guardandoSvgHilo = false;
+          this.mostrarMensajeSvgHilo('SVG guardado correctamente', 'exito');
+          if (this.moldeHiloSeleccionado) {
+            this.moldeHiloSeleccionado.svgContent = datosActualizados.svgContent;
+            this.moldeHiloSeleccionado.svgAreaMappings = datosActualizados.svgAreaMappings;
+          }
+          this.cargarMoldesHilo();
+        },
+        error: (err) => {
+          this.guardandoSvgHilo = false;
+          console.error('Error al guardar:', err);
+          this.mostrarMensajeSvgHilo('Error al guardar el SVG', 'error');
+        }
+      });
+  }
+
+  eliminarSvgHilo(): void {
+    if (!this.moldeHiloSeleccionado) return;
+    this.mostrarPopupEliminarSvgHilo = true;
+  }
+
+  confirmarEliminarSvgHilo(): void {
+    this.mostrarPopupEliminarSvgHilo = false;
+    if (!this.moldeHiloSeleccionado) return;
+    this.guardandoSvgHilo = true;
+    const datosActualizados = { svgContent: null, svgAreaMappings: [] };
+    this.http.put(`http://localhost:5000/api/moldes-hilo/${this.moldeHiloSeleccionado._id}`, datosActualizados)
+      .subscribe({
+        next: () => {
+          this.guardandoSvgHilo = false;
+          this.mostrarMensajeSvgHilo('SVG eliminado correctamente', 'exito');
+          this.svgContentHilo = '';
+          this.svgPreviewHilo = null;
+          this.svgElementIdsHilo = [];
+          this.inicializarMappingsHilo();
+          if (this.moldeHiloSeleccionado) {
+            this.moldeHiloSeleccionado.svgContent = undefined;
+            this.moldeHiloSeleccionado.svgAreaMappings = undefined;
+          }
+          this.cargarMoldesHilo();
+        },
+        error: (err) => {
+          this.guardandoSvgHilo = false;
+          console.error('Error al eliminar:', err);
+          this.mostrarMensajeSvgHilo('Error al eliminar el SVG', 'error');
+        }
+      });
+  }
+
+  todosLosMapeosCompletosHilo(): boolean {
+    return this.areaMappingsHilo.every(m => m.svgElementId && m.svgElementId.length > 0);
+  }
+
+  limpiarSeleccionSvgHilo(): void {
+    this.moldeHiloSeleccionado = null;
+    this.svgContentHilo = '';
+    this.svgPreviewHilo = null;
+    this.svgElementIdsHilo = [];
+    this.areaMappingsHilo = [];
+    this.mensajeSvgHilo = '';
+    this.tipoMensajeSvgHilo = '';
+  }
+
+  mostrarMensajeSvgHilo(texto: string, tipo: 'exito' | 'error'): void {
+    this.mensajeSvgHilo = texto;
+    this.tipoMensajeSvgHilo = tipo;
+    setTimeout(() => { this.mensajeSvgHilo = ''; this.tipoMensajeSvgHilo = ''; }, 4000);
   }
 }

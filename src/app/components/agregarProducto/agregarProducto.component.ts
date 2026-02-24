@@ -45,6 +45,7 @@ export class AgregarProductoComponent implements OnInit {
   tiposProducto: string[] = [];
   materiales: string[] = [];
   moldes: Molde[] = [];
+  moldesHilo: Molde[] = [];
   
   // Para nuevos tipos/materiales
   mostrarInputNuevoProducto = false;
@@ -65,11 +66,14 @@ export class AgregarProductoComponent implements OnInit {
   // Carrusel de imágenes
   imagenCarruselIndex = 0;
   
-  // Para resina
+  // Para resina / hilo encerado
   esResina = false;
+  esHiloEncerado = false;
+  requiereColores = false;
 
   // Colores para asignar a imágenes
   colores: Color[] = [];
+  coloresHilo: Color[] = [];
   coloresPorImagen: ColoresImagen[] = [];
   imagenColorAbierta: number | null = null;
 
@@ -90,7 +94,9 @@ export class AgregarProductoComponent implements OnInit {
     this.globalService.checkLoggedIn("/agregarProducto");
     this.obtenerTiposProducto();
     this.cargarMoldes();
+    this.cargarMoldesHilo();
     this.cargarColores();
+    this.cargarColoresHilo();
     
     this.addProductForm.get('producto')?.valueChanges.subscribe(producto => {
       if (producto === '__nuevo__') {
@@ -98,6 +104,8 @@ export class AgregarProductoComponent implements OnInit {
         this.materiales = [];
         this.addProductForm.get('material')?.setValue('');
         this.esResina = false;
+        this.esHiloEncerado = false;
+        this.requiereColores = false;
         this.subcategorias = [];
         this.subcategoriasSeleccionadas = [];
       } else {
@@ -115,14 +123,18 @@ export class AgregarProductoComponent implements OnInit {
       if (material === '__nuevo__') {
         this.mostrarInputNuevoMaterial = true;
         this.esResina = false;
+        this.esHiloEncerado = false;
+        this.requiereColores = false;
         this.subcategorias = [];
         this.subcategoriasSeleccionadas = [];
       } else {
         this.mostrarInputNuevoMaterial = false;
         this.nuevoMaterialNombre = '';
-        // Verificar si es resina
+        // Verificar si es resina o hilo encerado
         this.esResina = material?.toLowerCase() === 'resina';
-        if (!this.esResina) {
+        this.esHiloEncerado = material?.toLowerCase() === 'hilo encerado';
+        this.requiereColores = this.esResina || this.esHiloEncerado;
+        if (!this.requiereColores) {
           this.addProductForm.get('molde')?.setValue('');
         }
         // Cargar subcategorías cuando se selecciona material
@@ -157,11 +169,27 @@ export class AgregarProductoComponent implements OnInit {
       });
   }
 
+  cargarMoldesHilo() {
+    this.http.get<Molde[]>('http://localhost:5000/api/moldes-hilo')
+      .subscribe({
+        next: (data) => this.moldesHilo = data,
+        error: (err) => console.error('Error al cargar moldes de hilo:', err)
+      });
+  }
+
   cargarColores() {
     this.http.get<Color[]>('http://localhost:5000/api/colores')
       .subscribe({
         next: (data) => this.colores = data,
         error: (err) => console.error('Error al cargar colores:', err)
+      });
+  }
+
+  cargarColoresHilo() {
+    this.http.get<Color[]>('http://localhost:5000/api/colores-hilo')
+      .subscribe({
+        next: (data) => this.coloresHilo = data,
+        error: (err) => console.error('Error al cargar colores de hilo:', err)
       });
   }
 
@@ -179,9 +207,11 @@ export class AgregarProductoComponent implements OnInit {
   }
 
   onNuevoMaterialChange() {
-    // Verificar si el nuevo material es "resina"
+    // Verificar si el nuevo material es "resina" o "hilo encerado"
     this.esResina = this.nuevoMaterialNombre.toLowerCase() === 'resina';
-    if (!this.esResina) {
+    this.esHiloEncerado = this.nuevoMaterialNombre.toLowerCase() === 'hilo encerado';
+    this.requiereColores = this.esResina || this.esHiloEncerado;
+    if (!this.requiereColores) {
       this.addProductForm.get('molde')?.setValue('');
     }
   }
@@ -378,7 +408,21 @@ export class AgregarProductoComponent implements OnInit {
   getMoldeSeleccionado(): Molde | null {
     const moldeNombre = this.addProductForm.get('molde')?.value;
     if (!moldeNombre) return null;
+    if (this.esHiloEncerado) {
+      return this.moldesHilo.find(m => m.nombre === moldeNombre) || null;
+    }
     return this.moldes.find(m => m.nombre === moldeNombre) || null;
+  }
+
+  // Obtener capas para asignación de colores (de molde para resina o hilo encerado)
+  getCapasParaColorAsignacion(): { nombre: string; volumen: number }[] {
+    const molde = this.getMoldeSeleccionado();
+    return molde?.capas || [];
+  }
+
+  // Verificar si se puede asignar colores a imágenes
+  puedeAsignarColores(): boolean {
+    return (this.esResina && !!this.getMoldeSeleccionado()) || (this.esHiloEncerado && !!this.getMoldeSeleccionado());
   }
 
   getColoresPorCategoria(categoria: string): Color[] {
@@ -400,8 +444,8 @@ export class AgregarProductoComponent implements OnInit {
 
   asignarColorImagen(imgIdx: number, capaIdx: number, color: Color) {
     const entry = this.getColoresImagenEntry(imgIdx);
-    const molde = this.getMoldeSeleccionado();
-    const capaNombre = molde?.capas[capaIdx]?.nombre || '';
+    const capas = this.getCapasParaColorAsignacion();
+    const capaNombre = capas[capaIdx]?.nombre || '';
     
     const existing = entry.colores.findIndex(c => c.capaIndex === capaIdx);
     const colorData: ColorPorImagenCapa = {
@@ -470,6 +514,10 @@ export class AgregarProductoComponent implements OnInit {
       console.error('Molde es requerido para productos de resina');
       return;
     }
+    if (this.esHiloEncerado && !formValue.molde) {
+      console.error('Molde es requerido para productos de hilo encerado');
+      return;
+    }
 
     // Subir todas las imágenes a Cloudinary
     const uploadPromises = this.archivosImagenes.map(file => {
@@ -497,6 +545,9 @@ export class AgregarProductoComponent implements OnInit {
         
         // Agregar nombre del molde si es resina (el nombre es único)
         if (this.esResina && formValue.molde) {
+          body.moldeNombre = formValue.molde;
+        }
+        if (this.esHiloEncerado && formValue.molde) {
           body.moldeNombre = formValue.molde;
         }
 

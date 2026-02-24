@@ -26,6 +26,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
   // Popup confirmación
   mostrarPopupConfirmacion = false;
   procesando = false;
+  notaPedido = '';
   
   // Popup teléfono
   mostrarPopupTelefono = false;
@@ -216,6 +217,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
 
   cancelarCompra(): void {
     this.mostrarPopupConfirmacion = false;
+    this.notaPedido = '';
   }
 
   confirmarCompra(): void {
@@ -263,7 +265,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
       estado: 'A confirmar',
       metodoPago: 'A definir',
       pagado: false,
-      nota: `Pedido web - ${this.getCantidadTotal()} productos - Total: $${this.getTotal()}`
+      nota: this.notaPedido.trim() || ''
     };
     
     // Crear el pedido único
@@ -280,6 +282,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
           // Cerrar popup
           this.mostrarPopupConfirmacion = false;
           this.procesando = false;
+          this.notaPedido = '';
           
           // Abrir WhatsApp
           window.open(urlWhatsApp, '_blank');

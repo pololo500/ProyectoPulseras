@@ -5,7 +5,7 @@
 
 <div class="productos-container">
     <div class="card" *ngFor="let carrusel of carruseles" (click)="irAModificarProductos(carrusel.tipo)">
-        <h2 class="tipo-titulo">{{ carrusel.tipo | capitalize }}</h2>
+        <h2 class="tipo-titulo">{{ carrusel.tipo | capitalize }}s</h2>
         
         <div class="carrusel-wrapper" *ngIf="carrusel.productos.length > 0"
              (mouseenter)="onMouseEnter(carrusel)" 

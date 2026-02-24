@@ -170,37 +170,39 @@
     <div class="card popup-detalle" (click)="$event.stopPropagation()">
         <button class="btn-cerrar-popup" (click)="cerrarDetalle()">✕</button>
         
-        <div class="popup-contenido layout-horizontal" [class.foto-svg]="esResina(productoDetalle) && moldeTieneSvg(moldeDetalle)">
+            <div class="popup-contenido layout-horizontal" [class.foto-svg]="(esResina(productoDetalle) || esHiloEncerado(productoDetalle)) && moldeTieneSvg(moldeDetalle)">
             <!-- Panel izquierdo: Imagen/SVG -->
             <div class="popup-panel-izquierdo">
                 <!-- Carrusel de imágenes (cuando no hay SVG o no es resina) -->
-                <div class="popup-imagen-container">
-                    <div class="popup-carrusel">
-                        <button class="popup-nav prev" (click)="imagenAnterior()" *ngIf="getImagenes(productoDetalle).length > 1">❮</button>
-                        <img [src]="getImagenes(productoDetalle)[imagenActualIndex]" 
-                             [alt]="productoDetalle.nombre" 
-                             class="popup-imagen clickable"
-                             (click)="abrirLightbox(imagenActualIndex)"
-                             title="Clic para ampliar">
-                        <button class="popup-nav next" (click)="imagenSiguiente()" *ngIf="getImagenes(productoDetalle).length > 1">❯</button>
+                <div class="imagen-btn-colores">
+                    <div class="popup-imagen-container">
+                        <div class="popup-carrusel">
+                            <button class="popup-nav prev" (click)="imagenAnterior()" *ngIf="getImagenes(productoDetalle).length > 1">❮</button>
+                            <img [src]="getImagenes(productoDetalle)[imagenActualIndex]" 
+                                 [alt]="productoDetalle.nombre" 
+                                 class="popup-imagen clickable"
+                                 (click)="abrirLightbox(imagenActualIndex)"
+                                 title="Clic para ampliar">
+                            <button class="popup-nav next" (click)="imagenSiguiente()" *ngIf="getImagenes(productoDetalle).length > 1">❯</button>
+                        </div>
+                        <div class="popup-indicadores" *ngIf="getImagenes(productoDetalle).length > 1">
+                            <span class="indicador" 
+                                  *ngFor="let img of getImagenes(productoDetalle); let i = index"
+                                  [class.activo]="i === imagenActualIndex"
+                                  (click)="seleccionarImagen(i)"></span>
+                        </div>
                     </div>
-                    <div class="popup-indicadores" *ngIf="getImagenes(productoDetalle).length > 1">
-                        <span class="indicador" 
-                              *ngFor="let img of getImagenes(productoDetalle); let i = index"
-                              [class.activo]="i === imagenActualIndex"
-                              (click)="seleccionarImagen(i)"></span>
-                    </div>
+                    
+                    <!-- Botón para aplicar colores de la foto -->
+                    <button class="btn-colores-foto" 
+                            *ngIf="requiereColores(productoDetalle) && coloresPorCapaDetalle.length > 0 && imagenActualTieneColores()"
+                            (click)="aplicarColoresDeFoto()">
+                        🎨 Quiero los colores de la foto
+                    </button>
                 </div>
                 
-                <!-- Botón para aplicar colores de la foto -->
-                <button class="btn-colores-foto" 
-                        *ngIf="esResina(productoDetalle) && moldeTieneSvg(moldeDetalle) && imagenActualTieneColores()"
-                        (click)="aplicarColoresDeFoto()">
-                    🎨 Quiero los colores de la foto
-                </button>
-                
-                <!-- SVG Preview interactivo (cuando es resina con SVG) -->
-                <div class="svg-panel-detalle" *ngIf="esResina(productoDetalle) && moldeTieneSvg(moldeDetalle)">
+                <!-- SVG Preview interactivo (cuando tiene molde con SVG) -->
+                <div class="svg-panel-detalle" *ngIf="(esResina(productoDetalle) || esHiloEncerado(productoDetalle)) && moldeTieneSvg(moldeDetalle)">
                     <div class="svg-preview-grande" 
                          [innerHTML]="svgPreviewDetalle"
                          (click)="onSvgClickDetalle($event)"></div>
@@ -219,12 +221,12 @@
                     <p class="popup-precio">${{ productoDetalle.precio | formatoPrecio }}</p>
                 </div>
 
-                <!-- Selector de color por capa para productos de resina -->
-                <div class="selector-colores-detalle" *ngIf="esResina(productoDetalle) && moldeDetalle">
+                <!-- Selector de color por capa para productos con colores -->
+                <div class="selector-colores-detalle" *ngIf="requiereColores(productoDetalle) && coloresPorCapaDetalle.length > 0">
                     <h4>Selecciona colores por capa:</h4>
                     
                     <div class="capas-accordion-detalle">
-                        <div class="capa-accordion" *ngFor="let capa of moldeDetalle.capas; let i = index">
+                        <div class="capa-accordion" *ngFor="let capa of getCapasDetalle(); let i = index">
                             <!-- Header de la capa -->
                             <div class="capa-accordion-header" 
                                  [class.abierto]="capaAbiertaDetalle === i"
@@ -245,47 +247,62 @@
                             
                             <!-- Contenido desplegable -->
                             <div class="capa-accordion-contenido" *ngIf="capaAbiertaDetalle === i">
-                                <!-- Sub-accordion: Colores Translúcidos -->
-                                <div class="subcategoria-accordion" *ngIf="getColoresPorCategoria('translucido').length > 0">
-                                    <div class="subcategoria-header" 
-                                         [class.abierto]="categoriaAbiertaDetalle === 'translucido'"
-                                         (click)="toggleCategoriaDetalle('translucido'); $event.stopPropagation()">
-                                        <span class="subcategoria-titulo">✨ Translúcidos</span>
-                                        <span class="subcategoria-toggle">{{ categoriaAbiertaDetalle === 'translucido' ? '▲' : '▼' }}</span>
-                                    </div>
-                                    <div class="subcategoria-contenido" *ngIf="categoriaAbiertaDetalle === 'translucido'">
-                                        <div class="colores-grid-nuevo">
-                                            <div class="color-opcion-nuevo" 
-                                                 *ngFor="let color of getColoresPorCategoria('translucido')" 
-                                                 [class.seleccionado]="coloresPorCapaDetalle[i]?._id === color._id"
-                                                 (click)="seleccionarColorCapaDetalle(i, color); $event.stopPropagation()"
-                                                 [title]="color.nombre">
-                                                <span class="color-dot-nuevo translucido" [style.background-color]="color.rgb"></span>
-                                                <span class="color-nombre-nuevo">{{ color.nombre | capitalize }}</span>
+                                <!-- Colores de Resina (sub-accordions por categoría) -->
+                                <ng-container *ngIf="esResina(productoDetalle)">
+                                    <!-- Sub-accordion: Colores Translúcidos -->
+                                    <div class="subcategoria-accordion" *ngIf="getColoresPorCategoria('translucido').length > 0">
+                                        <div class="subcategoria-header" 
+                                             [class.abierto]="categoriaAbiertaDetalle === 'translucido'"
+                                             (click)="toggleCategoriaDetalle('translucido'); $event.stopPropagation()">
+                                            <span class="subcategoria-titulo">✨ Translúcidos</span>
+                                            <span class="subcategoria-toggle">{{ categoriaAbiertaDetalle === 'translucido' ? '▲' : '▼' }}</span>
+                                        </div>
+                                        <div class="subcategoria-contenido" *ngIf="categoriaAbiertaDetalle === 'translucido'">
+                                            <div class="colores-grid-nuevo">
+                                                <div class="color-opcion-nuevo" 
+                                                     *ngFor="let color of getColoresPorCategoria('translucido')" 
+                                                     [class.seleccionado]="coloresPorCapaDetalle[i]?._id === color._id"
+                                                     (click)="seleccionarColorCapaDetalle(i, color); $event.stopPropagation()"
+                                                     [title]="color.nombre">
+                                                    <span class="color-dot-nuevo translucido" [style.background-color]="color.rgb"></span>
+                                                    <span class="color-nombre-nuevo">{{ color.nombre | capitalize }}</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                
-                                <!-- Sub-accordion: Colores Polvo / Brillos -->
-                                <div class="subcategoria-accordion" *ngIf="getColoresPorCategoria('polvo').length > 0">
-                                    <div class="subcategoria-header" 
-                                         [class.abierto]="categoriaAbiertaDetalle === 'polvo'"
-                                         (click)="toggleCategoriaDetalle('polvo'); $event.stopPropagation()">
-                                        <span class="subcategoria-titulo">🌟 Polvo / Brillos</span>
-                                        <span class="subcategoria-toggle">{{ categoriaAbiertaDetalle === 'polvo' ? '▲' : '▼' }}</span>
-                                    </div>
-                                    <div class="subcategoria-contenido" *ngIf="categoriaAbiertaDetalle === 'polvo'">
-                                        <div class="colores-grid-nuevo">
-                                            <div class="color-opcion-nuevo" 
-                                                 *ngFor="let color of getColoresPorCategoria('polvo')" 
-                                                 [class.seleccionado]="coloresPorCapaDetalle[i]?._id === color._id"
-                                                 (click)="seleccionarColorCapaDetalle(i, color); $event.stopPropagation()"
-                                                 [title]="color.nombre">
-                                                <span class="color-dot-nuevo polvo" [style.background-color]="color.rgb"></span>
-                                                <span class="color-nombre-nuevo">{{ color.nombre | capitalize }}</span>
+                                    
+                                    <!-- Sub-accordion: Colores Polvo / Brillos -->
+                                    <div class="subcategoria-accordion" *ngIf="getColoresPorCategoria('polvo').length > 0">
+                                        <div class="subcategoria-header" 
+                                             [class.abierto]="categoriaAbiertaDetalle === 'polvo'"
+                                             (click)="toggleCategoriaDetalle('polvo'); $event.stopPropagation()">
+                                            <span class="subcategoria-titulo">🌟 Polvo / Brillos</span>
+                                            <span class="subcategoria-toggle">{{ categoriaAbiertaDetalle === 'polvo' ? '▲' : '▼' }}</span>
+                                        </div>
+                                        <div class="subcategoria-contenido" *ngIf="categoriaAbiertaDetalle === 'polvo'">
+                                            <div class="colores-grid-nuevo">
+                                                <div class="color-opcion-nuevo" 
+                                                     *ngFor="let color of getColoresPorCategoria('polvo')" 
+                                                     [class.seleccionado]="coloresPorCapaDetalle[i]?._id === color._id"
+                                                     (click)="seleccionarColorCapaDetalle(i, color); $event.stopPropagation()"
+                                                     [title]="color.nombre">
+                                                    <span class="color-dot-nuevo polvo" [style.background-color]="color.rgb"></span>
+                                                    <span class="color-nombre-nuevo">{{ color.nombre | capitalize }}</span>
+                                                </div>
                                             </div>
                                         </div>
+                                    </div>
+                                </ng-container>
+
+                                <!-- Colores de Hilo Encerado (grid plano) -->
+                                <div class="colores-grid-nuevo" *ngIf="esHiloEncerado(productoDetalle) && coloresHilo.length > 0">
+                                    <div class="color-opcion-nuevo" 
+                                         *ngFor="let color of coloresHilo" 
+                                         [class.seleccionado]="coloresPorCapaDetalle[i]?._id === color._id"
+                                         (click)="seleccionarColorCapaDetalle(i, color); $event.stopPropagation()"
+                                         [title]="color.nombre">
+                                        <span class="color-dot-nuevo" [style.background-color]="color.rgb"></span>
+                                        <span class="color-nombre-nuevo">{{ color.nombre | capitalize }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -308,7 +325,7 @@
                     </div>
                     <button class="btn-agregar-popup" 
                             (click)="agregarDesdeDetalle()"
-                            [disabled]="esResina(productoDetalle) && moldeDetalle && !todasCapasConColorDetalle()">
+                            [disabled]="requiereColores(productoDetalle) && coloresPorCapaDetalle.length > 0 && !todasCapasConColorDetalle()">
                         Agregar
                     </button>
                 </div>

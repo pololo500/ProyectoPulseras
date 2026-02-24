@@ -64,6 +64,7 @@ export class ModificarProductosComponent implements OnInit {
   tiposProducto: string[] = [];
   materiales: string[] = [];
   moldes: Molde[] = [];
+  moldesHilo: Molde[] = [];
   
   // Filtros
   filtroProducto = '';
@@ -92,8 +93,10 @@ export class ModificarProductosComponent implements OnInit {
   mostrarDropdownSubcategorias = false;
   mostrarPopupSubcategoria = false;
   
-  // Resina
+  // Resina / Hilo encerado
   esResina = false;
+  esHiloEncerado = false;
+  requiereColores = false;
   
   // Para nuevos tipos/materiales en edición
   mostrarInputNuevoProducto = false;
@@ -116,6 +119,7 @@ export class ModificarProductosComponent implements OnInit {
 
   // Colores para asignar a imágenes
   colores: Color[] = [];
+  coloresHilo: Color[] = [];
   coloresPorImagen: ColoresImagen[] = [];
   imagenColorAbierta: number | null = null;
 
@@ -130,7 +134,9 @@ export class ModificarProductosComponent implements OnInit {
     this.cargarProductos();
     this.cargarTiposProducto();
     this.cargarMoldes();
+    this.cargarMoldesHilo();
     this.cargarColores();
+    this.cargarColoresHilo();
     
     // Leer queryParams para aplicar filtro inicial
     this.route.queryParams.subscribe(params => {
@@ -165,11 +171,27 @@ export class ModificarProductosComponent implements OnInit {
       });
   }
 
+  cargarMoldesHilo() {
+    this.http.get<Molde[]>('http://localhost:5000/api/moldes-hilo')
+      .subscribe({
+        next: (data) => this.moldesHilo = data,
+        error: (err) => console.error('Error al cargar moldes de hilo:', err)
+      });
+  }
+
   cargarColores() {
     this.http.get<Color[]>('http://localhost:5000/api/colores')
       .subscribe({
         next: (data) => this.colores = data,
         error: (err) => console.error('Error al cargar colores:', err)
+      });
+  }
+
+  cargarColoresHilo() {
+    this.http.get<Color[]>('http://localhost:5000/api/colores-hilo')
+      .subscribe({
+        next: (data) => this.coloresHilo = data,
+        error: (err) => console.error('Error al cargar colores de hilo:', err)
       });
   }
 
@@ -296,8 +318,10 @@ export class ModificarProductosComponent implements OnInit {
     this.subcategoriasSeleccionadas = [...(producto.subcategorias || [])];
     this.cargarSubcategoriasDisponibles();
     
-    // Verificar si es resina
+    // Verificar si es resina o hilo encerado
     this.esResina = producto.material?.toLowerCase() === 'resina';
+    this.esHiloEncerado = producto.material?.toLowerCase() === 'hilo encerado';
+    this.requiereColores = this.esResina || this.esHiloEncerado;
     
     // Cargar colores por imagen existentes
     this.coloresPorImagen = producto.coloresPorImagen ? JSON.parse(JSON.stringify(producto.coloresPorImagen)) : [];
@@ -316,6 +340,8 @@ export class ModificarProductosComponent implements OnInit {
     this.subcategoriasDisponibles = [];
     this.mostrarDropdownSubcategorias = false;
     this.esResina = false;
+    this.esHiloEncerado = false;
+    this.requiereColores = false;
     this.coloresPorImagen = [];
     this.imagenColorAbierta = null;
     this.mostrarInputNuevoProducto = false;
@@ -391,7 +417,9 @@ export class ModificarProductosComponent implements OnInit {
 
   onMaterialChange() {
     this.esResina = this.editForm.material?.toLowerCase() === 'resina';
-    if (!this.esResina) {
+    this.esHiloEncerado = this.editForm.material?.toLowerCase() === 'hilo encerado';
+    this.requiereColores = this.esResina || this.esHiloEncerado;
+    if (!this.requiereColores) {
       this.editForm.moldeNombre = '';
     }
     this.cargarSubcategoriasDisponibles();
@@ -404,6 +432,8 @@ export class ModificarProductosComponent implements OnInit {
       this.materialesEdicion = [];
       this.editForm.material = '';
       this.esResina = false;
+      this.esHiloEncerado = false;
+      this.requiereColores = false;
     } else {
       this.mostrarInputNuevoProducto = false;
       this.nuevoProductoNombre = '';
@@ -412,6 +442,8 @@ export class ModificarProductosComponent implements OnInit {
       }
       this.editForm.material = '';
       this.esResina = false;
+      this.esHiloEncerado = false;
+      this.requiereColores = false;
       this.subcategoriasSeleccionadas = [];
       this.cargarSubcategoriasDisponibles();
     }
@@ -422,10 +454,14 @@ export class ModificarProductosComponent implements OnInit {
       this.mostrarInputNuevoMaterial = true;
       this.editForm.material = '';
       this.esResina = false;
+      this.esHiloEncerado = false;
+      this.requiereColores = false;
     } else {
       this.mostrarInputNuevoMaterial = false;
       this.nuevoMaterialNombre = '';
       this.esResina = this.editForm.material?.toLowerCase() === 'resina';
+      this.esHiloEncerado = this.editForm.material?.toLowerCase() === 'hilo encerado';
+      this.requiereColores = this.esResina || this.esHiloEncerado;
       if (!this.esResina) {
         this.editForm.moldeNombre = '';
       }
@@ -436,6 +472,8 @@ export class ModificarProductosComponent implements OnInit {
 
   onNuevoMaterialChange() {
     this.esResina = this.nuevoMaterialNombre?.toLowerCase() === 'resina';
+    this.esHiloEncerado = this.nuevoMaterialNombre?.toLowerCase() === 'hilo encerado';
+    this.requiereColores = this.esResina || this.esHiloEncerado;
     if (!this.esResina) {
       this.editForm.moldeNombre = '';
     }
@@ -448,6 +486,8 @@ export class ModificarProductosComponent implements OnInit {
     this.materialesEdicion = [];
     this.editForm.material = '';
     this.esResina = false;
+    this.esHiloEncerado = false;
+    this.requiereColores = false;
   }
 
   cancelarNuevoMaterial() {
@@ -455,6 +495,8 @@ export class ModificarProductosComponent implements OnInit {
     this.nuevoMaterialNombre = '';
     this.editForm.material = '';
     this.esResina = false;
+    this.esHiloEncerado = false;
+    this.requiereColores = false;
   }
 
   cargarMaterialesEdicion(producto: string) {
@@ -640,7 +682,21 @@ export class ModificarProductosComponent implements OnInit {
   getMoldeSeleccionado(): Molde | null {
     const moldeNombre = this.editForm.moldeNombre;
     if (!moldeNombre) return null;
+    if (this.esHiloEncerado) {
+      return this.moldesHilo.find(m => m.nombre === moldeNombre) || null;
+    }
     return this.moldes.find(m => m.nombre === moldeNombre) || null;
+  }
+
+  // Obtener capas para asignación de colores (de molde para resina o hilo encerado)
+  getCapasParaColorAsignacion(): { nombre: string; volumen: number }[] {
+    const molde = this.getMoldeSeleccionado();
+    return molde?.capas || [];
+  }
+
+  // Verificar si se puede asignar colores a imágenes
+  puedeAsignarColores(): boolean {
+    return (this.esResina && !!this.getMoldeSeleccionado()) || (this.esHiloEncerado && !!this.getMoldeSeleccionado());
   }
 
   getColoresPorCategoria(categoria: string): Color[] {
@@ -666,8 +722,8 @@ export class ModificarProductosComponent implements OnInit {
 
   asignarColorImagen(imgIdx: number, capaIdx: number, color: Color) {
     const entry = this.getColoresImagenEntry(imgIdx);
-    const molde = this.getMoldeSeleccionado();
-    const capaNombre = molde?.capas[capaIdx]?.nombre || '';
+    const capas = this.getCapasParaColorAsignacion();
+    const capaNombre = capas[capaIdx]?.nombre || '';
     
     const existing = entry.colores.findIndex(c => c.capaIndex === capaIdx);
     const colorData: ColorPorImagenCapa = {
@@ -780,8 +836,8 @@ export class ModificarProductosComponent implements OnInit {
         subcategorias: this.subcategoriasSeleccionadas
       };
       
-      // Agregar nombre del molde si es resina (el nombre es único)
-      if (this.esResina && this.editForm.moldeNombre) {
+      // Agregar nombre del molde si es resina o hilo encerado
+      if ((this.esResina || this.esHiloEncerado) && this.editForm.moldeNombre) {
         body.moldeNombre = this.editForm.moldeNombre;
       } else {
         body.moldeNombre = '';

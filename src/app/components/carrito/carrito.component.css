@@ -534,6 +534,42 @@
     color: #000447;
 }
 
+.popup-nota {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.popup-nota label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+}
+
+.popup-nota input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+    box-sizing: border-box;
+}
+
+.popup-nota input:hover {
+    border-color: #aaa;
+}
+
+.popup-nota input:focus {
+    outline: none;
+    border-color: #000447;
+}
+
+.popup-nota input::placeholder {
+    color: #999;
+}
+
 .popup-acciones {
     display: flex;
     gap: 12px;

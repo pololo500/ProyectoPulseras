@@ -86,7 +86,9 @@ export class PedidosComponent implements OnInit {
   productosTipo: string[] = [];
   productosDisponibles: Producto[] = [];
   moldes: Molde[] = [];
+  moldesHilo: Molde[] = [];
   colores: Color[] = [];
+  coloresHilo: Color[] = [];
   
   estados = ['A confirmar', 'Por hacer', 'En produccion', 'Armar', 'A entregar'];
   metodosPago = ['Efectivo', 'Transferencia'];
@@ -103,6 +105,7 @@ export class PedidosComponent implements OnInit {
   
   // Para resina
   esResina = false;
+  esHiloEncerado = false;
   moldeSeleccionado: Molde | null = null;
   coloresPorCapa: { [key: number]: string } = {};
   
@@ -131,7 +134,9 @@ export class PedidosComponent implements OnInit {
     this.cargarPedidos();
     this.cargarProductos();
     this.cargarMoldes();
+    this.cargarMoldesHilo();
     this.cargarColores();
+    this.cargarColoresHilo();
   }
 
   getPedidoVacio(): Partial<Pedido> {
@@ -187,11 +192,27 @@ export class PedidosComponent implements OnInit {
       });
   }
 
+  cargarMoldesHilo() {
+    this.http.get<Molde[]>('http://localhost:5000/api/moldes-hilo')
+      .subscribe({
+        next: (data) => this.moldesHilo = data,
+        error: (err) => console.error('Error al cargar moldes de hilo:', err)
+      });
+  }
+
   cargarColores() {
     this.http.get<Color[]>('http://localhost:5000/api/colores')
       .subscribe({
         next: (data) => this.colores = data,
         error: (err) => console.error('Error al cargar colores:', err)
+      });
+  }
+
+  cargarColoresHilo() {
+    this.http.get<Color[]>('http://localhost:5000/api/colores-hilo')
+      .subscribe({
+        next: (data) => this.coloresHilo = data,
+        error: (err) => console.error('Error al cargar colores hilo:', err)
       });
   }
 
@@ -205,6 +226,7 @@ export class PedidosComponent implements OnInit {
     this.tipoSeleccionado = '';
     this.productosDisponibles = [];
     this.esResina = false;
+    this.esHiloEncerado = false;
     this.moldeSeleccionado = null;
     this.coloresPorCapa = {};
   }
@@ -217,6 +239,7 @@ export class PedidosComponent implements OnInit {
     this.itemActual = this.getItemVacio();
     this.tipoSeleccionado = '';
     this.esResina = false;
+    this.esHiloEncerado = false;
     this.moldeSeleccionado = null;
     this.coloresPorCapa = {};
   }
@@ -227,6 +250,7 @@ export class PedidosComponent implements OnInit {
     this.itemActual.productoNombre = '';
     this.itemActual.material = '';
     this.esResina = false;
+    this.esHiloEncerado = false;
     this.moldeSeleccionado = null;
     this.coloresPorCapa = {};
   }
@@ -239,8 +263,9 @@ export class PedidosComponent implements OnInit {
       this.itemActual.material = producto.material;
       this.itemActual.precio = producto.precio;
       
-      // Verificar si es resina
+      // Verificar si es resina o hilo encerado
       this.esResina = producto.material.toLowerCase() === 'resina';
+      this.esHiloEncerado = producto.material.toLowerCase() === 'hilo encerado';
       if (this.esResina) {
         // Buscar el molde vinculado al producto por nombre
         if (producto.moldeNombre) {
@@ -249,6 +274,27 @@ export class PedidosComponent implements OnInit {
             this.itemActual.moldeId = moldeVinculado._id;
             this.itemActual.moldeNombre = moldeVinculado.nombre;
             this.moldeSeleccionado = moldeVinculado;
+            this.coloresPorCapa = {};
+          } else {
+            this.moldeSeleccionado = null;
+            this.itemActual.moldeId = '';
+            this.itemActual.moldeNombre = '';
+            this.coloresPorCapa = {};
+          }
+        } else {
+          this.moldeSeleccionado = null;
+          this.itemActual.moldeId = '';
+          this.itemActual.moldeNombre = '';
+          this.coloresPorCapa = {};
+        }
+      } else if (this.esHiloEncerado) {
+        // Hilo encerado: buscar molde en moldesHilo
+        if (producto.moldeNombre) {
+          const moldeHilo = this.moldesHilo.find(m => m.nombre === producto.moldeNombre);
+          if (moldeHilo) {
+            this.itemActual.moldeId = moldeHilo._id;
+            this.itemActual.moldeNombre = moldeHilo.nombre;
+            this.moldeSeleccionado = moldeHilo;
             this.coloresPorCapa = {};
           } else {
             this.moldeSeleccionado = null;
@@ -291,6 +337,10 @@ export class PedidosComponent implements OnInit {
     return this.colores.find(c => c._id === colorId);
   }
 
+  getColorHiloById(colorId: string): Color | undefined {
+    return this.coloresHilo.find(c => c._id === colorId);
+  }
+
   // Agregar item al pedido
   agregarItem() {
     if (!this.itemActual.productoId) {
@@ -298,11 +348,23 @@ export class PedidosComponent implements OnInit {
       return;
     }
 
-    // Construir colores por capa si es resina
+    // Construir colores por capa si es resina o hilo encerado
     if (this.esResina && this.moldeSeleccionado) {
       this.itemActual.coloresPorCapa = this.moldeSeleccionado.capas.map((capa, index) => {
         const colorId = this.coloresPorCapa[index] || '';
         const color = this.getColorById(colorId);
+        return {
+          capaIndex: index,
+          capaNombre: capa.nombre,
+          colorId: colorId,
+          colorNombre: color?.nombre || '',
+          colorRgb: color?.rgb || ''
+        };
+      });
+    } else if (this.esHiloEncerado && this.moldeSeleccionado) {
+      this.itemActual.coloresPorCapa = this.moldeSeleccionado.capas.map((capa, index) => {
+        const colorId = this.coloresPorCapa[index] || '';
+        const color = this.getColorHiloById(colorId);
         return {
           capaIndex: index,
           capaNombre: capa.nombre,
@@ -334,6 +396,7 @@ export class PedidosComponent implements OnInit {
     this.tipoSeleccionado = '';
     this.productosDisponibles = [];
     this.esResina = false;
+    this.esHiloEncerado = false;
     this.moldeSeleccionado = null;
     this.coloresPorCapa = {};
   }
@@ -425,6 +488,7 @@ export class PedidosComponent implements OnInit {
     this.tipoSeleccionado = '';
     this.productosDisponibles = [];
     this.esResina = false;
+    this.esHiloEncerado = false;
     this.moldeSeleccionado = null;
     this.coloresPorCapa = {};
     

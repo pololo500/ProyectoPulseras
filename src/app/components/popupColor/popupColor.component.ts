@@ -21,6 +21,7 @@ interface ColorEditar {
 })
 export class PopupColorComponent implements OnInit, OnChanges {
   @Input() colorEditar: ColorEditar | null = null;
+  @Input() tipoColor: 'resina' | 'hilo' = 'resina';
   @Output() cerrar = new EventEmitter<void>();
   @Output() colorGuardado = new EventEmitter<any>();
   @Output() colorActualizado = new EventEmitter<any>();
@@ -35,6 +36,10 @@ export class PopupColorComponent implements OnInit, OnChanges {
   error: string = '';
   modoEdicion: boolean = false;
   mostrarConfirmEliminar: boolean = false;
+
+  get apiUrl(): string {
+    return this.tipoColor === 'hilo' ? 'http://localhost:5000/api/colores-hilo' : 'http://localhost:5000/api/colores';
+  }
 
   // Popup alerta
   mensajeAlerta = '';
@@ -76,6 +81,9 @@ export class PopupColorComponent implements OnInit, OnChanges {
   }
 
   formularioValido(): boolean {
+    if (this.tipoColor === 'hilo') {
+      return !!(this.nombreColor.trim() && this.rgbColor);
+    }
     return !!(this.nombreColor.trim() && this.rgbColor && this.categoria);
   }
 
@@ -88,15 +96,17 @@ export class PopupColorComponent implements OnInit, OnChanges {
     this.guardando = true;
     this.error = '';
 
-    const color = {
+    const color: any = {
       nombre: this.nombreColor.trim(),
-      rgb: this.rgbColor,
-      categoria: this.categoria
+      rgb: this.rgbColor
     };
+    if (this.tipoColor !== 'hilo') {
+      color.categoria = this.categoria;
+    }
 
     if (this.modoEdicion && this.colorEditar) {
       // Modo edición: actualizar color existente
-      this.http.put<any>(`http://localhost:5000/api/colores/${this.colorEditar._id}`, color)
+      this.http.put<any>(`${this.apiUrl}/${this.colorEditar._id}`, color)
         .subscribe({
           next: (result) => {
             this.guardando = false;
@@ -111,7 +121,7 @@ export class PopupColorComponent implements OnInit, OnChanges {
         });
     } else {
       // Modo creación
-      this.http.post<any>('http://localhost:5000/api/colores', color).subscribe({
+      this.http.post<any>(this.apiUrl, color).subscribe({
         next: (result) => {
           this.guardando = false;
           this.colorGuardado.emit(result.color);
@@ -140,7 +150,7 @@ export class PopupColorComponent implements OnInit, OnChanges {
     this.eliminando = true;
     this.error = '';
 
-    this.http.delete<any>(`http://localhost:5000/api/colores/${this.colorEditar._id}`)
+    this.http.delete<any>(`${this.apiUrl}/${this.colorEditar._id}`)
       .subscribe({
         next: () => {
           this.eliminando = false;
@@ -177,7 +187,7 @@ export class PopupColorComponent implements OnInit, OnChanges {
           return;
         }
 
-        this.http.post<{ colores: any[] }>('http://localhost:5000/api/colores/importar', { colores: coloresArray }).subscribe({
+        this.http.post<{ colores: any[] }>(`${this.apiUrl}/importar`, { colores: coloresArray }).subscribe({
           next: (res) => {
             this.coloresImportados.emit(res.colores);
             this.error = '';

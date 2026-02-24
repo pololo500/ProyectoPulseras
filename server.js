@@ -106,6 +106,24 @@ const ColorSchema = new mongoose.Schema({
 
 const Color = mongoose.model('Color', ColorSchema);
 
+// Esquema para Colores de Hilo Encerado
+const ColorHiloSchema = new mongoose.Schema({
+    nombre: String,
+    rgb: String
+}, { versionKey: false });
+
+const ColorHilo = mongoose.model('ColorHilo', ColorHiloSchema);
+
+// Esquema para Moldes de Hilo Encerado (misma estructura que Molde pero colección separada)
+const MoldeHiloSchema = new mongoose.Schema({
+    nombre: String,
+    capas: [CapaSchema],
+    svgContent: String,
+    svgAreaMappings: [SvgAreaMappingSchema]
+}, { versionKey: false });
+
+const MoldeHilo = mongoose.model('MoldeHilo', MoldeHiloSchema);
+
 // Esquema para colores asignados por imagen (para productos de resina)
 const ColorPorImagenCapaSchema = new mongoose.Schema({
     capaIndex: Number,
@@ -713,6 +731,128 @@ app.post('/api/colores/importar', async (req, res) => {
     } catch (error) {
         console.error('Error al importar colores:', error);
         res.status(500).json({ mensaje: 'Error al importar colores' });
+    }
+});
+
+
+// ==================== COLORES HILO ENCERADO ====================
+app.get('/api/colores-hilo', async (req, res) => {
+    try {
+        const colores = await ColorHilo.find();
+        res.status(200).json(colores);
+    } catch (error) {
+        console.error('Error al obtener colores de hilo:', error);
+        res.status(500).json({ mensaje: 'Error al obtener colores de hilo' });
+    }
+});
+
+app.post('/api/colores-hilo', async (req, res) => {
+    const datos = req.body;
+    try {
+        const nuevoColor = new ColorHilo(datos);
+        const result = await nuevoColor.save();
+        res.status(201).json({ mensaje: 'Color de hilo guardado', id: result._id, color: result });
+    } catch (error) {
+        console.error('Error al guardar color de hilo:', error);
+        res.status(500).json({ mensaje: 'Error al guardar color de hilo' });
+    }
+});
+
+app.delete('/api/colores-hilo/:id', async (req, res) => {
+    try {
+        const result = await ColorHilo.findByIdAndDelete(req.params.id);
+        if (!result) return res.status(404).json({ mensaje: 'Color de hilo no encontrado' });
+        res.status(200).json({ mensaje: 'Color de hilo eliminado' });
+    } catch (error) {
+        console.error('Error al eliminar color de hilo:', error);
+        res.status(500).json({ mensaje: 'Error al eliminar color de hilo' });
+    }
+});
+
+app.put('/api/colores-hilo/:id', async (req, res) => {
+    const datos = req.body;
+    try {
+        const result = await ColorHilo.findByIdAndUpdate(req.params.id, datos, { new: true });
+        if (!result) return res.status(404).json({ mensaje: 'Color de hilo no encontrado' });
+        res.status(200).json({ mensaje: 'Color de hilo actualizado', color: result });
+    } catch (error) {
+        console.error('Error al actualizar color de hilo:', error);
+        res.status(500).json({ mensaje: 'Error al actualizar color de hilo' });
+    }
+});
+
+app.post('/api/colores-hilo/importar', async (req, res) => {
+    const { colores } = req.body;
+    try {
+        if (!Array.isArray(colores) || colores.length === 0) {
+            return res.status(400).json({ mensaje: 'Se requiere un array de colores' });
+        }
+        const resultado = await ColorHilo.insertMany(colores);
+        res.status(201).json({ mensaje: `${resultado.length} colores de hilo importados`, colores: resultado });
+    } catch (error) {
+        console.error('Error al importar colores de hilo:', error);
+        res.status(500).json({ mensaje: 'Error al importar colores de hilo' });
+    }
+});
+
+
+// ==================== MOLDES HILO ENCERADO ====================
+app.get('/api/moldes-hilo', async (req, res) => {
+    try {
+        const moldes = await MoldeHilo.find();
+        res.status(200).json(moldes);
+    } catch (error) {
+        console.error('Error al obtener moldes de hilo:', error);
+        res.status(500).json({ mensaje: 'Error al obtener moldes de hilo' });
+    }
+});
+
+app.post('/api/moldes-hilo', async (req, res) => {
+    const datos = req.body;
+    try {
+        const nuevoMolde = new MoldeHilo(datos);
+        const result = await nuevoMolde.save();
+        res.status(201).json({ mensaje: 'Molde de hilo guardado', id: result._id, molde: result });
+    } catch (error) {
+        console.error('Error al guardar molde de hilo:', error);
+        res.status(500).json({ mensaje: 'Error al guardar molde de hilo' });
+    }
+});
+
+app.delete('/api/moldes-hilo/:id', async (req, res) => {
+    try {
+        const result = await MoldeHilo.findByIdAndDelete(req.params.id);
+        if (!result) return res.status(404).json({ mensaje: 'Molde de hilo no encontrado' });
+        res.status(200).json({ mensaje: 'Molde de hilo eliminado' });
+    } catch (error) {
+        console.error('Error al eliminar molde de hilo:', error);
+        res.status(500).json({ mensaje: 'Error al eliminar molde de hilo' });
+    }
+});
+
+app.put('/api/moldes-hilo/:id', async (req, res) => {
+    const datos = req.body;
+    try {
+        const result = await MoldeHilo.findByIdAndUpdate(req.params.id, datos, { new: true });
+        if (!result) return res.status(404).json({ mensaje: 'Molde de hilo no encontrado' });
+        res.status(200).json({ mensaje: 'Molde de hilo actualizado', molde: result });
+    } catch (error) {
+        console.error('Error al actualizar molde de hilo:', error);
+        res.status(500).json({ mensaje: 'Error al actualizar molde de hilo' });
+    }
+});
+
+app.post('/api/moldes-hilo/importar', async (req, res) => {
+    const { moldes } = req.body;
+    try {
+        if (!Array.isArray(moldes) || moldes.length === 0) {
+            return res.status(400).json({ mensaje: 'Se requiere un array de moldes' });
+        }
+        const resultado = await MoldeHilo.insertMany(moldes);
+        res.status(201).json({ mensaje: `${resultado.length} moldes de hilo importados`, moldes: resultado });
+    } catch (error) {
+        console.error('Error al importar moldes de hilo:', error);
+        res.status(500).json({ mensaje: 'Error al importar moldes de hilo' });
     }
 });
 
