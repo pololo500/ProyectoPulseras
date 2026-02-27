@@ -23,9 +23,8 @@
             
             <div class="pedido-body">
                 <h3>{{ getResumenProductos(pedido) }}</h3>
-                <p class="tipo" *ngIf="!tieneItems(pedido)">{{ (pedido.productoTipo || '') | capitalize }} - {{ (pedido.material || '') | capitalize }}</p>
-                <p class="tipo" *ngIf="tieneItems(pedido) && getCantidadProductos(pedido) === 1">{{ getCantidadProductos(pedido) }} producto</p>
-                <p class="tipo" *ngIf="tieneItems(pedido) && getCantidadProductos(pedido) > 1">{{ getCantidadProductos(pedido) }} productos</p>
+                <p class="tipo" *ngIf="getCantidadProductos(pedido) === 1">{{ getCantidadProductos(pedido) }} producto</p>
+                <p class="tipo" *ngIf="getCantidadProductos(pedido) > 1">{{ getCantidadProductos(pedido) }} productos</p>
                 <div class="pedido-info">
                     <span class="cantidad">Cantidad: {{ getCantidadItems(pedido) }}</span>
                     <span class="precio">${{ getTotalPedido(pedido) | formatoPrecio }}</span>
@@ -66,9 +65,8 @@
             
             <div class="venta-body">
                 <h3>{{ getResumenProductosVenta(venta) }}</h3>
-                <p class="tipo" *ngIf="!tieneItemsVenta(venta)">{{ getCantidadItemsVenta(venta) }} {{ getCantidadItemsVenta(venta) === 1 ? 'producto' : 'productos' }}</p>
-                <p class="tipo" *ngIf="tieneItemsVenta(venta) && getCantidadProductosVenta(venta) === 1">{{ getCantidadProductosVenta(venta) }} producto</p>
-                <p class="tipo" *ngIf="tieneItemsVenta(venta) && getCantidadProductosVenta(venta) > 1">{{ getCantidadProductosVenta(venta) }} productos</p>
+                <p class="tipo" *ngIf="getCantidadProductosVenta(venta) === 1">{{ getCantidadProductosVenta(venta) }} producto</p>
+                <p class="tipo" *ngIf="getCantidadProductosVenta(venta) > 1">{{ getCantidadProductosVenta(venta) }} productos</p>
                 <div class="venta-info">
                     <span class="cantidad">Cantidad: {{ getCantidadItemsVenta(venta) }}</span>
                     <span class="precio">${{ getTotalVenta(venta) | formatoPrecio }}</span>
@@ -102,7 +100,7 @@
                 {{ getEstadoTextoCliente(pedidoSeleccionado) }}
             </div>
             <div class="detalle-horizontal">
-                <!-- Pedido con múltiples items -->
+                <!-- Productos del pedido -->
                 <div class="detalle-seccion" *ngIf="tieneItems(pedidoSeleccionado)">
                     <h3>Productos ({{ pedidoSeleccionado.items!.length }})</h3>
                     <div class="items-lista">
@@ -123,24 +121,6 @@
                     </div>
                 </div>
                 
-                <!-- Pedido individual (legacy) 
-                <div class="detalle-seccion" *ngIf="!tieneItems(pedidoSeleccionado)">
-                    <h3>Producto</h3>
-                    <p><strong>{{ pedidoSeleccionado.productoNombre }}</strong></p>
-                    <p>{{ (pedidoSeleccionado.productoTipo || '') | capitalize }} - {{ (pedidoSeleccionado.material || '') | capitalize }}</p>
-                    <p *ngIf="pedidoSeleccionado.moldeNombre">Molde: {{ pedidoSeleccionado.moldeNombre }}</p>
-                </div>
-                
-                <div class="detalle-seccion" *ngIf="!tieneItems(pedidoSeleccionado) && pedidoSeleccionado.coloresPorCapa && pedidoSeleccionado.coloresPorCapa.length > 0">
-                    <h3>Colores</h3>
-                    <div class="colores-lista">
-                        <div class="color-item" *ngFor="let color of pedidoSeleccionado.coloresPorCapa">
-                            <span class="color-muestra" [style.background-color]="color.colorRgb"></span>
-                            <span>{{ color.capaNombre }}: {{ color.colorNombre }}</span>
-                        </div>
-                    </div>
-                </div>-->
-                
                 <div class="detalle-seccion">
                     <h3>Información del Pedido</h3>
                     <div class="info-grid">
@@ -151,10 +131,6 @@
                         <div class="info-item">
                             <span class="label">Cantidad Total</span>
                             <span class="value">{{ getCantidadItems(pedidoSeleccionado) }}</span>
-                        </div>
-                        <div class="info-item" *ngIf="!tieneItems(pedidoSeleccionado)">
-                            <span class="label">Precio Unitario</span>
-                            <span class="value">${{ pedidoSeleccionado.precio | formatoPrecio }}</span>
                         </div>
                         <div class="info-item">
                             <span class="label">Total</span>
@@ -195,7 +171,7 @@
                 {{ getEstadoTexto(ventaSeleccionada.estado) }}
             </div>
             <div class="detalle-horizontal">
-                <!-- Venta con múltiples items -->
+                <!-- Productos de la venta -->
                 <div class="detalle-seccion" *ngIf="tieneItemsVenta(ventaSeleccionada)">
                     <h3>Productos ({{ ventaSeleccionada.items!.length }})</h3>
                     <div class="items-lista">
@@ -212,27 +188,6 @@
                             </div>
                             <div class="item-cantidad">x{{ item.cantidad }}</div>
                             <div class="item-precio">${{ item.precio * item.cantidad | formatoPrecio }}</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Venta individual (legacy) -->
-                <div class="detalle-seccion" *ngIf="!tieneItemsVenta(ventaSeleccionada)">
-                    <h3>Producto</h3>
-                    <div class="items-lista">
-                        <div class="item-pedido">
-                            <div class="item-info">
-                                <p class="item-nombre"><strong>{{ ventaSeleccionada.productoNombre }}</strong></p>
-                                <p class="item-tipo">{{ (ventaSeleccionada.productoTipo || '') | capitalize }} <span *ngIf="ventaSeleccionada.material">- {{ (ventaSeleccionada.material || '') | capitalize }}</span></p>
-                                <div class="item-colores" *ngIf="ventaSeleccionada.coloresPorCapa && ventaSeleccionada.coloresPorCapa.length > 0">
-                                    <div class="color-capa-item" *ngFor="let colorCapa of ventaSeleccionada.coloresPorCapa">
-                                        <span class="color-dot" [style.background-color]="colorCapa.colorRgb"></span>
-                                        <span class="capa-info">{{ colorCapa.capaNombre }}: {{ colorCapa.colorNombre | capitalize }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="item-cantidad">x{{ ventaSeleccionada.cantidad }}</div>
-                            <div class="item-precio">${{ ventaSeleccionada.precio | formatoPrecio }}</div>
                         </div>
                     </div>
                 </div>

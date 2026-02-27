@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { CapitalizePipe } from '../../extras/capitalizePipe';
+import { ordenarCromatico, ordenarAlfabetico } from '../../extras/color-sort';
 import { GlobalService } from '../../services/global.service';
 import { PopupMoldeComponent } from '../popupMolde/popupMolde.component';
 import { PopupColorComponent } from '../popupColor/popupColor.component';
@@ -145,11 +146,11 @@ export class RecursosComponent implements OnInit {
   }
 
   get coloresTranslucidos(): Color[] {
-    return this.coloresFiltrados.filter(c => c.categoria === 'translucido');
+    return ordenarCromatico(this.coloresFiltrados.filter(c => c.categoria === 'translucido'));
   }
 
   get coloresPolvo(): Color[] {
-    return this.coloresFiltrados.filter(c => c.categoria === 'polvo');
+    return ordenarCromatico(this.coloresFiltrados.filter(c => c.categoria === 'polvo'));
   }
 
   // ==================== COLORES HILO ENCERADO ====================
@@ -162,12 +163,17 @@ export class RecursosComponent implements OnInit {
   }
 
   get coloresHiloFiltrados(): Color[] {
-    if (!this.busquedaColorHilo.trim()) return this.coloresHilo;
-    const busqueda = this.busquedaColorHilo.toLowerCase();
-    return this.coloresHilo.filter(c =>
-      c.nombre.toLowerCase().includes(busqueda) ||
-      c.rgb.toLowerCase().includes(busqueda)
-    );
+    let resultado: Color[];
+    if (!this.busquedaColorHilo.trim()) {
+      resultado = this.coloresHilo;
+    } else {
+      const busqueda = this.busquedaColorHilo.toLowerCase();
+      resultado = this.coloresHilo.filter(c =>
+        c.nombre.toLowerCase().includes(busqueda) ||
+        c.rgb.toLowerCase().includes(busqueda)
+      );
+    }
+    return ordenarCromatico(resultado);
   }
 
   abrirPopupCrearColorHilo(): void {
@@ -247,7 +253,7 @@ export class RecursosComponent implements OnInit {
   cargarMoldes(): void {
     this.cargandoMoldes = true;
     this.http.get<Molde[]>('http://localhost:5000/api/moldes').subscribe({
-      next: (data) => { this.moldes = data; this.cargandoMoldes = false; },
+      next: (data) => { this.moldes = ordenarAlfabetico(data); this.cargandoMoldes = false; },
       error: (err) => { console.error('Error al cargar moldes:', err); this.cargandoMoldes = false; }
     });
   }
@@ -307,7 +313,7 @@ export class RecursosComponent implements OnInit {
   cargarMoldesHilo(): void {
     this.cargandoMoldesHilo = true;
     this.http.get<Molde[]>('http://localhost:5000/api/moldes-hilo').subscribe({
-      next: (data) => { this.moldesHilo = data; this.cargandoMoldesHilo = false; },
+      next: (data) => { this.moldesHilo = ordenarAlfabetico(data); this.cargandoMoldesHilo = false; },
       error: (err) => { console.error('Error al cargar moldes hilo:', err); this.cargandoMoldesHilo = false; }
     });
   }

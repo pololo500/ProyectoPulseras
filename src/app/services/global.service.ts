@@ -69,6 +69,7 @@ export class GlobalService {
     sessionStorage.removeItem("favoritos");  // Limpiar favoritos al cerrar sesión
     window.dispatchEvent(new Event('carritoActualizado'));
     window.dispatchEvent(new Event('favoritosActualizado'));
+    window.dispatchEvent(new Event('sessionCerrada'));
     this.router.navigateByUrl("/login");
   }
 

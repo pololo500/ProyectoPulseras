@@ -75,7 +75,7 @@ export class ComprasComponent implements OnInit {
       cantidad: 0,
       costoUnidad: 0,
       lugar: '',
-      fechaCompra: new Date().toISOString().split('T')[0],
+      fechaCompra: (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`; })(),
       cantidadIndividual: 1
     };
   }
@@ -273,7 +273,7 @@ export class ComprasComponent implements OnInit {
           costoUnidad: c.costoUnidad || 0,
           costoTotal: (c.cantidad || 0) * (c.costoUnidad || 0),
           lugar: c.lugar,
-          fechaCompra: c.fechaCompra || new Date().toISOString().split('T')[0],
+          fechaCompra: c.fechaCompra || (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`; })(),
           cantidadIndividual: c.cantidadIndividual || 1,
           costoIndividual: (c.costoUnidad || 0) / (c.cantidadIndividual || 1)
         }));

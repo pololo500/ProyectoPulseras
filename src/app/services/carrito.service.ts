@@ -39,9 +39,9 @@ export class CarritoService {
   constructor(private http: HttpClient) {
     this.cargarCarritoInicial();
     
-    // Escuchar evento de logout para limpiar el carrito en memoria
-    window.addEventListener('carritoActualizado', () => {
-      this.cargarCarritoInicial();
+    // Escuchar evento de cierre de sesión para limpiar el carrito en memoria
+    window.addEventListener('sessionCerrada', () => {
+      this.carritoSubject.next([]);
     });
   }
 
@@ -187,12 +187,13 @@ export class CarritoService {
     this.guardarCarrito(items);
   }
 
-  // Generar clave única para un item (incluye colores)
+  // Generar clave única para un item (incluye colores y stockVarianteId)
   private getItemKey(item: ItemCarrito): string {
     const coloresKey = item.coloresPorCapa 
       ? item.coloresPorCapa.map(c => c.colorId).join('-')
       : '';
-    return `${item._id}-${coloresKey}`;
+    const stockKey = item.stockVarianteId || '';
+    return `${item._id}-${coloresKey}-${stockKey}`;
   }
 
   // Incrementar cantidad
@@ -266,18 +267,21 @@ export class CarritoService {
         }
       }
       
-      // Si no hay items locales, no hay nada que sincronizar
-      if (itemsLocales.length === 0) {
-        observer.next();
-        observer.complete();
-        return;
-      }
-      
       // Cargar carrito de la base de datos
       this.http.get<{ carrito: ItemCarrito[] }>(`${this.apiUrl}/usuarios/${email}/carrito`)
         .subscribe({
           next: (res) => {
             const itemsDB = res.carrito || [];
+            
+            // Si no hay items locales, solo cargar los de DB
+            if (itemsLocales.length === 0) {
+              sessionStorage.setItem('carrito', JSON.stringify(itemsDB));
+              this.carritoSubject.next(itemsDB);
+              window.dispatchEvent(new Event('carritoActualizado'));
+              observer.next();
+              observer.complete();
+              return;
+            }
             
             // Combinar carritos: agregar items locales al carrito de DB
             const carritoFinal = [...itemsDB];

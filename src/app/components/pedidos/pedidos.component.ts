@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { CapitalizePipe } from '../../extras/capitalizePipe';
+import { ordenarAlfabetico } from '../../extras/color-sort';
 import { FormatoPrecioPipe } from '../../extras/formatoPrecio.pipe';
 import { GlobalService } from '../../services/global.service';
 import { PopupConfirmComponent } from '../popupConfirm/popupConfirm.component';
@@ -32,19 +33,7 @@ interface ItemPedido {
 interface Pedido {
   _id?: string;
   cliente: string;
-  // Campos legacy para pedidos con un solo producto
-  productoId?: string;
-  productoNombre?: string;
-  productoTipo?: string;
-  material?: string;
-  moldeId?: string;
-  moldeNombre?: string;
-  coloresPorCapa?: ColorCapa[];
-  cantidad?: number;
-  precio?: number;
-  // Nuevo: array de items para múltiples productos
-  items?: ItemPedido[];
-  // Campos comunes
+  items: ItemPedido[];
   fecha: string;
   metodoPago: string;
   pagado: boolean;
@@ -143,7 +132,7 @@ export class PedidosComponent implements OnInit {
     return {
       cliente: '',
       items: [],
-      fecha: new Date().toISOString().split('T')[0],
+      fecha: (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`; })(),
       metodoPago: 'Efectivo',
       pagado: false,
       nota: ''
@@ -187,7 +176,7 @@ export class PedidosComponent implements OnInit {
   cargarMoldes() {
     this.http.get<Molde[]>('http://localhost:5000/api/moldes')
       .subscribe({
-        next: (data) => this.moldes = data,
+        next: (data) => this.moldes = ordenarAlfabetico(data),
         error: (err) => console.error('Error al cargar moldes:', err)
       });
   }
@@ -195,7 +184,7 @@ export class PedidosComponent implements OnInit {
   cargarMoldesHilo() {
     this.http.get<Molde[]>('http://localhost:5000/api/moldes-hilo')
       .subscribe({
-        next: (data) => this.moldesHilo = data,
+        next: (data) => this.moldesHilo = ordenarAlfabetico(data),
         error: (err) => console.error('Error al cargar moldes de hilo:', err)
       });
   }
@@ -203,7 +192,7 @@ export class PedidosComponent implements OnInit {
   cargarColores() {
     this.http.get<Color[]>('http://localhost:5000/api/colores')
       .subscribe({
-        next: (data) => this.colores = data,
+        next: (data) => this.colores = ordenarAlfabetico(data),
         error: (err) => console.error('Error al cargar colores:', err)
       });
   }
@@ -211,7 +200,7 @@ export class PedidosComponent implements OnInit {
   cargarColoresHilo() {
     this.http.get<Color[]>('http://localhost:5000/api/colores-hilo')
       .subscribe({
-        next: (data) => this.coloresHilo = data,
+        next: (data) => this.coloresHilo = ordenarAlfabetico(data),
         error: (err) => console.error('Error al cargar colores hilo:', err)
       });
   }
@@ -464,25 +453,7 @@ export class PedidosComponent implements OnInit {
     };
     
     // Cargar items del pedido
-    if (pedido.items && pedido.items.length > 0) {
-      this.itemsPedido = [...pedido.items];
-    } else if (pedido.productoId) {
-      // Pedido legacy con un solo producto
-      this.itemsPedido = [{
-        productoId: pedido.productoId,
-        productoNombre: pedido.productoNombre || '',
-        productoTipo: pedido.productoTipo || '',
-        material: pedido.material || '',
-        cantidad: pedido.cantidad || 1,
-        precio: pedido.precio || 0,
-        estado: (pedido as any).estado || 'A confirmar',
-        moldeId: pedido.moldeId,
-        moldeNombre: pedido.moldeNombre,
-        coloresPorCapa: pedido.coloresPorCapa
-      }];
-    } else {
-      this.itemsPedido = [];
-    }
+    this.itemsPedido = [...(pedido.items || [])];
     
     this.itemActual = this.getItemVacio();
     this.tipoSeleccionado = '';
@@ -512,7 +483,8 @@ export class PedidosComponent implements OnInit {
     if (!this.pedidoAccion || !this.accionPendiente) return;
 
     const estadoVenta = this.accionPendiente === 'entregar' ? 'Entregado' : 'Cancelado';
-    const fechaHoy = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const fechaHoy = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     
     // Crear una única venta con todos los items del pedido
     const venta: any = {
@@ -524,18 +496,8 @@ export class PedidosComponent implements OnInit {
       nota: this.pedidoAccion.nota
     };
     
-    // Si tiene items, copiarlos a la venta
-    if (this.tieneItems(this.pedidoAccion)) {
-      venta.items = this.pedidoAccion.items;
-    } else {
-      // Pedido legacy - guardar como campos individuales
-      venta.productoNombre = this.pedidoAccion.productoNombre;
-      venta.productoTipo = this.pedidoAccion.productoTipo;
-      venta.material = this.pedidoAccion.material;
-      venta.cantidad = this.pedidoAccion.cantidad;
-      venta.precio = this.pedidoAccion.precio;
-      venta.coloresPorCapa = this.pedidoAccion.coloresPorCapa;
-    }
+    // Copiar items a la venta
+    venta.items = this.pedidoAccion.items;
 
     this.http.post('http://localhost:5000/api/ventas', venta)
       .subscribe({
@@ -553,31 +515,13 @@ export class PedidosComponent implements OnInit {
       });
   }
 
-  // Helpers para manejar pedidos legacy y con items
+  // Helpers para items del pedido
   tieneItems(pedido: Pedido): boolean {
-    return !!(pedido.items && pedido.items.length > 0);
+    return (pedido.items?.length || 0) > 0;
   }
 
   getItemsPedido(pedido: Pedido): ItemPedido[] {
-    if (pedido.items && pedido.items.length > 0) {
-      return pedido.items;
-    }
-    // Pedido legacy
-    if (pedido.productoId) {
-      return [{
-        productoId: pedido.productoId,
-        productoNombre: pedido.productoNombre || '',
-        productoTipo: pedido.productoTipo || '',
-        material: pedido.material || '',
-        cantidad: pedido.cantidad || 1,
-        precio: pedido.precio || 0,
-        estado: (pedido as any).estado || 'A confirmar',
-        moldeId: pedido.moldeId,
-        moldeNombre: pedido.moldeNombre,
-        coloresPorCapa: pedido.coloresPorCapa
-      }];
-    }
-    return [];
+    return pedido.items || [];
   }
 
   getCantidadTotal(pedido: Pedido): number {

@@ -54,10 +54,8 @@
       <thead>
         <tr>
           <th>Cliente</th>
-          <th>Producto</th>
-          <th>Material</th>
+          <th>Productos</th>
           <th>Cantidad</th>
-          <th>Precio</th>
           <th>Total</th>
           <th>Método Pago</th>
           <th>Fecha Pedido</th>
@@ -68,18 +66,21 @@
       </thead>
       <tbody>
         <tr *ngIf="ventasFiltradas.length === 0">
-          <td colspan="11" class="empty-message">No hay ventas registradas</td>
+          <td colspan="9" class="empty-message">No hay ventas registradas</td>
         </tr>
         <tr *ngFor="let venta of ventasFiltradas">
           <td>{{ venta.cliente }}</td>
-          <td>
-            <span class="producto-nombre">{{ venta.productoNombre | capitalize }}</span>
-            <span class="producto-tipo">{{ venta.productoTipo | capitalize }}</span>
+          <td class="productos-cell">
+            <div class="items-list">
+              <div class="item-row" *ngFor="let item of getItemsVenta(venta)">
+                <span class="producto-nombre">{{ item.productoNombre | capitalize }}</span>
+                <span class="producto-tipo">{{ item.productoTipo | capitalize }} - {{ item.material | capitalize }} x{{ item.cantidad }}</span>
+                <span class="item-precio">${{ item.precio * item.cantidad | formatoPrecio }}</span>
+              </div>
+            </div>
           </td>
-          <td>{{ venta.material | capitalize }}</td>
-          <td>{{ venta.cantidad }}</td>
-          <td>${{ venta.precio | formatoPrecio }}</td>
-          <td class="total-cell">${{ venta.precio * venta.cantidad | formatoPrecio }}</td>
+          <td>{{ getCantidadTotal(venta) }}</td>
+          <td class="total-cell">${{ getTotalVenta(venta) | formatoPrecio }}</td>
           <td>{{ venta.metodoPago }}</td>
           <td>{{ formatearFecha(venta.fechaPedido) }}</td>
           <td>{{ formatearFecha(venta.fechaVenta) }}</td>
@@ -97,81 +98,118 @@
 
 <!-- Popup Formulario Agregar Venta -->
 <div class="popup-overlay" *ngIf="mostrarFormulario" (click)="cerrarFormulario()">
-  <div class="popup-content popup-form" (click)="$event.stopPropagation()">
+  <div class="popup-content popup-form popup-form-large" (click)="$event.stopPropagation()">
     <h2>Nueva Venta</h2>
-    
-    <div class="form-grid">
-      <div class="form-group">
-        <label>Cliente *</label>
-        <input type="text" [(ngModel)]="nuevaVenta.cliente" placeholder="Nombre del cliente">
+
+    <!-- Datos generales de la venta -->
+    <div class="seccion-form">
+      <h3>Datos de la Venta</h3>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Cliente *</label>
+          <input type="text" [(ngModel)]="nuevaVentaCliente" placeholder="Nombre del cliente">
+        </div>
+
+        <div class="form-group">
+          <label>Método de Pago</label>
+          <select [(ngModel)]="nuevaVentaMetodoPago">
+            <option *ngFor="let metodo of metodosPago" [value]="metodo">{{ metodo }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Estado</label>
+          <select [(ngModel)]="nuevaVentaEstado">
+            <option *ngFor="let est of estadosVenta" [value]="est">{{ est }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Fecha Pedido</label>
+          <input type="date" [(ngModel)]="nuevaVentaFechaPedido">
+        </div>
+
+        <div class="form-group">
+          <label>Fecha Venta</label>
+          <input type="date" [(ngModel)]="nuevaVentaFechaVenta">
+        </div>
+
+        <div class="form-group form-group-full">
+          <label>Nota</label>
+          <textarea [(ngModel)]="nuevaVentaNota" rows="2" placeholder="Observaciones..."></textarea>
+        </div>
       </div>
-      
-      <div class="form-group">
-        <label>Tipo de Producto *</label>
-        <select [(ngModel)]="tipoSeleccionado" (ngModelChange)="onTipoChange()">
-          <option value="">Seleccionar tipo...</option>
-          <option *ngFor="let tipo of productosTipo" [value]="tipo">{{ tipo | capitalize }}</option>
-        </select>
+    </div>
+
+    <!-- Agregar producto -->
+    <div class="seccion-form">
+      <h3>Agregar Producto</h3>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Tipo de Producto</label>
+          <select [(ngModel)]="tipoSeleccionado" (ngModelChange)="onTipoChange()">
+            <option value="">Seleccionar tipo...</option>
+            <option *ngFor="let tipo of productosTipo" [value]="tipo">{{ tipo | capitalize }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Producto</label>
+          <select [(ngModel)]="nuevaVentaItem.productoId" (ngModelChange)="onProductoChange($event)" [disabled]="!tipoSeleccionado">
+            <option value="">Seleccionar producto...</option>
+            <option *ngFor="let prod of productosDisponibles" [value]="prod._id">
+              {{ prod.nombre | capitalize }} - {{ prod.material | capitalize }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Material</label>
+          <input type="text" [value]="(nuevaVentaItem.material || '') | capitalize" disabled class="campo-calculado">
+        </div>
+
+        <div class="form-group">
+          <label>Cantidad</label>
+          <input type="number" [(ngModel)]="nuevaVentaItem.cantidad" min="1">
+        </div>
+
+        <div class="form-group">
+          <label>Precio</label>
+          <input type="number" [(ngModel)]="nuevaVentaItem.precio" min="0">
+        </div>
       </div>
 
-      <div class="form-group">
-        <label>Producto *</label>
-        <select [(ngModel)]="nuevaVenta.productoNombre" (ngModelChange)="onProductoChange($event)" [disabled]="!tipoSeleccionado">
-          <option value="">Seleccionar producto...</option>
-          <option *ngFor="let prod of productosDisponibles" [value]="prod._id">
-            {{ prod.nombre | capitalize }} - {{ prod.material | capitalize }}
-          </option>
-        </select>
+      <div class="form-agregar-item">
+        <button class="btn-agregar-item" (click)="agregarItemVenta()" [disabled]="!nuevaVentaItem.productoId">
+          ➕ Agregar al listado
+        </button>
       </div>
+    </div>
 
-      <div class="form-group">
-        <label>Material</label>
-        <input type="text" [value]="(nuevaVenta.material || '') | capitalize" disabled class="campo-calculado">
+    <!-- Lista de productos agregados -->
+    <div class="seccion-form" *ngIf="itemsVenta.length > 0">
+      <h3>Productos en la Venta ({{ itemsVenta.length }})</h3>
+      <div class="items-lista">
+        <div class="item-fila" *ngFor="let item of itemsVenta; let i = index">
+          <div class="item-info">
+            <span class="item-nombre">{{ item.productoNombre | capitalize }}</span>
+            <span class="item-detalle">{{ item.productoTipo | capitalize }} · {{ item.material | capitalize }}</span>
+          </div>
+          <div class="item-nums">
+            <span>x{{ item.cantidad }}</span>
+            <span class="item-precio">{{ item.precio * item.cantidad | formatoPrecio }}</span>
+          </div>
+          <button class="btn-eliminar-item" (click)="eliminarItemVenta(i)">🗑️</button>
+        </div>
       </div>
-
-      <div class="form-group">
-        <label>Cantidad</label>
-        <input type="number" [(ngModel)]="nuevaVenta.cantidad" min="1">
-      </div>
-
-      <div class="form-group">
-        <label>Precio</label>
-        <input type="number" [(ngModel)]="nuevaVenta.precio" min="0">
-      </div>
-
-      <div class="form-group">
-        <label>Método de Pago</label>
-        <select [(ngModel)]="nuevaVenta.metodoPago">
-          <option *ngFor="let metodo of metodosPago" [value]="metodo">{{ metodo }}</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Estado</label>
-        <select [(ngModel)]="nuevaVenta.estado">
-          <option *ngFor="let est of estadosVenta" [value]="est">{{ est }}</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Fecha Pedido</label>
-        <input type="date" [(ngModel)]="nuevaVenta.fechaPedido">
-      </div>
-
-      <div class="form-group">
-        <label>Fecha Venta</label>
-        <input type="date" [(ngModel)]="nuevaVenta.fechaVenta">
-      </div>
-
-      <div class="form-group form-group-full">
-        <label>Nota</label>
-        <textarea [(ngModel)]="nuevaVenta.nota" rows="2" placeholder="Observaciones..."></textarea>
+      <div class="total-items">
+        <strong>Total: {{ getTotalItemsForm() | formatoPrecio }}</strong>
       </div>
     </div>
 
     <div class="form-acciones">
       <button class="btn-cancelar" (click)="cerrarFormulario()">Cancelar</button>
-      <button class="btn-guardar" (click)="guardarVenta()">💾 Guardar Venta</button>
+      <button class="btn-guardar" (click)="guardarVenta()" [disabled]="itemsVenta.length === 0">💾 Guardar Venta</button>
     </div>
   </div>
 </div>
@@ -197,11 +235,13 @@
       <p><strong>Formato esperado:</strong></p>
       <pre>[{{"{"}}
   "cliente": "Juan",
-  "productoNombre": "Pulsera Luna",
-  "productoTipo": "Pulsera",
-  "material": "Resina",
-  "cantidad": 2,
-  "precio": 500,
+  "items": [{{"{"}}
+    "productoNombre": "Pulsera Luna",
+    "productoTipo": "Pulsera",
+    "material": "Resina",
+    "cantidad": 2,
+    "precio": 500
+  {{"}"}}],
   "metodoPago": "Efectivo",
   "fechaVenta": "2025-12-01",
   "estado": "Entregado"

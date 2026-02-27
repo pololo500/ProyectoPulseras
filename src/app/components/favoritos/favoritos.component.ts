@@ -8,6 +8,7 @@ import { forkJoin, Subscription } from 'rxjs';
 import { FavoritosService, ItemFavorito } from '../../services/favoritos.service';
 import { CarritoService, ColorPorCapa } from '../../services/carrito.service';
 import { CapitalizePipe } from '../../extras/capitalizePipe';
+import { ordenarCromatico, ordenarAlfabetico } from '../../extras/color-sort';
 import { FormatoPrecioPipe } from '../../extras/formatoPrecio.pipe';
 import { PopupExitoComponent, ColorInfo } from '../popupExito/popupExito.component';
 
@@ -136,7 +137,7 @@ export class FavoritosComponent implements OnInit, OnDestroy {
             next: (data) => {
                 this.productos = data.productos;
                 this.colores = data.colores;
-                this.moldes = data.moldes;
+                this.moldes = ordenarAlfabetico(data.moldes);
                 
                 // Suscribirse a favoritos después de cargar productos
                 this.favoritosSub = this.favoritosService.favoritos$.subscribe(items => {
@@ -390,7 +391,7 @@ export class FavoritosComponent implements OnInit, OnDestroy {
     }
 
     getColoresPorCategoria(categoria: string): Color[] {
-        return this.colores.filter(c => c.categoria?.toLowerCase() === categoria.toLowerCase());
+        return ordenarCromatico(this.colores.filter(c => c.categoria?.toLowerCase() === categoria.toLowerCase()));
     }
 
     seleccionarColorCapaDetalle(capaIndex: number, color: Color): void {

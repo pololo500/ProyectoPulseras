@@ -325,6 +325,10 @@ h1 {
   width: 100%;
 }
 
+.popup-form-large {
+  max-width: 850px;
+}
+
 .popup-form h2 {
   color: #D6B435;
   margin-bottom: 25px;
@@ -419,6 +423,137 @@ h1 {
 
 .btn-guardar:hover {
   background-color: #C8962B;
+}
+
+.btn-guardar:disabled {
+  background-color: #555;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Secciones del formulario multi-item */
+.seccion-form {
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #D6B43540;
+}
+
+.seccion-form:last-of-type {
+  border-bottom: none;
+}
+
+.seccion-form h3 {
+  color: #D6B435;
+  font-size: 1.1rem;
+  margin-bottom: 15px;
+}
+
+.form-agregar-item {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.btn-agregar-item {
+  padding: 10px 20px;
+  border: 2px solid #28a745;
+  border-radius: 8px;
+  background-color: transparent;
+  color: #28a745;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-agregar-item:hover {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.btn-agregar-item:disabled {
+  border-color: #555;
+  color: #555;
+  cursor: not-allowed;
+}
+
+.btn-agregar-item:disabled:hover {
+  background-color: transparent;
+  color: #555;
+}
+
+.items-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.item-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #000447;
+  border: 1px solid #D6B43530;
+  border-radius: 8px;
+  padding: 10px 15px;
+  gap: 10px;
+}
+
+.item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.item-nombre {
+  color: #fff;
+  font-weight: bold;
+  font-size: 0.95rem;
+}
+
+.item-detalle {
+  color: #7eb8da;
+  font-size: 0.8rem;
+}
+
+.item-nums {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.item-precio {
+  color: #D6B435;
+  font-weight: bold;
+  min-width: 80px;
+  text-align: right;
+}
+
+.btn-eliminar-item {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 5px;
+  transition: transform 0.2s ease;
+}
+
+.btn-eliminar-item:hover {
+  transform: scale(1.2);
+}
+
+.total-items {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #D6B43540;
+  color: #D6B435;
+  font-size: 1.1rem;
 }
 
 /* Popup importar */

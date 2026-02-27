@@ -82,8 +82,6 @@ export class CarritoComponent implements OnInit, OnDestroy {
     this.subscription = this.carritoService.carrito$.subscribe(items => {
       this.items = items;
     });
-    // Recargar carrito desde DB si está logueado
-    this.carritoService.cargarCarritoInicial();
   }
 
   ngOnDestroy(): void {
@@ -225,7 +223,8 @@ export class CarritoComponent implements OnInit, OnDestroy {
     
     const email = sessionStorage.getItem('email') || '';
     const nombreUsuario = sessionStorage.getItem('nombreUsuario') || 'Cliente';
-    const fechaHoy = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const fechaHoy = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     
     // Crear items con toda la información necesaria para el admin
     const items = this.items.map(item => {

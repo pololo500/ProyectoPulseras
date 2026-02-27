@@ -23,8 +23,92 @@ app.use(express.json()); // Para procesar JSON en las peticiones
 
 // Conectar a MongoDB Atlas
 mongoose.connect('mongodb+srv://marronemicaela:Abril2004@clusterm.dwtrhrc.mongodb.net/LMPulserasDB?retryWrites=true&w=majority&appName=ClusterM')
-.then(() => console.log('Conectado a MongoDB Atlas'))
+.then(async () => {
+    console.log('Conectado a MongoDB Atlas');
+    await migrarDatosLegacy();
+})
 .catch(err => console.error('Error al conectar a MongoDB:', err));
+
+// Migración: convertir pedidos y ventas legacy al formato items[]
+async function migrarDatosLegacy() {
+    try {
+        const db = mongoose.connection.db;
+
+        // Migrar pedidos legacy (tienen productoId en raíz y no tienen items)
+        const pedidosLegacy = await db.collection('pedidos').find({
+            productoId: { $exists: true },
+            $or: [{ items: { $exists: false } }, { items: { $size: 0 } }]
+        }).toArray();
+
+        for (const pedido of pedidosLegacy) {
+            const item = {
+                productoId: pedido.productoId || '',
+                productoNombre: pedido.productoNombre || '',
+                productoTipo: pedido.productoTipo || '',
+                material: pedido.material || '',
+                cantidad: pedido.cantidad || 1,
+                precio: pedido.precio || 0,
+                estado: pedido.estado || 'A confirmar',
+                moldeId: pedido.moldeId || '',
+                moldeNombre: pedido.moldeNombre || '',
+                coloresPorCapa: pedido.coloresPorCapa || []
+            };
+
+            await db.collection('pedidos').updateOne(
+                { _id: pedido._id },
+                {
+                    $set: { items: [item] },
+                    $unset: {
+                        productoId: '', productoNombre: '', productoTipo: '',
+                        material: '', moldeId: '', moldeNombre: '',
+                        coloresPorCapa: '', cantidad: '', precio: ''
+                    }
+                }
+            );
+        }
+
+        if (pedidosLegacy.length > 0) {
+            console.log(`✅ Migrados ${pedidosLegacy.length} pedidos legacy a formato items[]`);
+        }
+
+        // Migrar ventas legacy (tienen productoNombre en raíz y no tienen items)
+        const ventasLegacy = await db.collection('ventas').find({
+            productoNombre: { $exists: true },
+            $or: [{ items: { $exists: false } }, { items: { $size: 0 } }]
+        }).toArray();
+
+        for (const venta of ventasLegacy) {
+            const item = {
+                productoId: '',
+                productoNombre: venta.productoNombre || '',
+                productoTipo: venta.productoTipo || '',
+                material: venta.material || '',
+                cantidad: venta.cantidad || 1,
+                precio: venta.precio || 0,
+                estado: venta.estado || 'Entregado',
+                coloresPorCapa: venta.coloresPorCapa || []
+            };
+
+            await db.collection('ventas').updateOne(
+                { _id: venta._id },
+                {
+                    $set: { items: [item] },
+                    $unset: {
+                        productoNombre: '', productoTipo: '',
+                        material: '', cantidad: '', precio: '',
+                        coloresPorCapa: ''
+                    }
+                }
+            );
+        }
+
+        if (ventasLegacy.length > 0) {
+            console.log(`✅ Migradas ${ventasLegacy.length} ventas legacy a formato items[]`);
+        }
+    } catch (error) {
+        console.error('Error en migración de datos legacy:', error);
+    }
+}
 
 
 // Esquema para colores por capa en el carrito
@@ -195,19 +279,7 @@ const ItemPedidoSchema = new mongoose.Schema({
 
 const PedidoSchema = new mongoose.Schema({
     cliente: String,
-    // Campos legacy para pedidos individuales (compatibilidad hacia atrás)
-    productoId: String,
-    productoNombre: String,
-    productoTipo: String,
-    material: String,
-    moldeId: String,
-    moldeNombre: String,
-    coloresPorCapa: [ColorCapaPedidoSchema],
-    cantidad: Number,
-    precio: Number,
-    // Nuevo campo para pedidos con múltiples items
     items: [ItemPedidoSchema],
-    // Campos comunes
     fecha: String,
     estado: String, // 'A entregar', 'Armar', 'En produccion', 'Por hacer', 'A confirmar'
     metodoPago: String, // 'Efectivo', 'Transferencia'
@@ -220,16 +292,7 @@ const Pedido = mongoose.model('Pedido', PedidoSchema);
 // Esquema para Ventas (historial)
 const VentaSchema = new mongoose.Schema({
     cliente: String,
-    // Campos legacy para ventas individuales
-    productoNombre: String,
-    productoTipo: String,
-    material: String,
-    cantidad: Number,
-    precio: Number,
-    coloresPorCapa: [ColorCapaPedidoSchema],
-    // Nuevo campo para ventas con múltiples items
     items: [ItemPedidoSchema],
-    // Campos comunes
     metodoPago: String,
     fechaPedido: String,
     fechaVenta: String,

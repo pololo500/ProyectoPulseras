@@ -7,14 +7,31 @@ import { FormatoPrecioPipe } from '../../extras/formatoPrecio.pipe';
 import { GlobalService } from '../../services/global.service';
 import { PopupAlertaComponent } from '../popupAlerta/popupAlerta.component';
 
-interface Venta {
-  _id?: string;
-  cliente: string;
+interface ColorCapa {
+  capaIndex: number;
+  capaNombre: string;
+  colorId: string;
+  colorNombre: string;
+  colorRgb: string;
+}
+
+interface ItemVenta {
+  productoId: string;
   productoNombre: string;
   productoTipo: string;
   material: string;
   cantidad: number;
   precio: number;
+  estado: string;
+  moldeId?: string;
+  moldeNombre?: string;
+  coloresPorCapa?: ColorCapa[];
+}
+
+interface Venta {
+  _id?: string;
+  cliente: string;
+  items: ItemVenta[];
   metodoPago: string;
   fechaPedido: string;
   fechaVenta: string;
@@ -60,7 +77,14 @@ export class VentasComponent implements OnInit {
 
   // Formulario agregar venta
   mostrarFormulario = false;
-  nuevaVenta: Partial<Venta> = this.getVentaVacia();
+  nuevaVentaCliente = '';
+  nuevaVentaItem: Partial<ItemVenta> = this.getItemVacio();
+  itemsVenta: ItemVenta[] = [];
+  nuevaVentaMetodoPago = 'Efectivo';
+  nuevaVentaEstado: 'Entregado' | 'Cancelado' = 'Entregado';
+  nuevaVentaFechaPedido = (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`; })();
+  nuevaVentaFechaVenta = (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`; })();
+  nuevaVentaNota = '';
   metodosPago = ['Efectivo', 'Transferencia'];
   estadosVenta = ['Entregado', 'Cancelado'];
 
@@ -89,19 +113,15 @@ export class VentasComponent implements OnInit {
     this.cargarProductos();
   }
 
-  getVentaVacia(): Partial<Venta> {
+  getItemVacio(): Partial<ItemVenta> {
     return {
-      cliente: '',
+      productoId: '',
       productoNombre: '',
       productoTipo: '',
       material: '',
       cantidad: 1,
       precio: 0,
-      metodoPago: 'Efectivo',
-      fechaPedido: new Date().toISOString().split('T')[0],
-      fechaVenta: new Date().toISOString().split('T')[0],
-      estado: 'Entregado',
-      nota: ''
+      estado: 'Entregado'
     };
   }
 
@@ -130,19 +150,21 @@ export class VentasComponent implements OnInit {
 
   onTipoChange() {
     this.productosDisponibles = this.productos.filter(p => p.producto === this.tipoSeleccionado);
-    this.nuevaVenta.productoTipo = this.tipoSeleccionado;
-    this.nuevaVenta.productoNombre = '';
-    this.nuevaVenta.material = '';
-    this.nuevaVenta.precio = 0;
+    this.nuevaVentaItem.productoTipo = this.tipoSeleccionado;
+    this.nuevaVentaItem.productoNombre = '';
+    this.nuevaVentaItem.productoId = '';
+    this.nuevaVentaItem.material = '';
+    this.nuevaVentaItem.precio = 0;
   }
 
   onProductoChange(productoId: string) {
     const producto = this.productos.find(p => p._id === productoId);
     if (producto) {
-      this.nuevaVenta.productoNombre = producto.nombre;
-      this.nuevaVenta.productoTipo = producto.producto;
-      this.nuevaVenta.material = producto.material;
-      this.nuevaVenta.precio = producto.precio;
+      this.nuevaVentaItem.productoId = producto._id;
+      this.nuevaVentaItem.productoNombre = producto.nombre;
+      this.nuevaVentaItem.productoTipo = producto.producto;
+      this.nuevaVentaItem.material = producto.material;
+      this.nuevaVentaItem.precio = producto.precio;
     }
   }
 
@@ -177,7 +199,7 @@ export class VentasComponent implements OnInit {
     this.totalCancelados = this.ventas.filter(v => v.estado === 'Cancelado').length;
     this.ingresoTotal = this.ventas
       .filter(v => v.estado === 'Entregado')
-      .reduce((sum, v) => sum + (v.precio * v.cantidad), 0);
+      .reduce((sum, v) => sum + this.getTotalVenta(v), 0);
   }
 
   calcularTotalesFiltrados() {
@@ -205,25 +227,81 @@ export class VentasComponent implements OnInit {
   // Formulario manual
   abrirFormulario() {
     this.mostrarFormulario = true;
-    this.nuevaVenta = this.getVentaVacia();
+    this.nuevaVentaCliente = '';
+    this.nuevaVentaItem = this.getItemVacio();
+    this.itemsVenta = [];
+    this.nuevaVentaMetodoPago = 'Efectivo';
+    this.nuevaVentaEstado = 'Entregado';
+    const now = new Date();
+    const hoy = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    this.nuevaVentaFechaPedido = hoy;
+    this.nuevaVentaFechaVenta = hoy;
+    this.nuevaVentaNota = '';
     this.tipoSeleccionado = '';
     this.productosDisponibles = [];
   }
 
   cerrarFormulario() {
     this.mostrarFormulario = false;
-    this.nuevaVenta = this.getVentaVacia();
+    this.nuevaVentaCliente = '';
+    this.nuevaVentaItem = this.getItemVacio();
+    this.itemsVenta = [];
     this.tipoSeleccionado = '';
     this.productosDisponibles = [];
   }
 
-  guardarVenta() {
-    if (!this.nuevaVenta.cliente || !this.nuevaVenta.productoNombre) {
-      this.mostrarAlerta('Cliente y producto son requeridos', 'error');
+  agregarItemVenta() {
+    if (!this.nuevaVentaItem.productoId) {
+      this.mostrarAlerta('Selecciona un producto', 'error');
       return;
     }
 
-    this.http.post('http://localhost:5000/api/ventas', this.nuevaVenta)
+    this.itemsVenta.push({
+      productoId: this.nuevaVentaItem.productoId || '',
+      productoNombre: this.nuevaVentaItem.productoNombre || '',
+      productoTipo: this.nuevaVentaItem.productoTipo || '',
+      material: this.nuevaVentaItem.material || '',
+      cantidad: this.nuevaVentaItem.cantidad || 1,
+      precio: this.nuevaVentaItem.precio || 0,
+      estado: this.nuevaVentaEstado
+    });
+
+    // Limpiar para agregar otro
+    this.nuevaVentaItem = this.getItemVacio();
+    this.tipoSeleccionado = '';
+    this.productosDisponibles = [];
+  }
+
+  eliminarItemVenta(index: number) {
+    this.itemsVenta.splice(index, 1);
+  }
+
+  getTotalItemsForm(): number {
+    return this.itemsVenta.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+  }
+
+  guardarVenta() {
+    if (!this.nuevaVentaCliente) {
+      this.mostrarAlerta('El nombre del cliente es requerido', 'error');
+      return;
+    }
+
+    if (this.itemsVenta.length === 0) {
+      this.mostrarAlerta('Agrega al menos un producto a la venta', 'error');
+      return;
+    }
+
+    const venta = {
+      cliente: this.nuevaVentaCliente,
+      items: this.itemsVenta,
+      metodoPago: this.nuevaVentaMetodoPago,
+      fechaPedido: this.nuevaVentaFechaPedido,
+      fechaVenta: this.nuevaVentaFechaVenta,
+      estado: this.nuevaVentaEstado,
+      nota: this.nuevaVentaNota
+    };
+
+    this.http.post('http://localhost:5000/api/ventas', venta)
       .subscribe({
         next: () => {
           this.cargarVentas();
@@ -270,16 +348,20 @@ export class VentasComponent implements OnInit {
         let errores = 0;
 
         ventasArray.forEach((venta: any) => {
-          const ventaNormalizada: Partial<Venta> = {
+          const ventaNormalizada = {
             cliente: venta.cliente || '',
-            productoNombre: venta.productoNombre || venta.producto || '',
-            productoTipo: venta.productoTipo || venta.tipo || '',
-            material: venta.material || '',
-            cantidad: parseInt(venta.cantidad) || 1,
-            precio: parseFloat(venta.precio) || 0,
+            items: venta.items || [{
+              productoId: '',
+              productoNombre: venta.productoNombre || venta.producto || '',
+              productoTipo: venta.productoTipo || venta.tipo || '',
+              material: venta.material || '',
+              cantidad: parseInt(venta.cantidad) || 1,
+              precio: parseFloat(venta.precio) || 0,
+              estado: venta.estado || 'Entregado'
+            }],
             metodoPago: venta.metodoPago || 'Efectivo',
-            fechaPedido: venta.fechaPedido || new Date().toISOString().split('T')[0],
-            fechaVenta: venta.fechaVenta || new Date().toISOString().split('T')[0],
+            fechaPedido: venta.fechaPedido || (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`; })(),
+            fechaVenta: venta.fechaVenta || (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`; })(),
             estado: venta.estado || 'Entregado',
             nota: venta.nota || ''
           };
@@ -309,5 +391,25 @@ export class VentasComponent implements OnInit {
       }
     };
     reader.readAsText(this.archivoSeleccionado);
+  }
+
+  // Helpers para ventas con items[]
+  getItemsVenta(venta: Venta): ItemVenta[] {
+    return venta.items || [];
+  }
+
+  getCantidadTotal(venta: Venta): number {
+    return this.getItemsVenta(venta).reduce((sum, item) => sum + item.cantidad, 0);
+  }
+
+  getTotalVenta(venta: Venta): number {
+    return this.getItemsVenta(venta).reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+  }
+
+  getResumenProductos(venta: Venta): string {
+    const items = this.getItemsVenta(venta);
+    if (items.length === 0) return '';
+    if (items.length === 1) return items[0].productoNombre;
+    return `${items[0].productoNombre} y ${items.length - 1} más`;
   }
 }

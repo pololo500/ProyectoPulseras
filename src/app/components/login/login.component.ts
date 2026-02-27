@@ -105,7 +105,7 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
             sessionStorage.setItem("nombreUsuario", res.nombre);
             
             // Sincronizar carrito con la base de datos
-            this.carritoService.sincronizarAlLogin();
+            this.carritoService.sincronizarAlLogin().subscribe();
             
             // Sincronizar favoritos con la base de datos
             this.favoritosService.sincronizarAlLogin(formData.email as string);

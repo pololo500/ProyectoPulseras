@@ -7,6 +7,7 @@ import { PopupColorComponent } from '../popupColor/popupColor.component';
 import { PopupConfirmComponent } from '../popupConfirm/popupConfirm.component';
 import { PopupAlertaComponent } from '../popupAlerta/popupAlerta.component';
 import { CapitalizePipe } from '../../extras/capitalizePipe';
+import { ordenarCromatico, ordenarAlfabetico } from '../../extras/color-sort';
 import { GlobalService } from '../../services/global.service';
 import jsPDF from 'jspdf';
 
@@ -117,7 +118,7 @@ export class CalculadoraResinaComponent implements OnInit {
 
   cargarMoldes(): void {
     this.http.get<Molde[]>('http://localhost:5000/api/moldes').subscribe({
-      next: (data) => this.moldes = data,
+      next: (data) => this.moldes = ordenarAlfabetico(data),
       error: (err) => console.error('Error al cargar moldes:', err)
     });
   }
@@ -242,7 +243,7 @@ export class CalculadoraResinaComponent implements OnInit {
   }
 
   getColoresPorCategoria(categoria: string): Color[] {
-    return this.colores.filter(c => c.categoria === categoria);
+    return ordenarCromatico(this.colores.filter(c => c.categoria === categoria));
   }
 
   toggleColorPicker(pickerId: string): void {

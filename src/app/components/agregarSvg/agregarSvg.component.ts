@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { CapitalizePipe } from '../../extras/capitalizePipe';
+import { ordenarAlfabetico } from '../../extras/color-sort';
 import { GlobalService } from '../../services/global.service';
 import { PopupMoldeComponent } from '../popupMolde/popupMolde.component';
 import { PopupConfirmComponent } from '../popupConfirm/popupConfirm.component';
@@ -80,7 +81,7 @@ export class AgregarSvgComponent implements OnInit {
     this.http.get<Molde[]>('http://localhost:5000/api/moldes')
       .subscribe({
         next: (data) => {
-          this.moldes = data;
+          this.moldes = ordenarAlfabetico(data);
           this.cargando = false;
         },
         error: (err) => {

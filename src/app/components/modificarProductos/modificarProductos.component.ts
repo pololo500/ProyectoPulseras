@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { ButtonComponent } from '../button/button.component';
 import { CapitalizePipe } from '../../extras/capitalizePipe';
+import { ordenarCromatico, ordenarAlfabetico } from '../../extras/color-sort';
 import { FormatoPrecioPipe } from '../../extras/formatoPrecio.pipe';
 import { GlobalService } from '../../services/global.service';
 import { PopupSubcategoriaComponent } from '../popupSubcategoria/popupSubcategoria.component';
@@ -166,7 +167,7 @@ export class ModificarProductosComponent implements OnInit {
   cargarMoldes() {
     this.http.get<Molde[]>('http://localhost:5000/api/moldes')
       .subscribe({
-        next: (data) => this.moldes = data,
+        next: (data) => this.moldes = ordenarAlfabetico(data),
         error: (err) => console.error('Error al cargar moldes:', err)
       });
   }
@@ -174,7 +175,7 @@ export class ModificarProductosComponent implements OnInit {
   cargarMoldesHilo() {
     this.http.get<Molde[]>('http://localhost:5000/api/moldes-hilo')
       .subscribe({
-        next: (data) => this.moldesHilo = data,
+        next: (data) => this.moldesHilo = ordenarAlfabetico(data),
         error: (err) => console.error('Error al cargar moldes de hilo:', err)
       });
   }
@@ -190,7 +191,7 @@ export class ModificarProductosComponent implements OnInit {
   cargarColoresHilo() {
     this.http.get<Color[]>('http://localhost:5000/api/colores-hilo')
       .subscribe({
-        next: (data) => this.coloresHilo = data,
+        next: (data) => this.coloresHilo = ordenarCromatico(data),
         error: (err) => console.error('Error al cargar colores de hilo:', err)
       });
   }
@@ -700,7 +701,7 @@ export class ModificarProductosComponent implements OnInit {
   }
 
   getColoresPorCategoria(categoria: string): Color[] {
-    return this.colores.filter(c => c.categoria?.toLowerCase() === categoria.toLowerCase());
+    return ordenarCromatico(this.colores.filter(c => c.categoria?.toLowerCase() === categoria.toLowerCase()));
   }
 
   trackByIndexOriginal(index: number, item: { url: string, indexOriginal: number }): number {

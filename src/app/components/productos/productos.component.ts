@@ -6,6 +6,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { CapitalizePipe } from '../../extras/capitalizePipe';
+import { ordenarCromatico, ordenarAlfabetico } from '../../extras/color-sort';
 import { FormatoPrecioPipe } from '../../extras/formatoPrecio.pipe';
 import { CarritoService, ColorPorCapa } from '../../services/carrito.service';
 import { FavoritosService, ItemFavorito } from '../../services/favoritos.service';
@@ -214,11 +215,11 @@ export class ProductosComponent implements OnInit {
       next: (data) => {
         // Cargar colores
         this.colores = data.colores;
-        this.coloresHilo = data.coloresHilo;
+        this.coloresHilo = ordenarCromatico(data.coloresHilo);
         
         // Cargar moldes
-        this.moldes = data.moldes;
-        this.moldesHilo = data.moldesHilo;
+        this.moldes = ordenarAlfabetico(data.moldes);
+        this.moldesHilo = ordenarAlfabetico(data.moldesHilo);
         
         // Cargar productos
         this.productos = data.productos.map(p => ({ ...p, cantidad: 1 }));
@@ -275,7 +276,7 @@ export class ProductosComponent implements OnInit {
   cargarMoldes(): void {
     this.http.get<Molde[]>('http://localhost:5000/api/moldes')
       .subscribe({
-        next: (data) => this.moldes = data,
+        next: (data) => this.moldes = ordenarAlfabetico(data),
         error: (err) => console.error('Error al cargar moldes:', err)
       });
   }
@@ -451,7 +452,7 @@ export class ProductosComponent implements OnInit {
 
   // Obtener colores por categoría (polvo o translucido) - usa el producto actual para determinar set de colores
   getColoresPorCategoria(categoria: string): Color[] {
-    return this.colores.filter(c => c.categoria?.toLowerCase() === categoria.toLowerCase());
+    return ordenarCromatico(this.colores.filter(c => c.categoria?.toLowerCase() === categoria.toLowerCase()));
   }
 
   // Manejar click en el SVG para seleccionar capa

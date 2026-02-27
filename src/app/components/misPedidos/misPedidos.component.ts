@@ -33,19 +33,7 @@ interface ItemPedido {
 interface Pedido {
     _id?: string;
     cliente: string;
-    // Campos legacy para pedidos individuales
-    productoId?: string;
-    productoNombre?: string;
-    productoTipo?: string;
-    material?: string;
-    moldeId?: string;
-    moldeNombre?: string;
-    coloresPorCapa?: ColorCapa[];
-    cantidad?: number;
-    precio?: number;
-    // Nuevo campo para pedidos con múltiples items
-    items?: ItemPedido[];
-    // Campos comunes
+    items: ItemPedido[];
     fecha: string;
     estado: string;
     metodoPago: string;
@@ -56,16 +44,7 @@ interface Pedido {
 interface Venta {
     _id?: string;
     cliente: string;
-    // Campos legacy para ventas individuales
-    productoNombre?: string;
-    productoTipo?: string;
-    material?: string;
-    cantidad?: number;
-    precio?: number;
-    coloresPorCapa?: ColorCapa[];
-    // Nuevo campo para ventas con múltiples items
-    items?: ItemPedido[];
-    // Campos comunes
+    items: ItemPedido[];
     metodoPago: string;
     fechaPedido: string;
     fechaVenta: string;
@@ -217,31 +196,28 @@ export class MisPedidosComponent implements OnInit {
 
     // Obtener estado visible para el cliente basado en los estados de los items
     getEstadoCliente(pedido: Pedido): string {
-        // Si tiene items, calcular el estado basado en los estados de cada item
-        if (pedido.items && pedido.items.length > 0) {
-            const estados = pedido.items.map(item => item.estado || 'A confirmar');
-            
-            // Si todos están "A entregar", mostrar "A entregar"
-            if (estados.every(e => e === 'A entregar')) {
-                return 'A entregar';
-            }
-            
-            // Si todos están "A confirmar", mostrar "A confirmar"
-            if (estados.every(e => e === 'A confirmar')) {
-                return 'A confirmar';
-            }
-            
-            // Si alguno está en "Por hacer", "En produccion" o "Armar", mostrar "En produccion"
-            const estadosProduccion = ['Por hacer', 'En produccion', 'Armar'];
-            if (estados.some(e => estadosProduccion.includes(e))) {
-                return 'En produccion';
-            }
-            
-            // Default
-            return pedido.estado || 'A confirmar';
+        const items = pedido.items || [];
+        if (items.length === 0) return pedido.estado || 'A confirmar';
+
+        const estados = items.map(item => item.estado || 'A confirmar');
+
+        // Si todos están "A entregar", mostrar "A entregar"
+        if (estados.every(e => e === 'A entregar')) {
+            return 'A entregar';
         }
-        
-        // Pedido legacy sin items
+
+        // Si todos están "A confirmar", mostrar "A confirmar"
+        if (estados.every(e => e === 'A confirmar')) {
+            return 'A confirmar';
+        }
+
+        // Si alguno está en "Por hacer", "En produccion" o "Armar", mostrar "En produccion"
+        const estadosProduccion = ['Por hacer', 'En produccion', 'Armar'];
+        if (estados.some(e => estadosProduccion.includes(e))) {
+            return 'En produccion';
+        }
+
+        // Default
         return pedido.estado || 'A confirmar';
     }
 
@@ -267,74 +243,50 @@ export class MisPedidosComponent implements OnInit {
 
     // Métodos helper para pedidos con múltiples items
     tieneItems(pedido: Pedido): boolean {
-        return !!(pedido.items && pedido.items.length > 0);
+        return (pedido.items?.length || 0) > 0;
     }
 
     getCantidadItems(pedido: Pedido): number {
-        if (this.tieneItems(pedido)) {
-            return pedido.items!.reduce((sum, item) => sum + item.cantidad, 0);
-        }
-        return pedido.cantidad || 0;
+        return (pedido.items || []).reduce((sum, item) => sum + item.cantidad, 0);
     }
 
     getTotalPedido(pedido: Pedido): number {
-        if (this.tieneItems(pedido)) {
-            return pedido.items!.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
-        }
-        return (pedido.precio || 0) * (pedido.cantidad || 0);
+        return (pedido.items || []).reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
     }
 
     getResumenProductos(pedido: Pedido): string {
-        if (this.tieneItems(pedido)) {
-            if (pedido.items!.length === 1) {
-                return pedido.items![0].productoNombre;
-            }
-            return `${pedido.items![0].productoNombre} y ${pedido.items!.length - 1} más`;
-        }
-        return pedido.productoNombre || '';
+        const items = pedido.items || [];
+        if (items.length === 0) return '';
+        if (items.length === 1) return items[0].productoNombre;
+        return `${items[0].productoNombre} y ${items.length - 1} más`;
     }
 
     getCantidadProductos(pedido: Pedido): number {
-        if (this.tieneItems(pedido)) {
-            return pedido.items!.length;
-        }
-        return 1;
+        return (pedido.items || []).length;
     }
 
     // Métodos helper para ventas (historial)
     tieneItemsVenta(venta: Venta): boolean {
-        return !!(venta.items && venta.items.length > 0);
+        return (venta.items?.length || 0) > 0;
     }
 
     getCantidadItemsVenta(venta: Venta): number {
-        if (this.tieneItemsVenta(venta)) {
-            return venta.items!.reduce((sum, item) => sum + item.cantidad, 0);
-        }
-        return venta.cantidad || 0;
+        return (venta.items || []).reduce((sum, item) => sum + item.cantidad, 0);
     }
 
     getTotalVenta(venta: Venta): number {
-        if (this.tieneItemsVenta(venta)) {
-            return venta.items!.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
-        }
-        return venta.precio || 0;
+        return (venta.items || []).reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
     }
 
     getResumenProductosVenta(venta: Venta): string {
-        if (this.tieneItemsVenta(venta)) {
-            if (venta.items!.length === 1) {
-                return venta.items![0].productoNombre;
-            }
-            return `${venta.items![0].productoNombre} y ${venta.items!.length - 1} más`;
-        }
-        return venta.productoNombre || '';
+        const items = venta.items || [];
+        if (items.length === 0) return '';
+        if (items.length === 1) return items[0].productoNombre;
+        return `${items[0].productoNombre} y ${items.length - 1} más`;
     }
 
     getCantidadProductosVenta(venta: Venta): number {
-        if (this.tieneItemsVenta(venta)) {
-            return venta.items!.length;
-        }
-        return 1;
+        return (venta.items || []).length;
     }
 
     // Cancelar pedido
@@ -354,30 +306,19 @@ export class MisPedidosComponent implements OnInit {
         
         this.cancelando = true;
         const pedido = this.pedidoACancelar;
-        const fechaHoy = new Date().toISOString().split('T')[0];
+        const now = new Date();
+        const fechaHoy = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         
-        // Crear venta con estado Cancelado - preservando la estructura de items
+        // Crear venta con estado Cancelado
         const venta: any = {
             cliente: pedido.cliente,
+            items: pedido.items,
             metodoPago: pedido.metodoPago,
             fechaPedido: pedido.fecha,
             fechaVenta: fechaHoy,
             estado: 'Cancelado',
             nota: pedido.nota ? `${pedido.nota} - Cancelado por el cliente` : 'Cancelado por el cliente'
         };
-        
-        // Si tiene items, copiarlos a la venta
-        if (this.tieneItems(pedido)) {
-            venta.items = pedido.items;
-        } else {
-            // Pedido legacy
-            venta.productoNombre = pedido.productoNombre;
-            venta.productoTipo = pedido.productoTipo;
-            venta.material = pedido.material;
-            venta.cantidad = pedido.cantidad;
-            venta.precio = pedido.precio;
-            venta.coloresPorCapa = pedido.coloresPorCapa;
-        }
         
         // Primero crear la venta, luego eliminar el pedido
         this.http.post('http://localhost:5000/api/ventas', venta)
