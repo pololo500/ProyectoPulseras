@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { forkJoin, Subscription } from 'rxjs';
@@ -50,6 +50,44 @@ interface Producto {
     imagenesUrls?: string[];
     moldeNombre?: string;
     cantidad?: number;
+    coloresPorImagen?: {
+        imagenIndex: number;
+        colores: {
+            capaIndex: number;
+            capaNombre: string;
+            colorId: string;
+            colorNombre: string;
+            colorRgb: string;
+            colorCategoria: string;
+        }[];
+    }[];
+}
+
+interface ColorCapaStock {
+    capaIndex: number;
+    capaNombre: string;
+    colorId: string;
+    colorNombre: string;
+    colorRgb: string;
+}
+
+interface StockVariante {
+    _id: string;
+    coloresPorCapa: ColorCapaStock[];
+    cantidad: number;
+    detallesDiseno?: string;
+}
+
+interface StockItem {
+    _id: string;
+    productoId: string;
+    productoNombre: string;
+    productoTipo: string;
+    material: string;
+    moldeId?: string;
+    moldeNombre?: string;
+    imagenUrl?: string;
+    variantes: StockVariante[];
 }
 
 interface FavoritoConDatos extends ItemFavorito {
@@ -58,12 +96,13 @@ interface FavoritoConDatos extends ItemFavorito {
     descripcion?: string;
     imagenesUrls?: string[];
     moldeNombre?: string;
+    coloresPorImagen?: Producto['coloresPorImagen'];
 }
 
 @Component({
     selector: 'app-favoritos',
     standalone: true,
-    imports: [CommonModule, RouterModule, FormsModule, CapitalizePipe, FormatoPrecioPipe, PopupExitoComponent],
+    imports: [CommonModule, RouterModule, FormsModule, ReactiveFormsModule, CapitalizePipe, FormatoPrecioPipe, PopupExitoComponent],
     templateUrl: './favoritos.component.html',
     styleUrls: ['./favoritos.component.css']
 })
@@ -72,7 +111,9 @@ export class FavoritosComponent implements OnInit, OnDestroy {
     favoritosFiltrados: FavoritoConDatos[] = [];
     productos: Producto[] = [];
     colores: Color[] = [];
+    coloresHilo: Color[] = [];
     moldes: Molde[] = [];
+    moldesHilo: Molde[] = [];
     private favoritosSub!: Subscription;
 
     // Filtros
@@ -101,6 +142,13 @@ export class FavoritosComponent implements OnInit, OnDestroy {
     coloresPorCapaDetalle: (Color | null)[] = [];
     svgPreviewDetalle: SafeHtml | null = null;
     capaAbiertaDetalle: number | null = null;
+    categoriaAbiertaDetalle: string | null = null;
+
+    // Stock disponible
+    stockPorProducto: Map<string, { items: StockItem[], totalUnidades: number }> = new Map();
+    mostrarPopupStock = false;
+    stockDetalleItems: StockItem[] = [];
+    cantidadStockSeleccionada: Map<string, number> = new Map();
 
     // Lightbox de imágenes
     mostrarLightbox = false;
@@ -110,6 +158,26 @@ export class FavoritosComponent implements OnInit, OnDestroy {
     mostrarPopupExito = false;
     mensajeExito = '';
     coloresExito: ColorInfo[] = [];
+
+    // Popup de Login/Registro para favoritos
+    mostrarPopupLoginFavoritos = false;
+    modoLoginFavoritos: 'login' | 'registro' = 'login';
+    popupLoginError = '';
+
+    // Formulario de login
+    loginForm = new FormGroup({
+        email: new FormControl('', [Validators.required, Validators.email]),
+        password: new FormControl('', Validators.required),
+    });
+
+    // Formulario de registro
+    registroForm = new FormGroup({
+        email: new FormControl('', [Validators.required, Validators.email]),
+        nombre: new FormControl('', Validators.required),
+        telefono: new FormControl(''),
+        password: new FormControl('', [Validators.required, Validators.minLength(6)]),
+        confirmarPassword: new FormControl('', Validators.required),
+    });
 
     constructor(
         private favoritosService: FavoritosService,
@@ -132,12 +200,36 @@ export class FavoritosComponent implements OnInit, OnDestroy {
         forkJoin({
             productos: this.http.get<Producto[]>('http://localhost:5000/api/productos'),
             colores: this.http.get<Color[]>('http://localhost:5000/api/colores'),
-            moldes: this.http.get<Molde[]>('http://localhost:5000/api/moldes')
+            coloresHilo: this.http.get<Color[]>('http://localhost:5000/api/colores-hilo'),
+            moldes: this.http.get<Molde[]>('http://localhost:5000/api/moldes'),
+            moldesHilo: this.http.get<Molde[]>('http://localhost:5000/api/moldes-hilo'),
+            stock: this.http.get<StockItem[]>('http://localhost:5000/api/stock')
         }).subscribe({
             next: (data) => {
                 this.productos = data.productos;
                 this.colores = data.colores;
+                this.coloresHilo = ordenarCromatico(data.coloresHilo);
                 this.moldes = ordenarAlfabetico(data.moldes);
+                this.moldesHilo = ordenarAlfabetico(data.moldesHilo);
+
+                // Procesar stock
+                this.stockPorProducto.clear();
+                data.stock.forEach(item => {
+                    const variantesDisponibles = item.variantes.filter(v => v.cantidad > 0);
+                    if (variantesDisponibles.length > 0) {
+                        const itemFiltrado = { ...item, variantes: variantesDisponibles };
+                        const existing = this.stockPorProducto.get(item.productoId);
+                        if (existing) {
+                            existing.items.push(itemFiltrado);
+                            existing.totalUnidades += variantesDisponibles.reduce((sum, v) => sum + v.cantidad, 0);
+                        } else {
+                            this.stockPorProducto.set(item.productoId, {
+                                items: [itemFiltrado],
+                                totalUnidades: variantesDisponibles.reduce((sum, v) => sum + v.cantidad, 0)
+                            });
+                        }
+                    }
+                });
                 
                 // Suscribirse a favoritos después de cargar productos
                 this.favoritosSub = this.favoritosService.favoritos$.subscribe(items => {
@@ -149,7 +241,8 @@ export class FavoritosComponent implements OnInit, OnDestroy {
                             material: productoCompleto?.material,
                             descripcion: productoCompleto?.descripcion,
                             imagenesUrls: productoCompleto?.imagenesUrls,
-                            moldeNombre: productoCompleto?.moldeNombre
+                            moldeNombre: productoCompleto?.moldeNombre,
+                            coloresPorImagen: productoCompleto?.coloresPorImagen
                         };
                     });
                     this.extraerFiltros();
@@ -162,6 +255,10 @@ export class FavoritosComponent implements OnInit, OnDestroy {
 
     getMoldeByNombre(nombre: string): Molde | null {
         return this.moldes.find(m => m.nombre === nombre) || null;
+    }
+
+    getMoldeHiloByNombre(nombre: string): Molde | null {
+        return this.moldesHilo.find(m => m.nombre === nombre) || null;
     }
 
     // Métodos de filtrado
@@ -269,11 +366,23 @@ export class FavoritosComponent implements OnInit, OnDestroy {
         return producto.material?.toLowerCase() === 'resina';
     }
 
+    esHiloEncerado(producto: FavoritoConDatos): boolean {
+        return producto.material?.toLowerCase() === 'hilo encerado';
+    }
+
+    requiereColores(producto: FavoritoConDatos): boolean {
+        return this.esResina(producto) || this.esHiloEncerado(producto);
+    }
+
+    getCapasDetalle(): { nombre: string; volumen: number }[] {
+        return this.moldeDetalle?.capas || [];
+    }
+
     agregarAlCarrito(producto: FavoritoConDatos): void {
         const cantidad = producto.cantidad || 1;
         
-        // Si es resina, abrir popup de detalle para seleccionar colores
-        if (this.esResina(producto) && producto.moldeNombre) {
+        // Si requiere colores, abrir popup de detalle para seleccionar colores
+        if ((this.esResina(producto) && producto.moldeNombre) || (this.esHiloEncerado(producto) && producto.moldeNombre)) {
             this.abrirDetalle(producto, new Event('click'));
             this.cantidadDetalle = cantidad;
             return;
@@ -309,6 +418,20 @@ export class FavoritosComponent implements OnInit, OnDestroy {
                     this.svgPreviewDetalle = this.getSvgInicial(this.moldeDetalle);
                 }
             }
+        } else if (this.esHiloEncerado(producto) && producto.moldeNombre) {
+            this.moldeDetalle = this.getMoldeHiloByNombre(producto.moldeNombre);
+            if (this.moldeDetalle) {
+                this.coloresPorCapaDetalle = new Array(this.moldeDetalle.capas.length).fill(null);
+                if (this.moldeTieneSvg(this.moldeDetalle)) {
+                    this.svgPreviewDetalle = this.getSvgInicial(this.moldeDetalle);
+                }
+            } else {
+                this.coloresPorCapaDetalle = [];
+            }
+        } else if (this.esHiloEncerado(producto)) {
+            this.moldeDetalle = null;
+            this.coloresPorCapaDetalle = [];
+            this.svgPreviewDetalle = null;
         } else {
             this.moldeDetalle = null;
             this.coloresPorCapaDetalle = [];
@@ -325,6 +448,7 @@ export class FavoritosComponent implements OnInit, OnDestroy {
         this.coloresPorCapaDetalle = [];
         this.svgPreviewDetalle = null;
         this.capaAbiertaDetalle = null;
+        this.categoriaAbiertaDetalle = null;
         this.mostrarLightbox = false;
         this.imagenLightboxIndex = 0;
     }
@@ -387,7 +511,17 @@ export class FavoritosComponent implements OnInit, OnDestroy {
 
     // ========== SVG Y COLORES ==========
     toggleCapaDetalle(capaIndex: number): void {
-        this.capaAbiertaDetalle = this.capaAbiertaDetalle === capaIndex ? null : capaIndex;
+        if (this.capaAbiertaDetalle === capaIndex) {
+            this.capaAbiertaDetalle = null;
+            this.categoriaAbiertaDetalle = null;
+        } else {
+            this.capaAbiertaDetalle = capaIndex;
+            this.categoriaAbiertaDetalle = null;
+        }
+    }
+
+    toggleCategoriaDetalle(categoria: string): void {
+        this.categoriaAbiertaDetalle = this.categoriaAbiertaDetalle === categoria ? null : categoria;
     }
 
     getColoresPorCategoria(categoria: string): Color[] {
@@ -396,7 +530,11 @@ export class FavoritosComponent implements OnInit, OnDestroy {
 
     seleccionarColorCapaDetalle(capaIndex: number, color: Color): void {
         this.coloresPorCapaDetalle[capaIndex] = color;
-        this.actualizarSvgPreviewDetalle();
+        if (this.productoDetalle && this.moldeTieneSvg(this.moldeDetalle)) {
+            this.actualizarSvgPreviewDetalle();
+        }
+        this.categoriaAbiertaDetalle = null;
+        this.capaAbiertaDetalle = null;
     }
 
     moldeTieneSvg(molde: Molde | null): boolean {
@@ -424,16 +562,180 @@ export class FavoritosComponent implements OnInit, OnDestroy {
     }
 
     generarSvgConColores(svgContent: string, mappings: SvgAreaMapping[], colores: (Color | null)[]): SafeHtml {
-        let svgConColores = this.aplicarEstiloBase(svgContent, mappings);
-        
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(svgContent, 'image/svg+xml');
+
+        // Asegurar definiciones globales (gradientes para translucido/polvo)
+        this.ensureGlobalDefs(doc);
+
+        // Aplicar estilo base (blanco con borde negro)
+        this.aplicarEstiloBaseEnDoc(doc, mappings);
+
+        // Aplicar colores seleccionados
         mappings.forEach((mapping) => {
             const color = colores[mapping.capaIndex];
             if (color && mapping.svgElementId) {
-                svgConColores = this.aplicarColorAElemento(svgConColores, mapping.svgElementId, color.rgb);
+                this.aplicarColorEnDoc(doc, mapping.svgElementId, color);
             }
         });
+
+        const serialized = new XMLSerializer().serializeToString(doc);
+        return this.sanitizer.bypassSecurityTrustHtml(serialized);
+    }
+
+    ensureGlobalDefs(doc: Document): void {
+        const svg = doc.querySelector('svg');
+        if (!svg) return;
         
-        return this.sanitizer.bypassSecurityTrustHtml(svgConColores);
+        let defs = svg.querySelector('defs');
+        if (!defs) {
+            defs = doc.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            svg.insertBefore(defs, svg.firstChild);
+        }
+        
+        // Gradiente para efecto brillo/translucido (shine)
+        if (!doc.getElementById('grad-shine')) {
+            const gradShine = doc.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+            gradShine.setAttribute('id', 'grad-shine');
+            gradShine.setAttribute('x1', '0%');
+            gradShine.setAttribute('y1', '0%');
+            gradShine.setAttribute('x2', '100%');
+            gradShine.setAttribute('y2', '100%');
+            
+            const stops = [
+                { offset: '0%', color: 'white', opacity: '0.5' },
+                { offset: '40%', color: 'white', opacity: '0' },
+                { offset: '60%', color: 'white', opacity: '0' },
+                { offset: '100%', color: 'white', opacity: '0.3' }
+            ];
+            
+            stops.forEach(s => {
+                const stop = doc.createElementNS('http://www.w3.org/2000/svg', 'stop');
+                stop.setAttribute('offset', s.offset);
+                stop.setAttribute('stop-color', s.color);
+                stop.setAttribute('stop-opacity', s.opacity);
+                gradShine.appendChild(stop);
+            });
+            
+            defs.appendChild(gradShine);
+        }
+
+        // Gradiente para efecto polvo (dust)
+        if (!doc.getElementById('grad-dust')) {
+            const gradDust = doc.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+            gradDust.setAttribute('id', 'grad-dust');
+            gradDust.setAttribute('x1', '0%');
+            gradDust.setAttribute('y1', '0%');
+            gradDust.setAttribute('x2', '100%');
+            gradDust.setAttribute('y2', '100%');
+            
+            const stops = [
+                { offset: '0%', color: 'white', opacity: '0.4' },
+                { offset: '50%', color: 'white', opacity: '0' },
+                { offset: '100%', color: 'white', opacity: '0.4' }
+            ];
+            
+            stops.forEach(s => {
+                const stop = doc.createElementNS('http://www.w3.org/2000/svg', 'stop');
+                stop.setAttribute('offset', s.offset);
+                stop.setAttribute('stop-color', s.color);
+                stop.setAttribute('stop-opacity', s.opacity);
+                gradDust.appendChild(stop);
+            });
+            
+            defs.appendChild(gradDust);
+        }
+    }
+
+    aplicarEstiloBaseEnDoc(doc: Document, mappings: SvgAreaMapping[]): void {
+        mappings.forEach((mapping) => {
+            if (mapping.svgElementId) {
+                const elemento = doc.getElementById(mapping.svgElementId);
+                if (elemento) {
+                    this.aplicarEstiloBaseAElemento(elemento);
+                }
+            }
+        });
+    }
+
+    aplicarColorEnDoc(doc: Document, elementId: string, color: Color): void {
+        const elemento = doc.getElementById(elementId);
+        if (elemento) {
+            this.colorearElementoEnDoc(doc, elemento, color);
+        }
+    }
+
+    colorearElementoEnDoc(doc: Document, elemento: Element, color: Color): void {
+        let fillValue = color.rgb;
+        let strokeValue = '#000000';
+        
+        // Manejo de efectos para translucido y polvo
+        if (color.categoria === 'translucido' || color.categoria === 'polvo') {
+            const defs = doc.querySelector('defs')!;
+            
+            let patternId = '';
+            let gradRef = '';
+            let baseOpacity = '1';
+
+            if (color.categoria === 'translucido') {
+                patternId = `pat-trans-${color._id}`;
+                gradRef = 'grad-shine';
+                baseOpacity = '0.6';
+            } else if (color.categoria === 'polvo') {
+                patternId = `pat-dust-${color._id}`;
+                gradRef = 'grad-dust';
+            }
+
+            if (!doc.getElementById(patternId)) {
+                const pattern = doc.createElementNS('http://www.w3.org/2000/svg', 'pattern');
+                pattern.setAttribute('id', patternId);
+                pattern.setAttribute('patternUnits', 'objectBoundingBox');
+                pattern.setAttribute('width', '1');
+                pattern.setAttribute('height', '1');
+                pattern.setAttribute('viewBox', '0 0 1 1');
+                pattern.setAttribute('preserveAspectRatio', 'none');
+
+                const rectBase = doc.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rectBase.setAttribute('width', '1');
+                rectBase.setAttribute('height', '1');
+                rectBase.setAttribute('fill', color.rgb);
+                if (baseOpacity !== '1') {
+                    rectBase.setAttribute('fill-opacity', baseOpacity);
+                }
+                
+                const rectOverlay = doc.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rectOverlay.setAttribute('width', '1');
+                rectOverlay.setAttribute('height', '1');
+                rectOverlay.setAttribute('fill', `url(#${gradRef})`);
+                
+                pattern.appendChild(rectBase);
+                pattern.appendChild(rectOverlay);
+                defs.appendChild(pattern);
+            }
+            fillValue = `url(#${patternId})`;
+        }
+
+        const applyStyle = (el: Element) => {
+            el.setAttribute('fill', fillValue);
+            el.setAttribute('stroke', strokeValue);
+            el.setAttribute('stroke-width', '1');
+            
+            // Limpiar estilos inline
+            let style = el.getAttribute('style') || '';
+            style = style.replace(/(fill|stroke|stroke-width)\s*:\s*[^;]+;?/gi, '');
+            style += `fill: ${fillValue}; stroke: ${strokeValue}; stroke-width: 1;`;
+            el.setAttribute('style', style);
+        };
+
+        const tagName = elemento.tagName.toLowerCase();
+        const elementosConFill = ['path', 'rect', 'circle', 'ellipse', 'polygon', 'polyline'];
+
+        if (elementosConFill.includes(tagName)) {
+            applyStyle(elemento);
+        }
+        
+        const hijos = elemento.querySelectorAll('path, rect, circle, ellipse, polygon, polyline');
+        hijos.forEach(hijo => applyStyle(hijo));
     }
 
     aplicarEstiloBase(svgContent: string, mappings: SvgAreaMapping[]): string {
@@ -531,12 +833,13 @@ export class FavoritosComponent implements OnInit, OnDestroy {
     agregarDesdeDetalle(): void {
         if (!this.productoDetalle) return;
         
-        if (this.esResina(this.productoDetalle) && this.moldeDetalle) {
+        const capas = this.getCapasDetalle();
+        if (this.requiereColores(this.productoDetalle) && capas.length > 0) {
             if (!this.todasCapasConColorDetalle()) {
                 return;
             }
             
-            const coloresPorCapa: ColorPorCapa[] = this.moldeDetalle.capas.map((capa, index) => {
+            const coloresPorCapa: ColorPorCapa[] = capas.map((capa, index) => {
                 const color = this.coloresPorCapaDetalle[index]!;
                 return {
                     capaIndex: index,
@@ -579,6 +882,150 @@ export class FavoritosComponent implements OnInit, OnDestroy {
         }
     }
 
+    // ========== COLORES DE FOTO ==========
+    imagenActualTieneColores(): boolean {
+        if (!this.productoDetalle?.coloresPorImagen) return false;
+        const entry = this.productoDetalle.coloresPorImagen.find(c => c.imagenIndex === this.imagenActualIndex);
+        return !!(entry && entry.colores.length > 0);
+    }
+
+    aplicarColoresDeFoto(): void {
+        if (!this.productoDetalle?.coloresPorImagen) return;
+        if (!this.moldeDetalle && !this.esHiloEncerado(this.productoDetalle)) return;
+        
+        const entry = this.productoDetalle.coloresPorImagen.find(c => c.imagenIndex === this.imagenActualIndex);
+        if (!entry || entry.colores.length === 0) return;
+        
+        entry.colores.forEach(colorData => {
+            const colorCompleto = this.colores.find(c => c._id === colorData.colorId) || this.coloresHilo.find(c => c._id === colorData.colorId);
+            if (colorCompleto && colorData.capaIndex < this.coloresPorCapaDetalle.length) {
+                this.coloresPorCapaDetalle[colorData.capaIndex] = colorCompleto;
+            }
+        });
+        
+        if (this.productoDetalle && this.moldeTieneSvg(this.moldeDetalle)) {
+            this.actualizarSvgPreviewDetalle();
+        }
+    }
+
+    // ========== STOCK DISPONIBLE ==========
+    productoTieneStock(productoId: string): boolean {
+        const stock = this.stockPorProducto.get(productoId);
+        return !!(stock && stock.totalUnidades > 0);
+    }
+
+    getStockTotal(productoId: string): number {
+        const stock = this.stockPorProducto.get(productoId);
+        return stock ? stock.totalUnidades : 0;
+    }
+
+    abrirPopupStock(): void {
+        if (!this.productoDetalle) return;
+        const stock = this.stockPorProducto.get(this.productoDetalle._id);
+        if (!stock) return;
+        this.stockDetalleItems = stock.items;
+        this.cantidadStockSeleccionada.clear();
+        stock.items.forEach(item => {
+            item.variantes.forEach(v => {
+                this.cantidadStockSeleccionada.set(v._id, 1);
+            });
+        });
+        this.mostrarPopupStock = true;
+    }
+
+    cerrarPopupStock(): void {
+        this.mostrarPopupStock = false;
+        this.stockDetalleItems = [];
+        this.cantidadStockSeleccionada.clear();
+    }
+
+    generarSvgParaVariante(variante: StockVariante, moldeNombre?: string): SafeHtml | null {
+        if (!moldeNombre) return null;
+        const molde = this.getMoldeByNombre(moldeNombre) || this.getMoldeHiloByNombre(moldeNombre);
+        if (!molde?.svgContent || !molde?.svgAreaMappings) return null;
+        
+        const coloresArray: (Color | null)[] = new Array(molde.capas.length).fill(null);
+        variante.coloresPorCapa.forEach(cc => {
+            if (cc.capaIndex < coloresArray.length) {
+                coloresArray[cc.capaIndex] = {
+                    _id: cc.colorId,
+                    nombre: cc.colorNombre,
+                    rgb: cc.colorRgb,
+                    categoria: this.colores.find(c => c._id === cc.colorId)?.categoria || this.coloresHilo.find(c => c._id === cc.colorId)?.categoria || ''
+                };
+            }
+        });
+        
+        return this.generarSvgConColores(molde.svgContent, molde.svgAreaMappings, coloresArray);
+    }
+
+    getImagenParaVariante(variante: StockVariante, stockItem: StockItem): string | null {
+        if (!this.productoDetalle?.coloresPorImagen || !this.productoDetalle?.imagenesUrls) return stockItem.imagenUrl || null;
+        
+        for (const entry of this.productoDetalle.coloresPorImagen) {
+            if (entry.colores.length === 0) continue;
+            const match = variante.coloresPorCapa.every(vc => 
+                entry.colores.some(ec => ec.capaIndex === vc.capaIndex && ec.colorId === vc.colorId)
+            ) && entry.colores.every(ec =>
+                variante.coloresPorCapa.some(vc => vc.capaIndex === ec.capaIndex && vc.colorId === ec.colorId)
+            );
+            if (match && this.productoDetalle.imagenesUrls[entry.imagenIndex]) {
+                return this.productoDetalle.imagenesUrls[entry.imagenIndex];
+            }
+        }
+        
+        return stockItem.imagenUrl || null;
+    }
+
+    incrementarCantidadStock(varianteId: string, max: number): void {
+        const actual = this.cantidadStockSeleccionada.get(varianteId) || 1;
+        if (actual < max) {
+            this.cantidadStockSeleccionada.set(varianteId, actual + 1);
+        }
+    }
+
+    decrementarCantidadStock(varianteId: string): void {
+        const actual = this.cantidadStockSeleccionada.get(varianteId) || 1;
+        if (actual > 1) {
+            this.cantidadStockSeleccionada.set(varianteId, actual - 1);
+        }
+    }
+
+    getCantidadStock(varianteId: string): number {
+        return this.cantidadStockSeleccionada.get(varianteId) || 1;
+    }
+
+    comprarDesdeStock(variante: StockVariante, stockItem: StockItem): void {
+        if (!this.productoDetalle) return;
+        const cantidad = this.cantidadStockSeleccionada.get(variante._id) || 1;
+
+        const coloresPorCapa: ColorPorCapa[] = variante.coloresPorCapa.map(cc => ({
+            capaIndex: cc.capaIndex,
+            capaNombre: cc.capaNombre,
+            colorId: cc.colorId,
+            colorNombre: cc.colorNombre,
+            colorRgb: cc.colorRgb
+        }));
+
+        this.carritoService.agregarProducto({
+            _id: this.productoDetalle._id,
+            nombre: this.productoDetalle.nombre,
+            producto: this.productoDetalle.producto,
+            material: this.productoDetalle.material || '',
+            precio: this.productoDetalle.precio || 0,
+            imagen: this.getImagenParaVariante(variante, stockItem) || this.getPrimeraImagen(this.productoDetalle),
+            moldeNombre: this.productoDetalle.moldeNombre,
+            coloresPorCapa: coloresPorCapa.length > 0 ? coloresPorCapa : undefined,
+            esStock: true,
+            stockVarianteId: variante._id
+        }, cantidad);
+
+        const coloresGuardados = coloresPorCapa.length > 0 ? [...coloresPorCapa] : undefined;
+        this.cerrarPopupStock();
+        this.cerrarDetalle();
+        this.mostrarMensajeExito(`${cantidad} x ${this.productoDetalle?.nombre || stockItem.productoNombre} - Listo para retirar`, coloresGuardados);
+    }
+
     // ========== POPUP DE ÉXITO ==========
     mostrarMensajeExito(mensaje: string, coloresPorCapa?: ColorPorCapa[]): void {
         this.mensajeExito = mensaje;
@@ -598,5 +1045,120 @@ export class FavoritosComponent implements OnInit, OnDestroy {
         this.mostrarPopupExito = false;
         this.mensajeExito = '';
         this.coloresExito = [];
+    }
+
+    // ========== POPUP LOGIN/REGISTRO PARA FAVORITOS ==========
+
+    abrirPopupLoginFavoritos(): void {
+        this.mostrarPopupLoginFavoritos = true;
+        this.modoLoginFavoritos = 'login';
+        this.popupLoginError = '';
+        this.loginForm.reset();
+        this.registroForm.reset();
+    }
+
+    cerrarPopupLoginFavoritos(): void {
+        this.mostrarPopupLoginFavoritos = false;
+        this.popupLoginError = '';
+        this.loginForm.reset();
+        this.registroForm.reset();
+    }
+
+    cambiarModoLoginFavoritos(modo: 'login' | 'registro'): void {
+        this.modoLoginFavoritos = modo;
+        this.popupLoginError = '';
+        this.loginForm.reset();
+        this.registroForm.reset();
+    }
+
+    get passwordsCoinciden(): boolean {
+        return this.registroForm.get('password')?.value === this.registroForm.get('confirmarPassword')?.value;
+    }
+
+    onSubmitLoginFavoritos(): void {
+        const formData = {
+            email: this.loginForm.value.email,
+            password: this.loginForm.value.password
+        };
+
+        this.http.post<any>('http://localhost:5000/api/login', formData)
+            .subscribe({
+                next: (res) => {
+                    if (res.success) {
+                        sessionStorage.setItem('email', formData.email as string);
+                        sessionStorage.setItem('isLoggedIn', 'true');
+                        sessionStorage.setItem('tipoUsuario', res.tipoUsuario);
+                        sessionStorage.setItem('nombreUsuario', res.nombre);
+
+                        this.favoritosService.sincronizarAlLogin(formData.email as string);
+
+                        this.mostrarPopupLoginFavoritos = false;
+                        this.popupLoginError = '';
+                        this.loginForm.reset();
+
+                        // Recargar favoritos después de sincronizar
+                        setTimeout(() => {
+                            this.cargarDatos();
+                        }, 500);
+
+                        this.mostrarMensajeExito('¡Bienvenido! Tus favoritos se han cargado');
+                    }
+                },
+                error: (err) => {
+                    const errorMessage = err?.error?.error;
+                    if (errorMessage === 'contraseñaIncorrecta') {
+                        this.popupLoginError = 'Contraseña incorrecta';
+                    } else {
+                        this.popupLoginError = 'El email no está registrado';
+                    }
+                }
+            });
+    }
+
+    onSubmitRegistroFavoritos(): void {
+        if (!this.passwordsCoinciden) {
+            this.popupLoginError = 'Las contraseñas no coinciden';
+            return;
+        }
+
+        const formData = {
+            email: this.registroForm.value.email,
+            nombre: this.registroForm.value.nombre,
+            telefono: this.registroForm.value.telefono || '',
+            password: this.registroForm.value.password
+        };
+
+        this.http.post<any>('http://localhost:5000/api/usuarios/registro', formData)
+            .subscribe({
+                next: (res) => {
+                    if (res.success) {
+                        sessionStorage.setItem('email', formData.email as string);
+                        sessionStorage.setItem('isLoggedIn', 'true');
+                        sessionStorage.setItem('tipoUsuario', 'Cliente');
+                        sessionStorage.setItem('nombreUsuario', formData.nombre as string);
+
+                        this.mostrarPopupLoginFavoritos = false;
+                        this.popupLoginError = '';
+                        this.registroForm.reset();
+
+                        // Recargar favoritos después de registrarse
+                        setTimeout(() => {
+                            this.cargarDatos();
+                        }, 300);
+
+                        this.mostrarMensajeExito(`¡Bienvenido ${formData.nombre}! Ya podés guardar tus favoritos`);
+                    }
+                },
+                error: (err) => {
+                    const errorMessage = err?.error?.error;
+                    if (errorMessage === 'usuarioExistente') {
+                        this.popupLoginError = 'El email ya está registrado';
+                    } else if (errorMessage === 'emailInvalido') {
+                        this.popupLoginError = 'Email inválido';
+                    } else {
+                        this.popupLoginError = 'Error al registrar. Intente nuevamente';
+                    }
+                }
+            });
     }
 }

@@ -53,6 +53,8 @@
     <!-- Favoritos Grid -->
     <div class="productos-grid" *ngIf="vistaGrid && favoritosFiltrados.length > 0">
         <div class="card producto-card" *ngFor="let producto of favoritosFiltrados" (click)="abrirDetalle(producto, $event)">
+            <!-- Badge stock disponible -->
+            <span class="badge-stock" *ngIf="productoTieneStock(producto._id)">Listo para retirar</span>
             <!-- Botón quitar favorito -->
             <button class="btn-favorito activo" (click)="eliminarFavorito(producto._id); $event.stopPropagation()" title="Quitar de favoritos">
                 <span class="sparkle-icon">✦</span>
@@ -82,6 +84,8 @@
     <!-- Favoritos Lista -->
     <div class="productos-lista" *ngIf="!vistaGrid && favoritosFiltrados.length > 0">
         <div class="card producto-row" *ngFor="let producto of favoritosFiltrados" (click)="abrirDetalle(producto, $event)">
+            <!-- Badge stock disponible -->
+            <span class="badge-stock badge-stock-lista" *ngIf="productoTieneStock(producto._id)">Listo para retirar</span>
             <!-- Botón quitar favorito -->
             <button class="btn-favorito activo" id="btn-favorito-lista" (click)="eliminarFavorito(producto._id); $event.stopPropagation()" title="Quitar de favoritos">
                 <span class="sparkle-icon">✦</span>
@@ -120,7 +124,10 @@
         <div class="icono-vacio">✦</div>
         <h2>No tienes productos favoritos</h2>
         <p>Explora nuestros productos y marca tus favoritos para verlos aquí</p>
-        <a routerLink="/productos" class="btn-explorar">Ver productos</a>
+        <div class="sin-favoritos-acciones">
+            <a routerLink="/productos" class="btn-explorar">Ver productos</a>
+            <button class="btn-explorar btn-login-favoritos" (click)="abrirPopupLoginFavoritos()">Inicia Sesión para ver tus favoritos</button>
+        </div>
     </div>
 </div>
 
@@ -174,30 +181,39 @@
     <div class="card popup-detalle" (click)="$event.stopPropagation()">
         <button class="btn-cerrar-popup" (click)="cerrarDetalle()">✕</button>
         
-        <div class="popup-contenido layout-horizontal" [class.foto-svg]="esResina(productoDetalle) && moldeTieneSvg(moldeDetalle)">
+        <div class="popup-contenido layout-horizontal" [class.foto-svg]="(esResina(productoDetalle) || esHiloEncerado(productoDetalle)) && moldeTieneSvg(moldeDetalle)">
             <!-- Panel izquierdo: Imagen/SVG -->
             <div class="popup-panel-izquierdo">
                 <!-- Carrusel de imágenes -->
-                <div class="popup-imagen-container">
-                    <div class="popup-carrusel">
-                        <button class="popup-nav prev" (click)="imagenAnterior()" *ngIf="getImagenes(productoDetalle).length > 1">❮</button>
-                        <img [src]="getImagenes(productoDetalle)[imagenActualIndex]" 
-                             [alt]="productoDetalle.nombre" 
-                             class="popup-imagen clickable"
-                             (click)="abrirLightbox(imagenActualIndex)"
-                             title="Clic para ampliar">
-                        <button class="popup-nav next" (click)="imagenSiguiente()" *ngIf="getImagenes(productoDetalle).length > 1">❯</button>
+                <div class="imagen-btn-colores">
+                    <div class="popup-imagen-container">
+                        <div class="popup-carrusel">
+                            <button class="popup-nav prev" (click)="imagenAnterior()" *ngIf="getImagenes(productoDetalle).length > 1">❮</button>
+                            <img [src]="getImagenes(productoDetalle)[imagenActualIndex]" 
+                                 [alt]="productoDetalle.nombre" 
+                                 class="popup-imagen clickable"
+                                 (click)="abrirLightbox(imagenActualIndex)"
+                                 title="Clic para ampliar">
+                            <button class="popup-nav next" (click)="imagenSiguiente()" *ngIf="getImagenes(productoDetalle).length > 1">❯</button>
+                        </div>
+                        <div class="popup-indicadores" *ngIf="getImagenes(productoDetalle).length > 1">
+                            <span class="indicador" 
+                                  *ngFor="let img of getImagenes(productoDetalle); let i = index"
+                                  [class.activo]="i === imagenActualIndex"
+                                  (click)="seleccionarImagen(i)"></span>
+                        </div>
                     </div>
-                    <div class="popup-indicadores" *ngIf="getImagenes(productoDetalle).length > 1">
-                        <span class="indicador" 
-                              *ngFor="let img of getImagenes(productoDetalle); let i = index"
-                              [class.activo]="i === imagenActualIndex"
-                              (click)="seleccionarImagen(i)"></span>
-                    </div>
+                    
+                    <!-- Botón para aplicar colores de la foto -->
+                    <button class="btn-colores-foto" 
+                            *ngIf="requiereColores(productoDetalle) && coloresPorCapaDetalle.length > 0 && imagenActualTieneColores()"
+                            (click)="aplicarColoresDeFoto()">
+                        🎨 Quiero los colores de la foto
+                    </button>
                 </div>
                 
-                <!-- SVG Preview interactivo (cuando es resina con SVG) -->
-                <div class="svg-panel-detalle" *ngIf="esResina(productoDetalle) && moldeTieneSvg(moldeDetalle)">
+                <!-- SVG Preview interactivo (cuando tiene molde con SVG) -->
+                <div class="svg-panel-detalle" *ngIf="(esResina(productoDetalle) || esHiloEncerado(productoDetalle)) && moldeTieneSvg(moldeDetalle)">
                     <div class="svg-preview-grande" 
                          [innerHTML]="svgPreviewDetalle"
                          (click)="onSvgClickDetalle($event)"></div>
@@ -216,12 +232,12 @@
                     <p class="popup-precio">${{ productoDetalle.precio | formatoPrecio }}</p>
                 </div>
 
-                <!-- Selector de color por capa para productos de resina -->
-                <div class="selector-colores-detalle" *ngIf="esResina(productoDetalle) && moldeDetalle">
+                <!-- Selector de color por capa para productos con colores -->
+                <div class="selector-colores-detalle" *ngIf="requiereColores(productoDetalle) && coloresPorCapaDetalle.length > 0">
                     <h4>Selecciona colores por capa:</h4>
                     
                     <div class="capas-accordion-detalle">
-                        <div class="capa-accordion" *ngFor="let capa of moldeDetalle.capas; let i = index">
+                        <div class="capa-accordion" *ngFor="let capa of getCapasDetalle(); let i = index">
                             <!-- Header de la capa -->
                             <div class="capa-accordion-header" 
                                  [class.abierto]="capaAbiertaDetalle === i"
@@ -242,33 +258,62 @@
                             
                             <!-- Contenido desplegable -->
                             <div class="capa-accordion-contenido" *ngIf="capaAbiertaDetalle === i">
-                                <!-- Colores Translúcidos -->
-                                <div class="categoria-colores" *ngIf="getColoresPorCategoria('translucido').length > 0">
-                                    <h5 class="categoria-titulo">✨ Translúcidos</h5>
-                                    <div class="colores-grid-nuevo">
-                                        <div class="color-opcion-nuevo" 
-                                             *ngFor="let color of getColoresPorCategoria('translucido')" 
-                                             [class.seleccionado]="coloresPorCapaDetalle[i]?._id === color._id"
-                                             (click)="seleccionarColorCapaDetalle(i, color); $event.stopPropagation()"
-                                             [title]="color.nombre">
-                                            <span class="color-dot-nuevo translucido" [style.background-color]="color.rgb"></span>
-                                            <span class="color-nombre-nuevo">{{ color.nombre | capitalize }}</span>
+                                <!-- Colores de Resina (sub-accordions por categoría) -->
+                                <ng-container *ngIf="esResina(productoDetalle)">
+                                    <!-- Sub-accordion: Colores Translúcidos -->
+                                    <div class="subcategoria-accordion" *ngIf="getColoresPorCategoria('translucido').length > 0">
+                                        <div class="subcategoria-header" 
+                                             [class.abierto]="categoriaAbiertaDetalle === 'translucido'"
+                                             (click)="toggleCategoriaDetalle('translucido'); $event.stopPropagation()">
+                                            <span class="subcategoria-titulo">✨ Translúcidos</span>
+                                            <span class="subcategoria-toggle">{{ categoriaAbiertaDetalle === 'translucido' ? '▲' : '▼' }}</span>
+                                        </div>
+                                        <div class="subcategoria-contenido" *ngIf="categoriaAbiertaDetalle === 'translucido'">
+                                            <div class="colores-grid-nuevo">
+                                                <div class="color-opcion-nuevo" 
+                                                     *ngFor="let color of getColoresPorCategoria('translucido')" 
+                                                     [class.seleccionado]="coloresPorCapaDetalle[i]?._id === color._id"
+                                                     (click)="seleccionarColorCapaDetalle(i, color); $event.stopPropagation()"
+                                                     [title]="color.nombre">
+                                                    <span class="color-dot-nuevo translucido" [style.background-color]="color.rgb"></span>
+                                                    <span class="color-nombre-nuevo">{{ color.nombre | capitalize }}</span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                
-                                <!-- Colores Polvo -->
-                                <div class="categoria-colores" *ngIf="getColoresPorCategoria('polvo').length > 0">
-                                    <h5 class="categoria-titulo">🌟 Polvo / Brillos</h5>
-                                    <div class="colores-grid-nuevo">
-                                        <div class="color-opcion-nuevo" 
-                                             *ngFor="let color of getColoresPorCategoria('polvo')" 
-                                             [class.seleccionado]="coloresPorCapaDetalle[i]?._id === color._id"
-                                             (click)="seleccionarColorCapaDetalle(i, color); $event.stopPropagation()"
-                                             [title]="color.nombre">
-                                            <span class="color-dot-nuevo polvo" [style.background-color]="color.rgb"></span>
-                                            <span class="color-nombre-nuevo">{{ color.nombre | capitalize }}</span>
+                                    
+                                    <!-- Sub-accordion: Colores Polvo / Brillos -->
+                                    <div class="subcategoria-accordion" *ngIf="getColoresPorCategoria('polvo').length > 0">
+                                        <div class="subcategoria-header" 
+                                             [class.abierto]="categoriaAbiertaDetalle === 'polvo'"
+                                             (click)="toggleCategoriaDetalle('polvo'); $event.stopPropagation()">
+                                            <span class="subcategoria-titulo">🌟 Polvo / Brillos</span>
+                                            <span class="subcategoria-toggle">{{ categoriaAbiertaDetalle === 'polvo' ? '▲' : '▼' }}</span>
                                         </div>
+                                        <div class="subcategoria-contenido" *ngIf="categoriaAbiertaDetalle === 'polvo'">
+                                            <div class="colores-grid-nuevo">
+                                                <div class="color-opcion-nuevo" 
+                                                     *ngFor="let color of getColoresPorCategoria('polvo')" 
+                                                     [class.seleccionado]="coloresPorCapaDetalle[i]?._id === color._id"
+                                                     (click)="seleccionarColorCapaDetalle(i, color); $event.stopPropagation()"
+                                                     [title]="color.nombre">
+                                                    <span class="color-dot-nuevo polvo" [style.background-color]="color.rgb"></span>
+                                                    <span class="color-nombre-nuevo">{{ color.nombre | capitalize }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </ng-container>
+
+                                <!-- Colores de Hilo Encerado (grid plano) -->
+                                <div class="colores-grid-nuevo" *ngIf="esHiloEncerado(productoDetalle) && coloresHilo.length > 0">
+                                    <div class="color-opcion-nuevo" 
+                                         *ngFor="let color of coloresHilo" 
+                                         [class.seleccionado]="coloresPorCapaDetalle[i]?._id === color._id"
+                                         (click)="seleccionarColorCapaDetalle(i, color); $event.stopPropagation()"
+                                         [title]="color.nombre">
+                                        <span class="color-dot-nuevo" [style.background-color]="color.rgb"></span>
+                                        <span class="color-nombre-nuevo">{{ color.nombre | capitalize }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -276,6 +321,13 @@
                     </div>
                 </div>
                 
+                <!-- Botón para ver stock disponible -->
+                <button class="btn-ver-stock" 
+                        *ngIf="productoTieneStock(productoDetalle._id)"
+                        (click)="abrirPopupStock()">
+                    Ver disponibles para retirar ({{ getStockTotal(productoDetalle._id) }})
+                </button>
+
                 <div class="popup-acciones">
                     <div class="popup-cantidad">
                         <button (click)="decrementarCantidadDetalle()">-</button>
@@ -284,7 +336,7 @@
                     </div>
                     <button class="btn-agregar-popup" 
                             (click)="agregarDesdeDetalle()"
-                            [disabled]="esResina(productoDetalle) && moldeDetalle && !todasCapasConColorDetalle()">
+                            [disabled]="requiereColores(productoDetalle) && coloresPorCapaDetalle.length > 0 && !todasCapasConColorDetalle()">
                         Agregar
                     </button>
                 </div>
@@ -300,6 +352,54 @@
     [colores]="coloresExito"
     (cerrar)="cerrarPopupExito()">
 </app-popup-exito>
+
+<!-- Popup de Stock Disponible -->
+<div class="popup-overlay popup-stock-overlay" *ngIf="mostrarPopupStock && productoDetalle" (click)="cerrarPopupStock()">
+    <div class="card popup-stock" (click)="$event.stopPropagation()">
+        <button class="btn-cerrar-popup" (click)="cerrarPopupStock()">✕</button>
+        <h2>Disponibles para retirar</h2>
+        <p class="stock-subtitle">{{ productoDetalle.nombre }}</p>
+
+        <div class="stock-variantes-lista">
+            <ng-container *ngFor="let stockItem of stockDetalleItems">
+                <div class="stock-variante-card" *ngFor="let variante of stockItem.variantes">
+                    <div class="stock-variante-visual">
+                        <div class="stock-variante-svg" 
+                             *ngIf="generarSvgParaVariante(variante, stockItem.moldeNombre) as svgHtml"
+                             [innerHTML]="svgHtml"></div>
+                        <img class="stock-variante-img" 
+                             *ngIf="!generarSvgParaVariante(variante, stockItem.moldeNombre) && getImagenParaVariante(variante, stockItem)"
+                             [src]="getImagenParaVariante(variante, stockItem)" 
+                             [alt]="productoDetalle.nombre">
+                    </div>
+                    <div class="stock-variante-info">
+                        <div class="stock-colores-chips">
+                            <span class="stock-color-chip" *ngFor="let cc of variante.coloresPorCapa"
+                                  [title]="cc.capaNombre + ': ' + cc.colorNombre">
+                                <span class="stock-color-dot" [style.background-color]="cc.colorRgb"></span>
+                                <span class="stock-color-nombre">{{ cc.colorNombre | capitalize }}</span>
+                            </span>
+                        </div>
+                        <p class="stock-variante-detalles" *ngIf="variante.detallesDiseno">{{ variante.detallesDiseno }}</p>
+                        <p class="stock-variante-cantidad">
+                            <span class="stock-disponible">{{ variante.cantidad }} disponible{{ variante.cantidad > 1 ? 's' : '' }}</span>
+                        </p>
+                    </div>
+                    <div class="stock-variante-acciones">
+                        <div class="selector-cantidad stock-cantidad-selector">
+                            <button class="btn-cantidad" (click)="decrementarCantidadStock(variante._id)">-</button>
+                            <span class="cantidad">{{ getCantidadStock(variante._id) }}</span>
+                            <button class="btn-cantidad" (click)="incrementarCantidadStock(variante._id, variante.cantidad)">+</button>
+                        </div>
+                        <button class="btn-comprar-stock" (click)="comprarDesdeStock(variante, stockItem)">
+                            Agregar
+                        </button>
+                    </div>
+                </div>
+            </ng-container>
+        </div>
+    </div>
+</div>
 
 <!-- Lightbox para ver imágenes en grande -->
 <div class="lightbox-overlay" *ngIf="mostrarLightbox && productoDetalle" (click)="cerrarLightbox()">
@@ -322,5 +422,88 @@
     
     <div class="lightbox-contador">
         {{ imagenLightboxIndex + 1 }} / {{ getImagenes(productoDetalle).length }}
+    </div>
+</div>
+
+<!-- Popup de Login/Registro para Favoritos -->
+<div class="popup-overlay" *ngIf="mostrarPopupLoginFavoritos" (click)="cerrarPopupLoginFavoritos()">
+    <div class="card popup-login-favoritos" (click)="$event.stopPropagation()">
+        <button class="btn-cerrar-popup" (click)="cerrarPopupLoginFavoritos()">✕</button>
+        <div class="popup-login-content">
+            <div class="login-favoritos-header">
+                <span class="icono-favorito">✦</span>
+                <h3>Iniciá sesión para ver tus favoritos</h3>
+            </div>
+
+            <!-- Tabs para cambiar entre Login y Registro -->
+            <div class="login-tabs">
+                <button [class.active]="modoLoginFavoritos === 'login'" (click)="cambiarModoLoginFavoritos('login')">Iniciar Sesión</button>
+                <button [class.active]="modoLoginFavoritos === 'registro'" (click)="cambiarModoLoginFavoritos('registro')">Registrarse</button>
+            </div>
+
+            <!-- Mensaje de error -->
+            <div class="login-error" *ngIf="popupLoginError">
+                {{ popupLoginError }}
+            </div>
+
+            <!-- Formulario de Login -->
+            <form *ngIf="modoLoginFavoritos === 'login'" [formGroup]="loginForm" (ngSubmit)="onSubmitLoginFavoritos()" class="login-form">
+                <div class="form-group">
+                    <label for="favLoginEmail">Email</label>
+                    <input type="email" id="favLoginEmail" formControlName="email" placeholder="ejemplo@correo.com">
+                    <div class="form-error" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+                        <span *ngIf="loginForm.get('email')?.errors?.['required']">El email es obligatorio</span>
+                        <span *ngIf="loginForm.get('email')?.errors?.['email']">Ingrese un email válido</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="favLoginPassword">Contraseña</label>
+                    <input type="password" id="favLoginPassword" formControlName="password">
+                    <div class="form-error" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+                        La contraseña es obligatoria
+                    </div>
+                </div>
+                <button type="submit" class="btn-submit" [disabled]="loginForm.invalid">Iniciar Sesión</button>
+            </form>
+
+            <!-- Formulario de Registro -->
+            <form *ngIf="modoLoginFavoritos === 'registro'" [formGroup]="registroForm" (ngSubmit)="onSubmitRegistroFavoritos()" class="login-form">
+                <div class="form-group">
+                    <label for="favRegEmail">Email *</label>
+                    <input type="email" id="favRegEmail" formControlName="email" placeholder="ejemplo@correo.com">
+                    <div class="form-error" *ngIf="registroForm.get('email')?.invalid && registroForm.get('email')?.touched">
+                        <span *ngIf="registroForm.get('email')?.errors?.['required']">El email es obligatorio</span>
+                        <span *ngIf="registroForm.get('email')?.errors?.['email']">Ingrese un email válido</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="favRegNombre">Nombre *</label>
+                    <input type="text" id="favRegNombre" formControlName="nombre" placeholder="Tu nombre">
+                    <div class="form-error" *ngIf="registroForm.get('nombre')?.invalid && registroForm.get('nombre')?.touched">
+                        El nombre es obligatorio
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="favRegTelefono">Teléfono (opcional)</label>
+                    <input type="tel" id="favRegTelefono" formControlName="telefono" placeholder="11-1234-5678">
+                </div>
+                <div class="form-group">
+                    <label for="favRegPassword">Contraseña *</label>
+                    <input type="password" id="favRegPassword" formControlName="password">
+                    <div class="form-error" *ngIf="registroForm.get('password')?.invalid && registroForm.get('password')?.touched">
+                        <span *ngIf="registroForm.get('password')?.errors?.['required']">La contraseña es obligatoria</span>
+                        <span *ngIf="registroForm.get('password')?.errors?.['minlength']">Mínimo 6 caracteres</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="favRegConfirmar">Confirmar Contraseña *</label>
+                    <input type="password" id="favRegConfirmar" formControlName="confirmarPassword">
+                    <div class="form-error" *ngIf="registroForm.get('confirmarPassword')?.touched && !passwordsCoinciden">
+                        Las contraseñas no coinciden
+                    </div>
+                </div>
+                <button type="submit" class="btn-submit" [disabled]="registroForm.invalid || !passwordsCoinciden">Registrarse</button>
+            </form>
+        </div>
     </div>
 </div>
