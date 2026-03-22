@@ -86,7 +86,7 @@ export class ComprasComponent implements OnInit {
         next: (data) => {
           this.compras = data;
         },
-        error: (err) => console.error('Error al cargar compras:', err)
+        error: (err) => {}
       });
   }
 
@@ -96,7 +96,7 @@ export class ComprasComponent implements OnInit {
         next: (data) => {
           this.lugares = data;
         },
-        error: (err) => console.error('Error al cargar lugares:', err)
+        error: (err) => {}
       });
   }
 
@@ -171,7 +171,7 @@ export class ComprasComponent implements OnInit {
             this.cargarLugares();
             this.cerrarFormulario();
           },
-          error: (err) => console.error('Error al actualizar compra:', err)
+          error: (err) => {}
         });
     } else {
       // Crear
@@ -182,7 +182,7 @@ export class ComprasComponent implements OnInit {
             this.cargarLugares();
             this.cerrarFormulario();
           },
-          error: (err) => console.error('Error al guardar compra:', err)
+          error: (err) => {}
         });
     }
   }
@@ -224,7 +224,7 @@ export class ComprasComponent implements OnInit {
           this.cargarLugares();
           this.cancelarEliminar();
         },
-        error: (err) => console.error('Error al eliminar compra:', err)
+        error: (err) => {}
       });
   }
 
@@ -287,7 +287,7 @@ export class ComprasComponent implements OnInit {
               this.cerrarImportarJson();
             },
             error: (err) => {
-              console.error('Error al importar:', err);
+              
               this.mostrarAlerta('Error al importar compras', 'error');
             }
           });

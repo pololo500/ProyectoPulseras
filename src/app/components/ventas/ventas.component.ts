@@ -133,7 +133,7 @@ export class VentasComponent implements OnInit {
           this.aplicarFiltros();
           this.calcularTotales();
         },
-        error: (err) => console.error('Error al cargar ventas:', err)
+        error: (err) => {}
       });
   }
 
@@ -144,7 +144,7 @@ export class VentasComponent implements OnInit {
           this.productos = data;
           this.productosTipo = [...new Set(data.map(p => p.producto))];
         },
-        error: (err) => console.error('Error al cargar productos:', err)
+        error: (err) => {}
       });
   }
 
@@ -307,7 +307,7 @@ export class VentasComponent implements OnInit {
           this.cargarVentas();
           this.cerrarFormulario();
         },
-        error: (err) => console.error('Error al guardar venta:', err)
+        error: (err) => {}
       });
   }
 

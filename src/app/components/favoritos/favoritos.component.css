@@ -533,6 +533,7 @@ h1 {
 .btn-explorar:hover {
     background-image: radial-gradient(#080e81, #000447);
     color: #D6B435;
+    box-shadow: 0px 0px 20px 5px rgba(95, 95, 95, 0.4);
 }
 
 .sin-favoritos-acciones {
@@ -541,11 +542,20 @@ h1 {
     justify-content: center;
     align-items: center;
     flex-wrap: wrap;
+    flex-direction: column;
 }
 
 .btn-login-favoritos {
     cursor: pointer;
     border: none;
+    width: fit-content;
+    background-image: radial-gradient(#080e81, #000447);
+    color: #D6B435;
+}
+
+.btn-login-favoritos:hover {
+    background-image: radial-gradient(#f0ea4c, #D6B435);
+    color: #000447;
 }
 
 /* ========== POPUP LOGIN/REGISTRO PARA FAVORITOS ========== */

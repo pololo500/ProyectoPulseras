@@ -2,7 +2,7 @@
     <h1>Mis Favoritos</h1>
     
     <!-- Botón filtros móvil -->
-    <div class="filtros-mobile-header">
+    <div class="filtros-mobile-header" *ngIf="favoritos.length > 0">
         <button class="btn-filtros-mobile" (click)="abrirFiltrosMobile()">Filtros
             <span class="filtros-activos" *ngIf="tieneFiltrosActivos()">●</span>
         </button>
@@ -453,7 +453,7 @@
                     <input type="email" id="favLoginEmail" formControlName="email" placeholder="ejemplo@correo.com">
                     <div class="form-error" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
                         <span *ngIf="loginForm.get('email')?.errors?.['required']">El email es obligatorio</span>
-                        <span *ngIf="loginForm.get('email')?.errors?.['email']">Ingrese un email válido</span>
+                        <span *ngIf="loginForm.get('email')?.errors?.['email'] || loginForm.get('email')?.errors?.['pattern']">Ingrese un email válido</span>
                     </div>
                 </div>
                 <div class="form-group">
@@ -473,7 +473,7 @@
                     <input type="email" id="favRegEmail" formControlName="email" placeholder="ejemplo@correo.com">
                     <div class="form-error" *ngIf="registroForm.get('email')?.invalid && registroForm.get('email')?.touched">
                         <span *ngIf="registroForm.get('email')?.errors?.['required']">El email es obligatorio</span>
-                        <span *ngIf="registroForm.get('email')?.errors?.['email']">Ingrese un email válido</span>
+                        <span *ngIf="registroForm.get('email')?.errors?.['email'] || registroForm.get('email')?.errors?.['pattern']">Ingrese un email válido</span>
                     </div>
                 </div>
                 <div class="form-group">
@@ -486,6 +486,9 @@
                 <div class="form-group">
                     <label for="favRegTelefono">Teléfono (opcional)</label>
                     <input type="tel" id="favRegTelefono" formControlName="telefono" placeholder="11-1234-5678">
+                    <div class="form-error" *ngIf="registroForm.get('telefono')?.invalid && registroForm.get('telefono')?.touched">
+                        <span *ngIf="registroForm.get('telefono')?.errors?.['pattern']">Debe tener 10 números (ej: 1140766376)</span>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="favRegPassword">Contraseña *</label>

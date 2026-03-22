@@ -169,7 +169,7 @@ export class PopupMoldeComponent implements OnInit, OnChanges {
           error: (err) => {
             this.guardando = false;
             this.error = 'Error al actualizar el molde';
-            console.error('Error:', err);
+            
           }
         });
     } else {
@@ -188,7 +188,7 @@ export class PopupMoldeComponent implements OnInit, OnChanges {
         error: (err) => {
           this.guardando = false;
           this.error = 'Error al guardar el molde';
-          console.error('Error:', err);
+          
         }
       });
     }
@@ -234,7 +234,7 @@ export class PopupMoldeComponent implements OnInit, OnChanges {
         error: (err) => {
           this.eliminando = false;
           this.error = 'Error al eliminar el molde';
-          console.error('Error:', err);
+          
         }
       });
   }
@@ -268,7 +268,7 @@ export class PopupMoldeComponent implements OnInit, OnChanges {
             this.mostrarAlerta(`${res.moldes.length} moldes importados correctamente`, 'exito');
           },
           error: (err) => {
-            console.error('Error al importar moldes:', err);
+            
             this.error = 'Error al importar moldes';
           }
         });

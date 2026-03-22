@@ -9,21 +9,18 @@
 .container {
   padding: 20px 20px 40px 20px;
   min-height: 100vh;
-  max-width: 1400px;
   margin: 0 auto;
-}
-
-h1 {
-  color: #D6B435;
-  text-align: center;
-  margin-bottom: 30px;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 h2 {
   color: #D6B435;
   margin: 0;
-  font-size: 1.4rem;
+  font-size: 2rem;
+  font-family: 'Dancing Script', cursive;
 }
 
 /* Botones principales */
@@ -33,6 +30,7 @@ h2 {
   gap: 20px;
   margin-bottom: 30px;
   flex-wrap: wrap;
+  width: 90%;
 }
 
 .btn-accion {
@@ -41,7 +39,7 @@ h2 {
   gap: 10px;
   padding: 15px 30px;
   font-size: 16px;
-  background: linear-gradient(135deg, #D6B435, #C8962B);
+  background: #D6B435;
   color: #000447;
   border: none;
   border-radius: 10px;
@@ -49,25 +47,22 @@ h2 {
   font-weight: bold;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(214, 180, 53, 0.3);
+  justify-content: center;
+  width: 45%;
 }
 
 .btn-accion:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(214, 180, 53, 0.5);
-  background: linear-gradient(135deg, #e0c045, #d4a030);
+  background: #C8962B;
 }
 
 .btn-accion.secundario {
-  background: linear-gradient(135deg, #3a3a6e, #2a2a5e);
+  background: #000447;
   color: #D6B435;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(214, 180, 53, 0.4);
+  border: 1px solid #D6B435;
 }
 
 .btn-accion.secundario:hover {
-  background: linear-gradient(135deg, #4a4a7e, #3a3a6e);
-  box-shadow: 0 6px 20px rgba(214, 180, 53, 0.3);
-  border-color: rgba(214, 180, 53, 0.7);
+  background: #080e81;
 }
 
 .btn-accion .icon {
@@ -80,12 +75,12 @@ h2 {
   border-radius: 15px;
   padding: 20px;
   margin-bottom: 30px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  width: 90%;
 }
 
 .tabla-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   margin-bottom: 20px;
   flex-wrap: wrap;
@@ -105,7 +100,6 @@ h2 {
 
 .btn-agregar:hover {
   background: #e0c045;
-  transform: scale(1.05);
 }
 
 /* Tabla productos */
@@ -121,27 +115,26 @@ h2 {
   background: #D6B435;
   color: #000447;
   padding: 15px 10px;
-  text-align: left;
+  text-align: center;
   font-weight: bold;
 }
 
 .tabla-productos td {
   padding: 15px 10px;
   border-bottom: 1px solid rgba(214, 180, 53, 0.2);
-  vertical-align: top;
   color: #fff;
 }
 
 .tabla-productos select,
 .tabla-productos input,
 .tabla-productos textarea {
-  width: 100%;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(214, 180, 53, 0.5);
   color: #fff;
   border-radius: 5px;
   padding: 8px;
   font-size: 14px;
+  margin: 0;
 }
 
 .tabla-productos select option {
@@ -155,8 +148,14 @@ h2 {
   font-weight: bold;
 }
 
-.input-cantidad {
-  max-width: 80px;
+.cantidad-cell {
+  text-align: center;
+}
+
+.input-cantidad, 
+.input-volumen {
+  max-width: 40px;
+  min-width: 30px;
   text-align: center;
 }
 
@@ -194,24 +193,24 @@ h2 {
 }
 
 .btn-add-color {
-  background: #28a745;
+  background: #02c028;
   color: #fff;
   border: none;
-  width: 24px;
-  height: 24px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  padding: 0px;
 }
 
 .btn-add-color:hover:not(:disabled) {
-  background: #34ce57;
-  transform: scale(1.1);
+  background: #06d22f;
 }
 
 .btn-add-color:disabled {
@@ -463,6 +462,7 @@ h2 {
   gap: 8px;
   align-items: center;
   flex-wrap: wrap;
+  margin-bottom: 10px;
 }
 
 .color-capa-row select {
@@ -470,20 +470,17 @@ h2 {
   min-width: 100px;
 }
 
-.input-volumen {
-  width: 70px !important;
-  flex: 0 0 70px;
-  text-align: center;
+.tabla-productos input.input-volumen {
+  padding: 10px;
 }
 
 .volumen-display {
   background: rgba(214, 180, 53, 0.2);
   color: #D6B435;
-  padding: 8px 12px;
+  padding: 10px 12px;
   border-radius: 5px;
   font-weight: bold;
   font-size: 14px;
-  min-width: 60px;
   text-align: center;
 }
 
@@ -522,15 +519,16 @@ h2 {
   justify-content: center;
   transition: all 0.2s ease;
   flex-shrink: 0;
+  padding: 0px;
+  margin: 0px;
 }
 
 .btn-remove-color:hover {
   background: #e04555;
-  transform: scale(1.1);
 }
 
 .input-nota {
-  width: 100%;
+  width: calc(100% - 18px);
   margin-top: 6px;
   padding: 5px 8px;
   background: rgba(255, 255, 255, 0.1);
@@ -570,24 +568,24 @@ h2 {
   gap: 10px;
   justify-content: center;
   align-items: center;
+  flex-direction: column;
 }
 
 .btn-stock {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: #02c028;
   border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
+  padding: 8px 12px;
+  border-radius: 5px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   transition: all 0.3s ease;
-  white-space: nowrap;
+  margin: 0px;
+  width: fit-content;
 }
 
 .btn-stock:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  background-color: #06d22f;
 }
 
 .btn-stock:disabled {
@@ -602,12 +600,14 @@ h2 {
   border-radius: 5px;
   cursor: pointer;
   font-size: 16px;
+  font-weight: 600;
   transition: all 0.3s ease;
+  margin: 0px;
+  width: fit-content;
 }
 
 .btn-eliminar:hover {
-  background: #c82333;
-  transform: scale(1.1);
+  background: #e04555;
 }
 
 .sin-productos {
@@ -625,7 +625,7 @@ h2 {
   background: rgba(0, 4, 71, 0.8);
   border-radius: 15px;
   padding: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  width: 90%;
 }
 
 .resumen-container h2 {
@@ -752,38 +752,35 @@ h2 {
   font-size: 11px;
 }
 
-/* Botón Generar Informe */
-.informe-container {
+/* Conteiner Botones */
+.btn-container {
   display: flex;
   justify-content: center;
-  margin-top: 30px;
-  padding-bottom: 40px;
+  gap: 20px;
+  margin-top: 20px;
+  width: 90%;
 }
 
+/* Botón Generar Informe */
 .btn-informe {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 18px 40px;
   font-size: 18px;
-  background: linear-gradient(135deg, #28a745, #20c997);
+  background: #02c028;
   color: #fff;
   border: none;
   border-radius: 12px;
   cursor: pointer;
   font-weight: bold;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 20px rgba(40, 167, 69, 0.4);
+  margin: 0;
+  justify-content: center;
 }
 
 .btn-informe:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 30px rgba(40, 167, 69, 0.6);
-  background: linear-gradient(135deg, #34ce57, #2dd4a7);
-}
-
-.btn-informe:active {
-  transform: translateY(0);
+  background: #06d22f;
 }
 
 .btn-informe .icon {
@@ -791,22 +788,13 @@ h2 {
 }
 
 /* Botón limpiar */
-.memoria-container {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  margin-top: 20px;
-  padding-bottom: 40px;
-  flex-wrap: wrap;
-}
-
 .btn-limpiar {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 15px 35px;
   font-size: 16px;
-  background: linear-gradient(135deg, #dc3545, #c82333);
+  background: #dc3545;
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -814,12 +802,12 @@ h2 {
   font-weight: bold;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+  margin: 0;
+  justify-content: center;
 }
 
 .btn-limpiar:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(220, 53, 69, 0.6);
-  background: linear-gradient(135deg, #e04555, #d43f4f);
+  background: #e04555;
 }
 
 .btn-limpiar .icon {

@@ -167,15 +167,15 @@ export class ProductosComponent implements OnInit {
   
   // Formulario de login
   loginForm = new FormGroup({
-    email: new FormControl('', [Validators.required, Validators.email]),
+    email: new FormControl('', [Validators.required, Validators.pattern('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}$')]),
     password: new FormControl('', Validators.required),
   });
   
   // Formulario de registro
   registroForm = new FormGroup({
-    email: new FormControl('', [Validators.required, Validators.email]),
+    email: new FormControl('', [Validators.required, Validators.pattern('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}$')]),
     nombre: new FormControl('', Validators.required),
-    telefono: new FormControl(''),
+    telefono: new FormControl('', [Validators.pattern('^[ \\-\\+\\(\\)]*(?:\\d[ \\-\\+\\(\\)]*){10}$')]),
     password: new FormControl('', [Validators.required, Validators.minLength(6)]),
     confirmarPassword: new FormControl('', Validators.required),
   });
@@ -261,7 +261,7 @@ export class ProductosComponent implements OnInit {
           this.productoIdPendiente = null;
         }
       },
-      error: (err) => console.error('Error al cargar datos:', err)
+      error: (err) => {}
     });
   }
 
@@ -269,7 +269,7 @@ export class ProductosComponent implements OnInit {
     this.http.get<Color[]>('http://localhost:5000/api/colores')
       .subscribe({
         next: (data) => this.colores = data,
-        error: (err) => console.error('Error al cargar colores:', err)
+        error: (err) => {}
       });
   }
 
@@ -277,7 +277,7 @@ export class ProductosComponent implements OnInit {
     this.http.get<Molde[]>('http://localhost:5000/api/moldes')
       .subscribe({
         next: (data) => this.moldes = ordenarAlfabetico(data),
-        error: (err) => console.error('Error al cargar moldes:', err)
+        error: (err) => {}
       });
   }
 
@@ -298,7 +298,7 @@ export class ProductosComponent implements OnInit {
           this.productosFiltrados = [...this.productos];
           this.extraerFiltros();
         },
-        error: (err) => console.error('Error al cargar productos:', err)
+        error: (err) => {}
       });
   }
 
@@ -848,7 +848,7 @@ export class ProductosComponent implements OnInit {
     event.stopPropagation();
     this.productoDetalle = producto;
     this.imagenActualIndex = 0;
-    this.cantidadDetalle = 1;
+    this.cantidadDetalle = producto.cantidad || 1;
     
     // Cargar molde y preparar array de colores por capa
     if (this.esResina(producto) && producto.moldeNombre) {

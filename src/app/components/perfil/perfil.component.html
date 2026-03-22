@@ -1,5 +1,10 @@
 <div class="perfil-page">
     <h1>Mi Perfil</h1>
+
+    <!-- Mensaje de estado -->
+    <div class="mensaje" *ngIf="mensaje" [class.success]="tipoMensaje === 'success'" [class.error]="tipoMensaje === 'error'">
+        {{ mensaje }}
+    </div>
     
     <div class="card perfil-container">
         <!-- Avatar y nombre -->
@@ -13,11 +18,6 @@
             <div class="cerrar-sesion">
                 <button class="btn-logout" (click)="cerrarSesion()">Cerrar sesión</button>
             </div>
-        </div>
-        
-        <!-- Mensaje de estado -->
-        <div class="mensaje" *ngIf="mensaje" [class.success]="tipoMensaje === 'success'" [class.error]="tipoMensaje === 'error'">
-            {{ mensaje }}
         </div>
         
         <!-- Sección de datos personales -->
@@ -43,6 +43,9 @@
                 <div class="campo">
                     <label>Teléfono</label>
                     <input type="tel" formControlName="telefono" placeholder="Ej: 11-1234-5678">
+                    <div class="error" *ngIf="datosForm.get('telefono')?.invalid && datosForm.get('telefono')?.touched">
+                        <span *ngIf="datosForm.get('telefono')?.errors?.['pattern']">Debe tener exactamente 10 números</span>
+                    </div>
                 </div>
                 
                 <div class="botones" *ngIf="datosModificados()">

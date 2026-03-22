@@ -119,14 +119,14 @@ export class CalculadoraResinaComponent implements OnInit {
   cargarMoldes(): void {
     this.http.get<Molde[]>('http://localhost:5000/api/moldes').subscribe({
       next: (data) => this.moldes = ordenarAlfabetico(data),
-      error: (err) => console.error('Error al cargar moldes:', err)
+      error: (err) => {}
     });
   }
 
   cargarColores(): void {
     this.http.get<Color[]>('http://localhost:5000/api/colores').subscribe({
       next: (data) => this.colores = data,
-      error: (err) => console.error('Error al cargar colores:', err)
+      error: (err) => {}
     });
   }
 
@@ -174,12 +174,12 @@ export class CalculadoraResinaComponent implements OnInit {
           
           // Guardar la estructura migrada solo si hubo migración
           if (necesitaMigracion) {
-            console.log('Migrando datos a nueva estructura...');
+            
             this.guardarMemoria();
           }
         }
       },
-      error: (err) => console.error('Error al cargar memoria:', err)
+      error: (err) => {}
     });
   }
 
@@ -189,8 +189,8 @@ export class CalculadoraResinaComponent implements OnInit {
       contadorId: this.contadorId
     };
     this.http.post('http://localhost:5000/api/calculadora-memoria', datos).subscribe({
-      next: () => console.log('Memoria guardada'),
-      error: (err) => console.error('Error al guardar memoria:', err)
+      next: () => {},
+      error: (err) => {}
     });
   }
 
@@ -206,7 +206,7 @@ export class CalculadoraResinaComponent implements OnInit {
         this.contadorId = 1;
         this.resumenColores = [];
       },
-      error: (err) => console.error('Error al limpiar memoria:', err)
+      error: (err) => {}
     });
   }
 
@@ -272,7 +272,7 @@ export class CalculadoraResinaComponent implements OnInit {
   recargarColores(): void {
     this.http.get<Color[]>('http://localhost:5000/api/colores').subscribe({
       next: (data) => this.colores = data,
-      error: (err) => console.error('Error al recargar colores:', err)
+      error: (err) => {}
     });
   }
 
@@ -631,26 +631,26 @@ export class CalculadoraResinaComponent implements OnInit {
           }]
         };
 
-        console.log('📤 Enviando desde calculadora a stock:', stockData);
+        
 
         // Enviar a stock
         this.http.post('http://localhost:5000/api/stock', stockData).subscribe({
           next: (response) => {
-            console.log('✅ Respuesta del servidor:', response);
+            
             this.mostrarAlerta(`✓ Producto agregado al stock: ${producto.cantidad} x ${producto.moldeNombre}`, 'exito');
             // Preguntar si desea eliminar de la calculadora
             this.productoIdTrasStock = producto.id;
             this.mostrarPopupEliminarTrasStock = true;
           },
           error: (err) => {
-            console.error('❌ Error al agregar a stock:', err);
-            console.error('Datos enviados:', stockData);
+            
+            
             this.mostrarAlerta(`Error al agregar al stock: ${err.error?.mensaje || err.message}`, 'error');
           }
         });
       },
       error: (err) => {
-        console.error('Error al buscar productos:', err);
+        
         this.mostrarAlerta('Error al buscar el producto base', 'error');
       }
     });

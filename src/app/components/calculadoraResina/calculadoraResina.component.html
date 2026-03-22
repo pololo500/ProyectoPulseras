@@ -35,7 +35,7 @@
               <option *ngFor="let molde of moldes" [value]="molde._id">{{ molde.nombre }}</option>
             </select>
           </td>
-          <td>
+          <td class="cantidad-cell">
             <input type="number" [(ngModel)]="producto.cantidad" min="1" (change)="onCantidadChange()" class="input-cantidad">
           </td>
           <td class="capas-cell">
@@ -158,9 +158,7 @@
               <button class="btn-stock" 
                       (click)="pasarAStock(producto)" 
                       title="Pasar a Stock"
-                      [disabled]="producto.capas.length === 0">
-                📦 Stock
-              </button>
+                      [disabled]="producto.capas.length === 0">📦</button>
               <button class="btn-eliminar" (click)="eliminarProducto(producto.id)">🗑️</button>
             </div>
           </td>
@@ -209,15 +207,13 @@
     </div>
   </div>
 
-  <!-- Botón generar informe -->
-  <div class="informe-container" *ngIf="resumenColores.length > 0">
-    <button class="btn-informe" (click)="generarInformePDF()">
+  <div class="btn-container">
+    <!-- Botón generar informe -->
+    <button class="btn-informe" *ngIf="resumenColores.length > 0" (click)="generarInformePDF()">
       <span class="icon">📄</span> Generar Informe PDF
     </button>
-  </div>
-
-  <!-- Botón limpiar -->
-  <div class="memoria-container">
+  
+    <!-- Botón limpiar -->
     <button class="btn-limpiar" (click)="limpiarCalculadora()">
       <span class="icon">🗑️</span> Limpiar Todo
     </button>

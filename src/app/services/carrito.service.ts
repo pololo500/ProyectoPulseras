@@ -92,7 +92,7 @@ export class CarritoService {
           sessionStorage.setItem('carrito', JSON.stringify(items));
         },
         error: (err) => {
-          console.error('Error al cargar carrito:', err);
+          
           this.cargarCarritoLocal();
         }
       });
@@ -120,7 +120,7 @@ export class CarritoService {
 
     this.http.put(`${this.apiUrl}/usuarios/${email}/carrito`, { carrito: items })
       .subscribe({
-        error: (err) => console.error('Error al guardar carrito en DB:', err)
+        error: (err) => {}
       });
   }
 
@@ -197,11 +197,8 @@ export class CarritoService {
   }
 
   // Incrementar cantidad
-  incrementar(itemId: string, coloresPorCapa?: ColorPorCapa[]): void {
-    const coloresKey = coloresPorCapa 
-      ? coloresPorCapa.map(c => c.colorId).join('-')
-      : '';
-    const targetKey = `${itemId}-${coloresKey}`;
+  incrementar(itemTarget: ItemCarrito): void {
+    const targetKey = this.getItemKey(itemTarget);
     
     const items = this.getItems().map(item => 
       this.getItemKey(item) === targetKey ? { ...item, cantidad: item.cantidad + 1 } : item
@@ -210,11 +207,8 @@ export class CarritoService {
   }
 
   // Decrementar cantidad
-  decrementar(itemId: string, coloresPorCapa?: ColorPorCapa[]): void {
-    const coloresKey = coloresPorCapa 
-      ? coloresPorCapa.map(c => c.colorId).join('-')
-      : '';
-    const targetKey = `${itemId}-${coloresKey}`;
+  decrementar(itemTarget: ItemCarrito): void {
+    const targetKey = this.getItemKey(itemTarget);
     
     const items = this.getItems().map(item => 
       this.getItemKey(item) === targetKey && item.cantidad > 1 
@@ -225,11 +219,8 @@ export class CarritoService {
   }
 
   // Eliminar item
-  eliminarItem(itemId: string, coloresPorCapa?: ColorPorCapa[]): void {
-    const coloresKey = coloresPorCapa 
-      ? coloresPorCapa.map(c => c.colorId).join('-')
-      : '';
-    const targetKey = `${itemId}-${coloresKey}`;
+  eliminarItem(itemTarget: ItemCarrito): void {
+    const targetKey = this.getItemKey(itemTarget);
     
     const items = this.getItems().filter(item => this.getItemKey(item) !== targetKey);
     this.guardarCarrito(items);
@@ -310,7 +301,7 @@ export class CarritoService {
                   observer.complete();
                 },
                 error: (err) => {
-                  console.error('Error al guardar carrito combinado:', err);
+                  
                   observer.next();
                   observer.complete();
                 }

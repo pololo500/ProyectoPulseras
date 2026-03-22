@@ -120,7 +120,7 @@ export class MisPedidosComponent implements OnInit {
                         p.cliente.toLowerCase().includes(this.emailCliente.split('@')[0].toLowerCase())
                     );
                 },
-                error: (err) => console.error('Error al cargar pedidos:', err)
+                error: (err) => {}
             });
     }
 
@@ -134,7 +134,7 @@ export class MisPedidosComponent implements OnInit {
                         v.cliente.toLowerCase().includes(this.emailCliente.split('@')[0].toLowerCase())
                     );
                 },
-                error: (err) => console.error('Error al cargar historial:', err)
+                error: (err) => {}
             });
     }
 
@@ -338,14 +338,14 @@ export class MisPedidosComponent implements OnInit {
                                 this.vistaActual = 'historial';
                             },
                             error: (err) => {
-                                console.error('Error al eliminar pedido:', err);
+                                
                                 this.cancelando = false;
                                 this.mostrarAlerta('Error al cancelar el pedido', 'error');
                             }
                         });
                 },
                 error: (err) => {
-                    console.error('Error al crear venta:', err);
+                    
                     this.cancelando = false;
                     this.mostrarAlerta('Error al cancelar el pedido', 'error');
                 }
@@ -371,7 +371,7 @@ export class MisPedidosComponent implements OnInit {
                 }
             },
             error: (err) => {
-                console.error('Error al guardar nota:', err);
+                
                 this.guardandoNota = false;
                 this.mostrarAlerta('Error al guardar la nota', 'error');
             }

@@ -1,37 +1,45 @@
 <div class="clientes-page">
     <div class="header">
         <h1>Clientes</h1>
-        <div class="stats">
-            <div class="stat">
-                <span class="stat-numero">{{ getTotalClientes() }}</span>
-                <span class="stat-label">Total clientes</span>
-            </div>
-            <div class="stat">
-                <span class="stat-numero">{{ getClientesConPedidos() }}</span>
-                <span class="stat-label">Con pedidos pendientes</span>
-            </div>
-        </div>
     </div>
 
-    <!-- Filtros -->
-    <div class="filtros-container">
-        <div class="filtro-grupo">
-            <label>Nombre</label>
-            <input type="text" [(ngModel)]="filtroNombre" (ngModelChange)="aplicarFiltros()" placeholder="Buscar por nombre...">
+    <!-- Botón filtros móvil -->
+    <div class="filtros-mobile-header">
+        <button class="btn-filtros-mobile" (click)="abrirFiltrosMobile()">Filtros
+        <span class="filtros-activos" *ngIf="tieneFiltrosActivos()">●</span>
+        </button>
+    </div>
+
+    <!-- Filtros Desktop -->
+    <div id="filtros-card">
+        <div class="filtros">
+            <div class="filtro-group">
+                <label>Nombre</label>
+                <input type="text" [(ngModel)]="filtroNombre" (ngModelChange)="aplicarFiltros()" placeholder="Buscar por nombre...">
+            </div>
+            <div class="filtro-group">
+                <label>Email</label>
+                <input type="text" [(ngModel)]="filtroEmail" (ngModelChange)="aplicarFiltros()" placeholder="Buscar por email...">
+            </div>
+            <div class="filtro-group">
+                <label>Pedidos</label>
+                <select [(ngModel)]="filtroPendientes" (ngModelChange)="aplicarFiltros()">
+                    <option value="todos">Todos</option>
+                    <option value="conPedidos">Con pedidos pendientes</option>
+                    <option value="sinPedidos">Sin pedidos pendientes</option>
+                </select>
+            </div>
+            <button class="btn-limpiar" (click)="limpiarFiltros()" *ngIf="tieneFiltrosActivos()">Mostrar todo</button>
         </div>
-        <div class="filtro-grupo">
-            <label>Email</label>
-            <input type="text" [(ngModel)]="filtroEmail" (ngModelChange)="aplicarFiltros()" placeholder="Buscar por email...">
+        
+        <div class="clientes-count">
+            <div class="count-item">
+                Total: <strong>{{ getTotalClientes() }}</strong> clientes
+            </div>
+            <div class="count-item">
+                <strong>{{ getClientesConPedidos() }}</strong> con pedidos
+            </div>
         </div>
-        <div class="filtro-grupo">
-            <label>Pedidos</label>
-            <select [(ngModel)]="filtroPendientes" (ngModelChange)="aplicarFiltros()">
-                <option value="todos">Todos</option>
-                <option value="conPedidos">Con pedidos pendientes</option>
-                <option value="sinPedidos">Sin pedidos pendientes</option>
-            </select>
-        </div>
-        <button class="btn-limpiar" (click)="limpiarFiltros()">Limpiar</button>
     </div>
 
     <!-- Loading -->
@@ -85,6 +93,40 @@
                 </tr>
             </tbody>
         </table>
+    </div>
+</div>
+
+<!-- Popup de Filtros Mobile -->
+<div class="modal-overlay" *ngIf="mostrarFiltrosMobile" (click)="cerrarFiltrosMobile()">
+    <div class="popup-filtros-mobile" (click)="$event.stopPropagation()">
+        <button class="btn-cerrar-popup" (click)="cerrarFiltrosMobile()">✕</button>
+        <h2>Filtros</h2>
+        
+        <div class="filtros-mobile-contenido">
+            <div class="filtro-group">
+                <label>Nombre</label>
+                <input type="text" [(ngModel)]="filtroNombre" placeholder="Buscar por nombre...">
+            </div>
+            
+            <div class="filtro-group">
+                <label>Email</label>
+                <input type="text" [(ngModel)]="filtroEmail" placeholder="Buscar por email...">
+            </div>
+            
+            <div class="filtro-group">
+                <label>Pedidos</label>
+                <select [(ngModel)]="filtroPendientes">
+                    <option value="todos">Todos</option>
+                    <option value="conPedidos">Con pedidos pendientes</option>
+                    <option value="sinPedidos">Sin pedidos pendientes</option>
+                </select>
+            </div>
+            
+            <div class="filtros-mobile-acciones">
+                <button class="btn-limpiar" (click)="limpiarFiltros()" *ngIf="tieneFiltrosActivos()">Mostrar todo</button>
+                <button class="btn-aplicar" (click)="aplicarFiltrosMovil()">Aplicar</button>
+            </div>
+        </div>
     </div>
 </div>
 

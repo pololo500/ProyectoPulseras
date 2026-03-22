@@ -9,8 +9,8 @@ import { CommonModule } from '@angular/common';
   styleUrl: './contacto.component.css'
 })
 export class ContactoComponent {
-  instagramUser = '@l.m_pulseras';
-  instagramUrl = 'https://www.instagram.com/l.m_pulseras';
+  instagramUser = '@lm_hermanhadas';
+  instagramUrl = 'https://www.instagram.com/lm_hermanhadas';
   whatsappNumber = '11 4076-6376';
   whatsappUrl = 'https://wa.me/541140766376';
 

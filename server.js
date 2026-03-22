@@ -27,7 +27,7 @@ mongoose.connect('mongodb+srv://marronemicaela:Abril2004@clusterm.dwtrhrc.mongod
     console.log('Conectado a MongoDB Atlas');
     await migrarDatosLegacy();
 })
-.catch(err => console.error('Error al conectar a MongoDB:', err));
+.catch(err => {});
 
 // Migración: convertir pedidos y ventas legacy al formato items[]
 async function migrarDatosLegacy() {
@@ -68,7 +68,7 @@ async function migrarDatosLegacy() {
         }
 
         if (pedidosLegacy.length > 0) {
-            console.log(`✅ Migrados ${pedidosLegacy.length} pedidos legacy a formato items[]`);
+            {}
         }
 
         // Migrar ventas legacy (tienen productoNombre en raíz y no tienen items)
@@ -103,10 +103,10 @@ async function migrarDatosLegacy() {
         }
 
         if (ventasLegacy.length > 0) {
-            console.log(`✅ Migradas ${ventasLegacy.length} ventas legacy a formato items[]`);
+            {}
         }
     } catch (error) {
-        console.error('Error en migración de datos legacy:', error);
+        {}
     }
 }
 
@@ -404,7 +404,7 @@ app.get('/api/pulseras', async (req, res) => {
         const result = await cloudinary.uploader.upload(req.file.path);
         res.json({ imageUrl: result.secure_url });
     } catch (error) {
-        console.error(error);
+        {}
         res.status(500).send('Error al subir la imagen');
     }
 });*/
@@ -425,7 +425,7 @@ app.get('/api/pulseras', async (req, res) => {
         const guardada = await nuevaPulsera.save();
         res.status(201).json(guardada);
     } catch (error) {
-        console.error('❌ Error al guardar pulsera:', error);
+        {}
         res.status(500).json({ message: 'Error al guardar la pulsera', error });
     }
 });*/
@@ -438,7 +438,7 @@ app.get('/api/colecciones', async (req, res) => {
         const nombres = colecciones.map(c => c.name);
         res.json(nombres);
     } catch (error) {
-        console.error('Error al obtener colecciones:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al obtener colecciones' });
     }
 });
@@ -453,7 +453,7 @@ app.get('/api/:coleccion/materiales', async (req, res) => {
         const materiales = await modelo.distinct('material'); // devuelve array de materiales únicos
         res.json(materiales);
     } catch (error) {
-        console.error('Error obteniendo materiales:', error);
+        {}
         res.status(500).json({ error: 'Error al obtener materiales' });
     }
 });
@@ -485,7 +485,7 @@ app.post('/api/login', async (req, res) => {
             nombre: usuario.nombre
         });
     } catch (error) {
-        console.error('Error en login:', error);
+        {}
         res.status(500).json({ success: false, error: 'serverError' });
     }
 });
@@ -519,7 +519,7 @@ app.post('/api/usuarios/registro', async (req, res) => {
         await nuevoUsuario.save();
         res.status(201).json({ success: true, mensaje: 'Usuario registrado' });
     } catch (error) {
-        console.error('Error al registrar usuario:', error);
+        {}
         res.status(500).json({ success: false, error: 'serverError' });
     }
 });
@@ -540,7 +540,7 @@ app.get('/api/usuarios/:email', async (req, res) => {
             telefono: usuario.telefono || ''
         });
     } catch (error) {
-        console.error('Error al obtener usuario:', error);
+        {}
         res.status(500).json({ error: 'Error del servidor' });
     }
 });
@@ -562,7 +562,7 @@ app.put('/api/usuarios/:email/datos', async (req, res) => {
         
         res.status(200).json({ success: true, mensaje: 'Datos actualizados' });
     } catch (error) {
-        console.error('Error al actualizar datos:', error);
+        {}
         res.status(500).json({ error: 'Error del servidor' });
     }
 });
@@ -590,7 +590,7 @@ app.put('/api/usuarios/:email/password', async (req, res) => {
         
         res.status(200).json({ success: true, mensaje: 'Contraseña actualizada' });
     } catch (error) {
-        console.error('Error al cambiar contraseña:', error);
+        {}
         res.status(500).json({ error: 'Error del servidor' });
     }
 });
@@ -607,7 +607,7 @@ app.get('/api/usuarios/:email/carrito', async (req, res) => {
         
         res.status(200).json({ carrito: usuario.carrito || [] });
     } catch (error) {
-        console.error('Error al obtener carrito:', error);
+        {}
         res.status(500).json({ error: 'Error del servidor' });
     }
 });
@@ -628,7 +628,7 @@ app.put('/api/usuarios/:email/carrito', async (req, res) => {
         
         res.status(200).json({ success: true, mensaje: 'Carrito actualizado' });
     } catch (error) {
-        console.error('Error al actualizar carrito:', error);
+        {}
         res.status(500).json({ error: 'Error del servidor' });
     }
 });
@@ -645,7 +645,7 @@ app.get('/api/usuarios/:email/favoritos', async (req, res) => {
         
         res.status(200).json({ favoritos: usuario.favoritos || [] });
     } catch (error) {
-        console.error('Error al obtener favoritos:', error);
+        {}
         res.status(500).json({ error: 'Error del servidor' });
     }
 });
@@ -666,7 +666,7 @@ app.put('/api/usuarios/:email/favoritos', async (req, res) => {
         
         res.status(200).json({ success: true, mensaje: 'Favoritos actualizados' });
     } catch (error) {
-        console.error('Error al actualizar favoritos:', error);
+        {}
         res.status(500).json({ error: 'Error del servidor' });
     }
 });
@@ -678,7 +678,7 @@ app.get('/api/moldes', async (req, res) => {
         const moldes = await Molde.find();
         res.status(200).json(moldes);
     } catch (error) {
-        console.error('Error al obtener moldes:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al obtener moldes' });
     }
 });
@@ -690,7 +690,7 @@ app.post('/api/moldes', async (req, res) => {
         const result = await nuevoMolde.save();
         res.status(201).json({ mensaje: 'Molde guardado', id: result._id, molde: result });
     } catch (error) {
-        console.error('Error al guardar molde:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al guardar molde' });
     }
 });
@@ -701,7 +701,7 @@ app.delete('/api/moldes/:id', async (req, res) => {
         if (!result) return res.status(404).json({ mensaje: 'Molde no encontrado' });
         res.status(200).json({ mensaje: 'Molde eliminado' });
     } catch (error) {
-        console.error('Error al eliminar molde:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al eliminar molde' });
     }
 });
@@ -714,7 +714,7 @@ app.put('/api/moldes/:id', async (req, res) => {
         if (!result) return res.status(404).json({ mensaje: 'Molde no encontrado' });
         res.status(200).json({ mensaje: 'Molde actualizado', molde: result });
     } catch (error) {
-        console.error('Error al actualizar molde:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al actualizar molde' });
     }
 });
@@ -729,7 +729,7 @@ app.post('/api/moldes/importar', async (req, res) => {
         const resultado = await Molde.insertMany(moldes);
         res.status(201).json({ mensaje: `${resultado.length} moldes importados`, moldes: resultado });
     } catch (error) {
-        console.error('Error al importar moldes:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al importar moldes' });
     }
 });
@@ -741,7 +741,7 @@ app.get('/api/colores', async (req, res) => {
         const colores = await Color.find();
         res.status(200).json(colores);
     } catch (error) {
-        console.error('Error al obtener colores:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al obtener colores' });
     }
 });
@@ -753,7 +753,7 @@ app.post('/api/colores', async (req, res) => {
         const result = await nuevoColor.save();
         res.status(201).json({ mensaje: 'Color guardado', id: result._id, color: result });
     } catch (error) {
-        console.error('Error al guardar color:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al guardar color' });
     }
 });
@@ -764,7 +764,7 @@ app.delete('/api/colores/:id', async (req, res) => {
         if (!result) return res.status(404).json({ mensaje: 'Color no encontrado' });
         res.status(200).json({ mensaje: 'Color eliminado' });
     } catch (error) {
-        console.error('Error al eliminar color:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al eliminar color' });
     }
 });
@@ -777,7 +777,7 @@ app.put('/api/colores/:id', async (req, res) => {
         if (!result) return res.status(404).json({ mensaje: 'Color no encontrado' });
         res.status(200).json({ mensaje: 'Color actualizado', color: result });
     } catch (error) {
-        console.error('Error al actualizar color:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al actualizar color' });
     }
 });
@@ -792,7 +792,7 @@ app.post('/api/colores/importar', async (req, res) => {
         const resultado = await Color.insertMany(colores);
         res.status(201).json({ mensaje: `${resultado.length} colores importados`, colores: resultado });
     } catch (error) {
-        console.error('Error al importar colores:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al importar colores' });
     }
 });
@@ -804,7 +804,7 @@ app.get('/api/colores-hilo', async (req, res) => {
         const colores = await ColorHilo.find();
         res.status(200).json(colores);
     } catch (error) {
-        console.error('Error al obtener colores de hilo:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al obtener colores de hilo' });
     }
 });
@@ -816,7 +816,7 @@ app.post('/api/colores-hilo', async (req, res) => {
         const result = await nuevoColor.save();
         res.status(201).json({ mensaje: 'Color de hilo guardado', id: result._id, color: result });
     } catch (error) {
-        console.error('Error al guardar color de hilo:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al guardar color de hilo' });
     }
 });
@@ -827,7 +827,7 @@ app.delete('/api/colores-hilo/:id', async (req, res) => {
         if (!result) return res.status(404).json({ mensaje: 'Color de hilo no encontrado' });
         res.status(200).json({ mensaje: 'Color de hilo eliminado' });
     } catch (error) {
-        console.error('Error al eliminar color de hilo:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al eliminar color de hilo' });
     }
 });
@@ -839,7 +839,7 @@ app.put('/api/colores-hilo/:id', async (req, res) => {
         if (!result) return res.status(404).json({ mensaje: 'Color de hilo no encontrado' });
         res.status(200).json({ mensaje: 'Color de hilo actualizado', color: result });
     } catch (error) {
-        console.error('Error al actualizar color de hilo:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al actualizar color de hilo' });
     }
 });
@@ -853,7 +853,7 @@ app.post('/api/colores-hilo/importar', async (req, res) => {
         const resultado = await ColorHilo.insertMany(colores);
         res.status(201).json({ mensaje: `${resultado.length} colores de hilo importados`, colores: resultado });
     } catch (error) {
-        console.error('Error al importar colores de hilo:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al importar colores de hilo' });
     }
 });
@@ -865,7 +865,7 @@ app.get('/api/moldes-hilo', async (req, res) => {
         const moldes = await MoldeHilo.find();
         res.status(200).json(moldes);
     } catch (error) {
-        console.error('Error al obtener moldes de hilo:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al obtener moldes de hilo' });
     }
 });
@@ -877,7 +877,7 @@ app.post('/api/moldes-hilo', async (req, res) => {
         const result = await nuevoMolde.save();
         res.status(201).json({ mensaje: 'Molde de hilo guardado', id: result._id, molde: result });
     } catch (error) {
-        console.error('Error al guardar molde de hilo:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al guardar molde de hilo' });
     }
 });
@@ -888,7 +888,7 @@ app.delete('/api/moldes-hilo/:id', async (req, res) => {
         if (!result) return res.status(404).json({ mensaje: 'Molde de hilo no encontrado' });
         res.status(200).json({ mensaje: 'Molde de hilo eliminado' });
     } catch (error) {
-        console.error('Error al eliminar molde de hilo:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al eliminar molde de hilo' });
     }
 });
@@ -900,7 +900,7 @@ app.put('/api/moldes-hilo/:id', async (req, res) => {
         if (!result) return res.status(404).json({ mensaje: 'Molde de hilo no encontrado' });
         res.status(200).json({ mensaje: 'Molde de hilo actualizado', molde: result });
     } catch (error) {
-        console.error('Error al actualizar molde de hilo:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al actualizar molde de hilo' });
     }
 });
@@ -914,7 +914,7 @@ app.post('/api/moldes-hilo/importar', async (req, res) => {
         const resultado = await MoldeHilo.insertMany(moldes);
         res.status(201).json({ mensaje: `${resultado.length} moldes de hilo importados`, moldes: resultado });
     } catch (error) {
-        console.error('Error al importar moldes de hilo:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al importar moldes de hilo' });
     }
 });
@@ -927,7 +927,7 @@ app.get('/api/productos/tipos', async (req, res) => {
         const tipos = await Producto.distinct('producto');
         res.status(200).json(tipos);
     } catch (error) {
-        console.error('Error al obtener tipos de producto:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al obtener tipos de producto' });
     }
 });
@@ -939,7 +939,7 @@ app.get('/api/productos/materiales/:tipo', async (req, res) => {
         const materiales = await Producto.distinct('material', { producto: tipo });
         res.status(200).json(materiales);
     } catch (error) {
-        console.error('Error al obtener materiales:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al obtener materiales' });
     }
 });
@@ -953,7 +953,7 @@ app.get('/api/productos/subcategorias/:producto/:material', async (req, res) => 
         const subcategorias = [...new Set(productos.flatMap(p => p.subcategorias || []))];
         res.status(200).json(subcategorias);
     } catch (error) {
-        console.error('Error al obtener subcategorías:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al obtener subcategorías' });
     }
 });
@@ -964,7 +964,7 @@ app.get('/api/productos', async (req, res) => {
         const productos = await Producto.find();
         res.status(200).json(productos);
     } catch (error) {
-        console.error('Error al obtener productos:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al obtener productos' });
     }
 });
@@ -974,16 +974,16 @@ app.post('/api/productos', async (req, res) => {
     const datos = req.body;
     try {
         if (datos.coloresPorImagen) {
-            console.log('Guardando coloresPorImagen:', JSON.stringify(datos.coloresPorImagen));
+            {});
         }
         const nuevoProducto = new Producto(datos);
         const result = await nuevoProducto.save();
         if (result.coloresPorImagen && result.coloresPorImagen.length > 0) {
-            console.log('Colores guardados correctamente:', result.coloresPorImagen.length, 'entradas');
+            {}
         }
         res.status(201).json({ mensaje: 'Producto guardado', id: result._id, producto: result });
     } catch (error) {
-        console.error('Error al guardar producto:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al guardar producto' });
     }
 });
@@ -993,16 +993,16 @@ app.put('/api/productos/:id', async (req, res) => {
     const datos = req.body;
     try {
         if (datos.coloresPorImagen) {
-            console.log('Actualizando coloresPorImagen:', JSON.stringify(datos.coloresPorImagen));
+            {});
         }
         const result = await Producto.findByIdAndUpdate(req.params.id, datos, { new: true });
         if (!result) return res.status(404).json({ mensaje: 'Producto no encontrado' });
         if (result.coloresPorImagen && result.coloresPorImagen.length > 0) {
-            console.log('Colores actualizados correctamente:', result.coloresPorImagen.length, 'entradas');
+            {}
         }
         res.status(200).json({ mensaje: 'Producto actualizado', producto: result });
     } catch (error) {
-        console.error('Error al actualizar producto:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al actualizar producto' });
     }
 });
@@ -1014,7 +1014,7 @@ app.delete('/api/productos/:id', async (req, res) => {
         if (!result) return res.status(404).json({ mensaje: 'Producto no encontrado' });
         res.status(200).json({ mensaje: 'Producto eliminado' });
     } catch (error) {
-        console.error('Error al eliminar producto:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al eliminar producto' });
     }
 });
@@ -1029,7 +1029,7 @@ app.get('/api/productos/por-tipo/:tipo', async (req, res) => {
         const productos = await Producto.find(query);
         res.status(200).json(productos);
     } catch (error) {
-        console.error('Error al obtener productos por tipo:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al obtener productos' });
     }
 });
@@ -1041,7 +1041,7 @@ app.get('/api/pedidos', async (req, res) => {
         const pedidos = await Pedido.find().sort({ fecha: -1 });
         res.status(200).json(pedidos);
     } catch (error) {
-        console.error('Error al obtener pedidos:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al obtener pedidos' });
     }
 });
@@ -1066,18 +1066,18 @@ app.post('/api/pedidos', async (req, res) => {
                         const variante = stockDoc.variantes.find(v => v._id === item.stockVarianteId);
                         if (variante) {
                             variante.cantidad = Math.max(0, variante.cantidad - item.cantidad);
-                            console.log(`📦 Stock descontado: ${item.productoNombre} variante ${item.stockVarianteId} -> cantidad restante: ${variante.cantidad}`);
+                            {}
 
                             // Si la variante llega a 0, eliminarla
                             if (variante.cantidad === 0) {
                                 stockDoc.variantes = stockDoc.variantes.filter(v => v._id !== item.stockVarianteId);
-                                console.log(`🗑️ Variante ${item.stockVarianteId} eliminada del stock (cantidad 0)`);
+                                {}`);
                             }
 
                             // Si no quedan variantes, eliminar el documento de stock completo
                             if (stockDoc.variantes.length === 0) {
                                 await Stock.findByIdAndDelete(stockDoc._id);
-                                console.log(`🗑️ Producto ${item.productoNombre} eliminado del stock (sin variantes)`);
+                                {}`);
                             } else {
                                 stockDoc.ultimaActualizacion = new Date();
                                 await stockDoc.save();
@@ -1085,7 +1085,7 @@ app.post('/api/pedidos', async (req, res) => {
                         }
                     }
                 } catch (stockError) {
-                    console.error(`Error al descontar stock para variante ${item.stockVarianteId}:`, stockError);
+                    {}
                     // No fallar el pedido por error de stock
                 }
             }
@@ -1093,7 +1093,7 @@ app.post('/api/pedidos', async (req, res) => {
 
         res.status(201).json({ mensaje: 'Pedido guardado', id: result._id, pedido: result });
     } catch (error) {
-        console.error('Error al guardar pedido:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al guardar pedido' });
     }
 });
@@ -1105,7 +1105,7 @@ app.put('/api/pedidos/:id', async (req, res) => {
         if (!result) return res.status(404).json({ mensaje: 'Pedido no encontrado' });
         res.status(200).json({ mensaje: 'Pedido actualizado', pedido: result });
     } catch (error) {
-        console.error('Error al actualizar pedido:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al actualizar pedido' });
     }
 });
@@ -1116,7 +1116,7 @@ app.delete('/api/pedidos/:id', async (req, res) => {
         if (!result) return res.status(404).json({ mensaje: 'Pedido no encontrado' });
         res.status(200).json({ mensaje: 'Pedido eliminado' });
     } catch (error) {
-        console.error('Error al eliminar pedido:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al eliminar pedido' });
     }
 });
@@ -1128,7 +1128,7 @@ app.get('/api/ventas', async (req, res) => {
         const ventas = await Venta.find().sort({ fechaVenta: -1 });
         res.status(200).json(ventas);
     } catch (error) {
-        console.error('Error al obtener ventas:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al obtener ventas' });
     }
 });
@@ -1140,7 +1140,7 @@ app.post('/api/ventas', async (req, res) => {
         const result = await nuevaVenta.save();
         res.status(201).json({ mensaje: 'Venta guardada', id: result._id, venta: result });
     } catch (error) {
-        console.error('Error al guardar venta:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al guardar venta' });
     }
 });
@@ -1151,7 +1151,7 @@ app.delete('/api/ventas/:id', async (req, res) => {
         if (!result) return res.status(404).json({ mensaje: 'Venta no encontrada' });
         res.status(200).json({ mensaje: 'Venta eliminada' });
     } catch (error) {
-        console.error('Error al eliminar venta:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al eliminar venta' });
     }
 });
@@ -1163,7 +1163,7 @@ app.get('/api/calculadora-memoria', async (req, res) => {
         const memoria = await CalculadoraMemoria.findOne({ nombre: 'calculadora_principal' });
         res.status(200).json(memoria || { productos: [], contadorId: 1 });
     } catch (error) {
-        console.error('Error al obtener memoria:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al obtener memoria' });
     }
 });
@@ -1178,7 +1178,7 @@ app.post('/api/calculadora-memoria', async (req, res) => {
         );
         res.status(200).json({ mensaje: 'Memoria guardada', memoria });
     } catch (error) {
-        console.error('Error al guardar memoria:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al guardar memoria' });
     }
 });
@@ -1192,7 +1192,7 @@ app.delete('/api/calculadora-memoria', async (req, res) => {
         );
         res.status(200).json({ mensaje: 'Memoria limpiada' });
     } catch (error) {
-        console.error('Error al limpiar memoria:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al limpiar memoria' });
     }
 });
@@ -1205,7 +1205,7 @@ app.get('/api/compras/lugares', async (req, res) => {
         const lugares = await Compra.distinct('lugar');
         res.status(200).json(lugares);
     } catch (error) {
-        console.error('Error al obtener lugares:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al obtener lugares' });
     }
 });
@@ -1220,7 +1220,7 @@ app.post('/api/compras/importar', async (req, res) => {
         const resultado = await Compra.insertMany(compras);
         res.status(201).json({ mensaje: `${resultado.length} compras importadas`, cantidad: resultado.length });
     } catch (error) {
-        console.error('Error al importar compras:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al importar compras' });
     }
 });
@@ -1231,7 +1231,7 @@ app.get('/api/compras', async (req, res) => {
         const compras = await Compra.find().sort({ fechaCompra: -1 });
         res.status(200).json(compras);
     } catch (error) {
-        console.error('Error al obtener compras:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al obtener compras' });
     }
 });
@@ -1244,7 +1244,7 @@ app.post('/api/compras', async (req, res) => {
         const result = await nuevaCompra.save();
         res.status(201).json({ mensaje: 'Compra guardada', id: result._id, compra: result });
     } catch (error) {
-        console.error('Error al guardar compra:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al guardar compra' });
     }
 });
@@ -1257,7 +1257,7 @@ app.put('/api/compras/:id', async (req, res) => {
         if (!result) return res.status(404).json({ mensaje: 'Compra no encontrada' });
         res.status(200).json({ mensaje: 'Compra actualizada', compra: result });
     } catch (error) {
-        console.error('Error al actualizar compra:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al actualizar compra' });
     }
 });
@@ -1269,7 +1269,7 @@ app.delete('/api/compras/:id', async (req, res) => {
         if (!result) return res.status(404).json({ mensaje: 'Compra no encontrada' });
         res.status(200).json({ mensaje: 'Compra eliminada' });
     } catch (error) {
-        console.error('Error al eliminar compra:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al eliminar compra' });
     }
 });
@@ -1300,7 +1300,7 @@ app.get('/api/stock', async (req, res) => {
         const stockLimpio = await Stock.find().sort({ fechaCreacion: -1 });
         res.status(200).json(stockLimpio);
     } catch (error) {
-        console.error('Error al obtener stock:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al obtener stock' });
     }
 });
@@ -1317,7 +1317,7 @@ app.get('/api/stock/producto/:productoId', async (req, res) => {
         }).filter(item => item.variantes.length > 0);
         res.status(200).json(itemsConStock);
     } catch (error) {
-        console.error('Error al obtener stock por producto:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al obtener stock por producto' });
     }
 });
@@ -1331,7 +1331,7 @@ app.get('/api/stock/:id', async (req, res) => {
         }
         res.status(200).json(item);
     } catch (error) {
-        console.error('Error al obtener item:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al obtener item' });
     }
 });
@@ -1339,7 +1339,7 @@ app.get('/api/stock/:id', async (req, res) => {
 // Agregar nuevo producto al stock (ahora con variantes)
 app.post('/api/stock', async (req, res) => {
     try {
-        console.log('📦 Datos recibidos para stock:', req.body);
+        {}
         
         // Validar campos requeridos
         const { productoId, productoNombre, productoTipo, material, variantes } = req.body;
@@ -1353,10 +1353,10 @@ app.post('/api/stock', async (req, res) => {
         const nuevoStock = new Stock(req.body);
         await nuevoStock.validate(); // Forzar validación antes de guardar
         await nuevoStock.save();
-        console.log('✅ Stock guardado exitosamente:', nuevoStock);
+        {}
         res.status(201).json({ mensaje: 'Producto agregado al stock', stock: nuevoStock });
     } catch (error) {
-        console.error('❌ Error al agregar al stock:', error);
+        {}
         const status = error.name === 'ValidationError' ? 400 : 500;
         res.status(status).json({ 
             mensaje: 'Error al agregar al stock',
@@ -1387,10 +1387,10 @@ app.post('/api/stock/:id/variante', async (req, res) => {
         stock.ultimaActualizacion = new Date();
         await stock.save();
 
-        console.log(`➕ Variante agregada a ${stock.productoNombre}: ${nuevaVariante._id}`);
+        {}
         res.status(201).json({ mensaje: 'Variante agregada', stock });
     } catch (error) {
-        console.error('Error al agregar variante:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al agregar variante' });
     }
 });
@@ -1428,7 +1428,7 @@ app.put('/api/stock/:id/variante/:varianteId/cantidad', async (req, res) => {
         
         res.status(200).json({ mensaje: 'Cantidad actualizada', stock });
     } catch (error) {
-        console.error('Error al actualizar cantidad:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al actualizar cantidad' });
     }
 });
@@ -1455,7 +1455,7 @@ app.delete('/api/stock/:id/variante/:varianteId', async (req, res) => {
         await stock.save();
         res.status(200).json({ mensaje: 'Variante eliminada', stock });
     } catch (error) {
-        console.error('Error al eliminar variante:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al eliminar variante' });
     }
 });
@@ -1530,7 +1530,7 @@ app.post('/api/stock/:id/vender', async (req, res) => {
             });
         }
     } catch (error) {
-        console.error('Error al vender desde stock:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al procesar venta' });
     }
 });
@@ -1565,7 +1565,7 @@ app.post('/api/:coleccion', async (req, res) => {
         res.status(201).json({ mensaje: 'Producto guardado', id: result._id });
 
     } catch (error) {
-        console.error('Error al guardar producto:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al guardar producto' });
     }
 });
@@ -1595,7 +1595,7 @@ app.get('/api/:coleccion', async (req, res) => {
         res.status(200).json(productos);
 
     } catch (error) {
-        console.error('Error al obtener productos:', error);
+        {}
         res.status(500).json({ mensaje: 'Error al obtener productos' });
     }
 });

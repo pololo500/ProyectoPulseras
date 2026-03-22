@@ -51,9 +51,15 @@
 
 /* Mensaje */
 .mensaje {
+    position: fixed;
+    top: 150px;
+    left: 50%;
+    transform: translateX(-50%);
     padding: 15px 30px;
     font-size: 14px;
     border-radius: 10px;
+    z-index: 1000;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
 .mensaje.success {

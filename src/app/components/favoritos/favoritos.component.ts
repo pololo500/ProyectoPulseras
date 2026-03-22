@@ -166,15 +166,15 @@ export class FavoritosComponent implements OnInit, OnDestroy {
 
     // Formulario de login
     loginForm = new FormGroup({
-        email: new FormControl('', [Validators.required, Validators.email]),
+        email: new FormControl('', [Validators.required, Validators.pattern('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}$')]),
         password: new FormControl('', Validators.required),
     });
 
     // Formulario de registro
     registroForm = new FormGroup({
-        email: new FormControl('', [Validators.required, Validators.email]),
+        email: new FormControl('', [Validators.required, Validators.pattern('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}$')]),
         nombre: new FormControl('', Validators.required),
-        telefono: new FormControl(''),
+        telefono: new FormControl('', [Validators.pattern('^[ \\-\\+\\(\\)]*(?:\\d[ \\-\\+\\(\\)]*){10}$')]),
         password: new FormControl('', [Validators.required, Validators.minLength(6)]),
         confirmarPassword: new FormControl('', Validators.required),
     });
@@ -249,7 +249,7 @@ export class FavoritosComponent implements OnInit, OnDestroy {
                     this.aplicarFiltros();
                 });
             },
-            error: (err) => console.error('Error al cargar datos:', err)
+            error: (err) => {}
         });
     }
 

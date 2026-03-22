@@ -3,7 +3,7 @@
     <h1>Historial de Ventas</h1>
     <div class="header-acciones">
       <button class="btn-agregar" (click)="abrirFormulario()">+ Agregar Venta</button>
-      <button class="btn-importar" (click)="abrirImportarJson()">📁 Importar JSON</button>
+      <button class="btn-importar" (click)="abrirImportarJson()">Importar JSON</button>
     </div>
   </div>
 
@@ -45,7 +45,7 @@
       <label>Hasta</label>
       <input type="date" [(ngModel)]="filtroFechaHasta" (ngModelChange)="aplicarFiltros()">
     </div>
-    <button class="btn-limpiar" (click)="limpiarFiltros()">Limpiar</button>
+    <button class="btn-limpiar" *ngIf="filtroEstado || filtroCliente || filtroFechaDesde || filtroFechaHasta" (click)="limpiarFiltros()">Limpiar</button>
   </div>
 
   <!-- Tabla -->

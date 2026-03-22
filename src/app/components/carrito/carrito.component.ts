@@ -60,14 +60,14 @@ export class CarritoComponent implements OnInit, OnDestroy {
   
   // Formularios
   loginForm = new FormGroup({
-    email: new FormControl('', [Validators.required, Validators.email]),
+    email: new FormControl('', [Validators.required, Validators.pattern('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}$')]),
     password: new FormControl('', Validators.required),
   });
   
   registroForm = new FormGroup({
-    email: new FormControl('', [Validators.required, Validators.email]),
+    email: new FormControl('', [Validators.required, Validators.pattern('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}$')]),
     nombre: new FormControl('', Validators.required),
-    telefono: new FormControl(''),
+    telefono: new FormControl('', [Validators.pattern('^[ \\-\\+\\(\\)]*(?:\\d[ \\-\\+\\(\\)]*){10}$')]),
     password: new FormControl('', [Validators.required, Validators.minLength(6)]),
     confirmarPassword: new FormControl('', Validators.required),
   });
@@ -91,15 +91,15 @@ export class CarritoComponent implements OnInit, OnDestroy {
   }
 
   incrementar(item: ItemCarrito): void {
-    this.carritoService.incrementar(item._id, item.coloresPorCapa);
+    this.carritoService.incrementar(item);
   }
 
   decrementar(item: ItemCarrito): void {
-    this.carritoService.decrementar(item._id, item.coloresPorCapa);
+    this.carritoService.decrementar(item);
   }
 
   eliminarItem(item: ItemCarrito): void {
-    this.carritoService.eliminarItem(item._id, item.coloresPorCapa);
+    this.carritoService.eliminarItem(item);
   }
 
   abrirPopupEliminar(item: ItemCarrito): void {
@@ -171,7 +171,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
           }
         },
         error: (err) => {
-          console.error('Error al verificar usuario:', err);
+          
           // En caso de error, pedir teléfono por seguridad
           this.telefonoInput = '';
           this.mostrarPopupTelefono = true;
@@ -187,6 +187,11 @@ export class CarritoComponent implements OnInit, OnDestroy {
   guardarTelefono(): void {
     if (!this.telefonoInput || this.telefonoInput.trim() === '') {
       this.mostrarAlerta('Por favor ingresa un número de teléfono válido', 'error');
+      return;
+    }
+    const regex = /^[ \\-\\+\\(\\)]*(?:\\d[ \\-\\+\\(\\)]*){10}$/;
+    if (!regex.test(this.telefonoInput.trim())) {
+      this.mostrarAlerta('El teléfono debe tener exactamente 10 números', 'error');
       return;
     }
     
@@ -206,7 +211,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
           this.mostrarPopupConfirmacion = true;
         },
         error: (err) => {
-          console.error('Error al guardar teléfono:', err);
+          
           this.guardandoTelefono = false;
           this.mostrarAlerta('Error al guardar el teléfono. Intenta nuevamente.', 'error');
         }
@@ -221,93 +226,126 @@ export class CarritoComponent implements OnInit, OnDestroy {
   confirmarCompra(): void {
     this.procesando = true;
     
-    const email = sessionStorage.getItem('email') || '';
-    const nombreUsuario = sessionStorage.getItem('nombreUsuario') || 'Cliente';
-    const now = new Date();
-    const fechaHoy = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    
-    // Crear items con toda la información necesaria para el admin
-    const items = this.items.map(item => {
-      const itemPedido: any = {
-        productoId: item._id,
-        productoNombre: item.nombre,
-        productoTipo: item.producto,
-        material: item.material || '',
-        cantidad: item.cantidad,
-        precio: item.precio,
-        estado: 'A confirmar'
-      };
-      
-      // Si tiene molde (resina)
-      if (item.moldeNombre) {
-        itemPedido.moldeNombre = item.moldeNombre;
-      }
-      
-      // Si tiene colores por capa (resina)
-      if (item.coloresPorCapa && item.coloresPorCapa.length > 0) {
-        itemPedido.coloresPorCapa = item.coloresPorCapa;
-      }
+    // Obtener stock actualizado
+    this.http.get<any[]>('http://localhost:5000/api/stock').subscribe({
+      next: (stockItems) => {
+        const email = sessionStorage.getItem('email') || '';
+        const nombreUsuario = sessionStorage.getItem('nombreUsuario') || 'Cliente';
+        const now = new Date();
+        const fechaHoy = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        
+        let notasStock: string[] = [];
 
-      // Si es producto de stock disponible
-      if (item.esStock) {
-        itemPedido.esStock = true;
-        itemPedido.stockVarianteId = item.stockVarianteId;
-      }
-      
-      return itemPedido;
-    });
-    
-    const pedido = {
-      cliente: email,
-      items: items,
-      fecha: fechaHoy,
-      estado: 'A confirmar',
-      metodoPago: 'A definir',
-      pagado: false,
-      nota: this.notaPedido.trim() || ''
-    };
-    
-    // Crear el pedido único
-    this.http.post('http://localhost:5000/api/pedidos', pedido)
-      .subscribe({
-        next: () => {
-          // Generar mensaje de WhatsApp
-          const mensaje = this.generarMensajeWhatsApp(nombreUsuario);
-          const urlWhatsApp = `https://wa.me/${this.numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+        // Crear items con toda la información necesaria para el admin
+        const items = this.items.map(item => {
+          const itemPedido: any = {
+            productoId: item._id,
+            productoNombre: item.nombre,
+            productoTipo: item.producto,
+            material: item.material || '',
+            cantidad: item.cantidad,
+            precio: item.precio,
+            estado: 'A confirmar'
+          };
           
-          // Vaciar carrito
-          this.carritoService.vaciarCarrito();
-          
-          // Cerrar popup
-          this.mostrarPopupConfirmacion = false;
-          this.procesando = false;
-          this.notaPedido = '';
-          
-          // Abrir WhatsApp
-          window.open(urlWhatsApp, '_blank');
-          
-          // Redirigir a mis pedidos
-          this.router.navigateByUrl('/mis-pedidos');
-        },
-        error: (error) => {
-          console.error('Error al crear pedido:', error);
-          this.procesando = false;
-          if (error.status === 0) {
-            this.mostrarAlerta('No se pudo conectar con el servidor. Verifica que esté en ejecución.', 'error');
-          } else {
-            this.mostrarAlerta(`Error al procesar el pedido: ${error.message || 'Intenta nuevamente.'}`, 'error');
+          // Si tiene molde (resina)
+          if (item.moldeNombre) {
+            itemPedido.moldeNombre = item.moldeNombre;
           }
+          
+          // Si tiene colores por capa (resina)
+          if (item.coloresPorCapa && item.coloresPorCapa.length > 0) {
+            itemPedido.coloresPorCapa = item.coloresPorCapa;
+          }
+
+          // Si es producto de stock disponible
+          if (item.esStock) {
+            itemPedido.esStock = true;
+            itemPedido.stockVarianteId = item.stockVarianteId;
+            
+            // Calcular cantidad disponible en stock
+            let stockDisp = 0;
+            for (const s of stockItems) {
+              const v = s.variantes?.find((x: any) => x._id === item.stockVarianteId);
+              if (v) {
+                stockDisp = v.cantidad;
+                break;
+              }
+            }
+            
+            const cantTomadaDeStock = Math.min(item.cantidad, stockDisp);
+            if (cantTomadaDeStock > 0) {
+              notasStock.push(`- ${item.nombre}: ${cantTomadaDeStock} en stock`);
+            }
+          }
+          
+          return itemPedido;
+        });
+
+        let notaFinal = this.notaPedido.trim();
+        if (notasStock.length > 0) {
+          let notaStockStr = "\nProductos apartados del stock disponible:\n" + notasStock.join('\n');
+          notaFinal = notaFinal ? notaFinal + "\n" + notaStockStr : notaStockStr.trim();
         }
-      });
+        
+        const pedido = {
+          cliente: email,
+          items: items,
+          fecha: fechaHoy,
+          estado: 'A confirmar',
+          metodoPago: 'A definir',
+          pagado: false,
+          nota: notaFinal
+        };
+        
+        // Crear el pedido único
+        this.http.post('http://localhost:5000/api/pedidos', pedido)
+          .subscribe({
+            next: () => {
+              // Generar mensaje de WhatsApp
+              const mensaje = this.generarMensajeWhatsApp(nombreUsuario);
+              const urlWhatsApp = `https://wa.me/${this.numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+              
+              // Vaciar carrito
+              this.carritoService.vaciarCarrito();
+              
+              // Cerrar popup
+              this.mostrarPopupConfirmacion = false;
+              this.procesando = false;
+              this.notaPedido = '';
+              
+              // Abrir WhatsApp
+              window.open(urlWhatsApp, '_blank');
+              
+              // Redirigir a mis pedidos
+              this.router.navigateByUrl('/mis-pedidos');
+            },
+            error: (error) => {
+              
+              this.procesando = false;
+              if (error.status === 0) {
+                this.mostrarAlerta('No se pudo conectar con el servidor. Verifica que esté en ejecución.', 'error');
+              } else {
+                this.mostrarAlerta(`Error al procesar el pedido: ${error.message || 'Intenta nuevamente.'}`, 'error');
+              }
+            }
+          });
+      },
+      error: (errorStock) => {
+        
+        this.procesando = false;
+        this.mostrarAlerta('No se pudo verificar el stock disponible. Intenta nuevamente.', 'error');
+      }
+    });
   }
 
   private generarMensajeWhatsApp(nombreUsuario: string): string {
-    let mensaje = `¡Hola! Soy ${nombreUsuario} 👋\n\n`;
+    let mensaje = `¡Hola! Soy ${nombreUsuario}\n\n`;
     mensaje += `Me gustaría realizar el siguiente pedido:\n\n`;
     mensaje += `━━━━━━━━━━━━━━━━━━━━\n`;
     
     this.items.forEach((item, index) => {
-      mensaje += `📦 *${item.nombre}*\n`;
+      mensaje += `*${item.nombre}*\n`;
       if (item.material) {
         mensaje += `   Material: ${item.material}\n`;
       }
@@ -326,9 +364,9 @@ export class CarritoComponent implements OnInit, OnDestroy {
     });
     
     mensaje += `━━━━━━━━━━━━━━━━━━━━\n`;
-    mensaje += `📝 *Total de productos:* ${this.getCantidadTotal()}\n`;
-    mensaje += `💰 *TOTAL: $${this.getTotal()}*\n\n`;
-    mensaje += `¡Espero su confirmación! 😊`;
+    mensaje += `*Total de productos:* ${this.getCantidadTotal()}\n`;
+    mensaje += `*TOTAL: $${this.getTotal()}*\n\n`;
+    mensaje += `¡Espero su confirmación!`;
     
     return mensaje;
   }

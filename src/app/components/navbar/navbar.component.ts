@@ -51,7 +51,7 @@ export class NavbarComponent implements OnInit, AfterViewInit, OnDestroy {
           this.particleEffectSquare = new ParticleEffectSquare('particle-canvas-square');
           this.particlesInitialized = true;
         } catch (e) {
-          console.warn('Error inicializando partículas:', e);
+          
           this.particlesInitialized = false;
         }
       } else if (this.validRoute) {

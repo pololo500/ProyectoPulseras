@@ -19,7 +19,7 @@ export class PerfilComponent implements OnInit {
   // Formulario de datos personales
   datosForm = new FormGroup({
     nombre: new FormControl('', Validators.required),
-    telefono: new FormControl('')
+    telefono: new FormControl('', [Validators.pattern('^[ \\-\\+\\(\\)]*(?:\\d[ \\-\\+\\(\\)]*){10}$')])
   });
   
   // Formulario de contraseña
@@ -34,6 +34,7 @@ export class PerfilComponent implements OnInit {
   mensaje: string = '';
   tipoMensaje: 'success' | 'error' = 'success';
   cargando: boolean = false;
+  mensajeTimeout: any;
   
   // Datos originales para comparar cambios
   datosOriginales: { nombre: string; telefono: string } = { nombre: '', telefono: '' };
@@ -95,6 +96,19 @@ export class PerfilComponent implements OnInit {
            this.passwordForm.get('confirmarPassword')?.value;
   }
 
+  mostrarMensaje(texto: string, tipo: 'success' | 'error'): void {
+    this.mensaje = texto;
+    this.tipoMensaje = tipo;
+    
+    if (this.mensajeTimeout) {
+      clearTimeout(this.mensajeTimeout);
+    }
+    
+    this.mensajeTimeout = setTimeout(() => {
+      this.mensaje = '';
+    }, 5000);
+  }
+
   // Capitalizar cada palabra del nombre
   private capitalizarNombre(nombre: string): string {
     return nombre
@@ -118,8 +132,7 @@ export class PerfilComponent implements OnInit {
       .subscribe({
         next: (res) => {
           this.cargando = false;
-          this.mensaje = 'Datos actualizados correctamente';
-          this.tipoMensaje = 'success';
+          this.mostrarMensaje('Datos actualizados correctamente', 'success');
           
           // Actualizar datos originales
           this.datosOriginales = {
@@ -133,8 +146,7 @@ export class PerfilComponent implements OnInit {
         },
         error: (err) => {
           this.cargando = false;
-          this.mensaje = err?.error?.error || 'Error al actualizar datos';
-          this.tipoMensaje = 'error';
+          this.mostrarMensaje(err?.error?.error || 'Error al actualizar datos', 'error');
         }
       });
   }
@@ -143,8 +155,7 @@ export class PerfilComponent implements OnInit {
     if (this.passwordForm.invalid) return;
     
     if (!this.passwordsCoinciden) {
-      this.mensaje = 'Las contraseñas no coinciden';
-      this.tipoMensaje = 'error';
+      this.mostrarMensaje('Las contraseñas no coinciden', 'error');
       return;
     }
     
@@ -158,15 +169,13 @@ export class PerfilComponent implements OnInit {
       .subscribe({
         next: (res) => {
           this.cargando = false;
-          this.mensaje = 'Contraseña actualizada correctamente';
-          this.tipoMensaje = 'success';
+          this.mostrarMensaje('Contraseña actualizada correctamente', 'success');
           this.editandoPassword = false;
           this.passwordForm.reset();
         },
         error: (err) => {
           this.cargando = false;
-          this.mensaje = err?.error?.error || 'Error al cambiar contraseña';
-          this.tipoMensaje = 'error';
+          this.mostrarMensaje(err?.error?.error || 'Error al cambiar contraseña', 'error');
         }
       });
   }

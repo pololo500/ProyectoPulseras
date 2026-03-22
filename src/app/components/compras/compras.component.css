@@ -9,58 +9,59 @@
 .container {
   padding: 20px 20px 20px 20px;
   min-height: 100vh;
-  background-color: #1a1a2e;
-  color: #D6B435;
-}
-
-h1 {
-  font-size: 2rem;
-  margin-bottom: 20px;
-  text-align: center;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* Botones de acción superiores */
 .acciones-top {
   display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin-bottom: 30px;
-  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: space-between;
+  width: 90%;
+  margin-bottom: 20px;
 }
 
 .btn-agregar {
-  padding: 12px 25px;
-  background-color: #28a745;
+  background-color: #02c028;
   color: white;
+  padding: 12px 24px;
   border: none;
   border-radius: 8px;
-  cursor: pointer;
-  font-size: 16px;
   font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 0;
 }
 
 .btn-agregar:hover {
-  background-color: #218838;
+  background-color: #06d22f;
 }
 
 .btn-importar {
-  padding: 12px 25px;
-  background-color: #17a2b8;
-  color: white;
+  background-color: #D6B435;
+  color: #000447;
+  padding: 12px 24px;
   border: none;
   border-radius: 8px;
-  cursor: pointer;
-  font-size: 16px;
   font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 0;
 }
 
 .btn-importar:hover {
-  background-color: #138496;
+  background-color: #C8962B;
 }
 
 /* Tabla */
 .tabla-container {
   overflow-x: auto;
+  width: 95%;
 }
 
 .compras-table {
@@ -99,9 +100,8 @@ h1 {
 }
 
 .acciones-cell {
-  display: flex;
-  gap: 5px;
-  justify-content: center;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .acciones-cell button {
@@ -110,6 +110,11 @@ h1 {
   border-radius: 5px;
   cursor: pointer;
   font-size: 14px;
+  margin: 0 2.5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
 }
 
 .btn-editar {

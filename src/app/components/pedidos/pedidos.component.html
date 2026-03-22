@@ -12,7 +12,6 @@
           <th>Cliente</th>
           <th>Productos</th>
           <th>Fecha</th>
-          <th>Cantidad</th>
           <th>Total</th>
           <th>Método Pago</th>
           <th>Pagado</th>
@@ -64,7 +63,6 @@
             </div>
           </td>
           <td>{{ formatearFecha(pedido.fecha) }}</td>
-          <td>{{ getCantidadTotal(pedido) }}</td>
           <td>${{ getPrecioTotal(pedido) | formatoPrecio }}</td>
           <td>{{ pedido.metodoPago }}</td>
           <td>
@@ -86,11 +84,9 @@
               [disabled]="!todosListosParaEntregar(pedido)"
               [class.btn-disabled]="!todosListosParaEntregar(pedido)">
               <span class="btn-icon">✅</span>
-              <span class="btn-text">Entregar</span>
             </button>
             <button class="btn-accion btn-cancelar-pedido" (click)="confirmarAccion(pedido, 'cancelar')" title="Cancelar pedido">
               <span class="btn-icon">❌</span>
-              <span class="btn-text">Cancelar</span>
             </button>
           </td>
         </tr>

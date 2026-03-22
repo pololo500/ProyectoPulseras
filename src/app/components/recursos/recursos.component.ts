@@ -131,7 +131,7 @@ export class RecursosComponent implements OnInit {
     this.cargandoColores = true;
     this.http.get<Color[]>('http://localhost:5000/api/colores').subscribe({
       next: (data) => { this.colores = data; this.cargandoColores = false; },
-      error: (err) => { console.error('Error al cargar colores:', err); this.cargandoColores = false; }
+      error: (err) => {  this.cargandoColores = false; }
     });
   }
 
@@ -158,7 +158,7 @@ export class RecursosComponent implements OnInit {
     this.cargandoColoresHilo = true;
     this.http.get<Color[]>('http://localhost:5000/api/colores-hilo').subscribe({
       next: (data) => { this.coloresHilo = data; this.cargandoColoresHilo = false; },
-      error: (err) => { console.error('Error al cargar colores de hilo:', err); this.cargandoColoresHilo = false; }
+      error: (err) => {  this.cargandoColoresHilo = false; }
     });
   }
 
@@ -254,7 +254,7 @@ export class RecursosComponent implements OnInit {
     this.cargandoMoldes = true;
     this.http.get<Molde[]>('http://localhost:5000/api/moldes').subscribe({
       next: (data) => { this.moldes = ordenarAlfabetico(data); this.cargandoMoldes = false; },
-      error: (err) => { console.error('Error al cargar moldes:', err); this.cargandoMoldes = false; }
+      error: (err) => {  this.cargandoMoldes = false; }
     });
   }
 
@@ -314,7 +314,7 @@ export class RecursosComponent implements OnInit {
     this.cargandoMoldesHilo = true;
     this.http.get<Molde[]>('http://localhost:5000/api/moldes-hilo').subscribe({
       next: (data) => { this.moldesHilo = ordenarAlfabetico(data); this.cargandoMoldesHilo = false; },
-      error: (err) => { console.error('Error al cargar moldes hilo:', err); this.cargandoMoldesHilo = false; }
+      error: (err) => {  this.cargandoMoldesHilo = false; }
     });
   }
 
@@ -523,7 +523,7 @@ export class RecursosComponent implements OnInit {
         },
         error: (err) => {
           this.guardandoSvg = false;
-          console.error('Error al guardar:', err);
+          
           this.mostrarMensajeSvg('Error al guardar el SVG', 'error');
         }
       });
@@ -556,7 +556,7 @@ export class RecursosComponent implements OnInit {
         },
         error: (err) => {
           this.guardandoSvg = false;
-          console.error('Error al eliminar:', err);
+          
           this.mostrarMensajeSvg('Error al eliminar el SVG', 'error');
         }
       });
@@ -682,7 +682,7 @@ export class RecursosComponent implements OnInit {
         },
         error: (err) => {
           this.guardandoSvgHilo = false;
-          console.error('Error al guardar:', err);
+          
           this.mostrarMensajeSvgHilo('Error al guardar el SVG', 'error');
         }
       });
@@ -715,7 +715,7 @@ export class RecursosComponent implements OnInit {
         },
         error: (err) => {
           this.guardandoSvgHilo = false;
-          console.error('Error al eliminar:', err);
+          
           this.mostrarMensajeSvgHilo('Error al eliminar el SVG', 'error');
         }
       });

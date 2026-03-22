@@ -158,7 +158,7 @@ export class PedidosComponent implements OnInit {
     this.http.get<Pedido[]>('http://localhost:5000/api/pedidos')
       .subscribe({
         next: (data) => this.pedidos = data,
-        error: (err) => console.error('Error al cargar pedidos:', err)
+        error: (err) => {}
       });
   }
 
@@ -169,7 +169,7 @@ export class PedidosComponent implements OnInit {
           this.productos = data;
           this.productosTipo = [...new Set(data.map(p => p.producto))];
         },
-        error: (err) => console.error('Error al cargar productos:', err)
+        error: (err) => {}
       });
   }
 
@@ -177,7 +177,7 @@ export class PedidosComponent implements OnInit {
     this.http.get<Molde[]>('http://localhost:5000/api/moldes')
       .subscribe({
         next: (data) => this.moldes = ordenarAlfabetico(data),
-        error: (err) => console.error('Error al cargar moldes:', err)
+        error: (err) => {}
       });
   }
 
@@ -185,7 +185,7 @@ export class PedidosComponent implements OnInit {
     this.http.get<Molde[]>('http://localhost:5000/api/moldes-hilo')
       .subscribe({
         next: (data) => this.moldesHilo = ordenarAlfabetico(data),
-        error: (err) => console.error('Error al cargar moldes de hilo:', err)
+        error: (err) => {}
       });
   }
 
@@ -193,7 +193,7 @@ export class PedidosComponent implements OnInit {
     this.http.get<Color[]>('http://localhost:5000/api/colores')
       .subscribe({
         next: (data) => this.colores = ordenarAlfabetico(data),
-        error: (err) => console.error('Error al cargar colores:', err)
+        error: (err) => {}
       });
   }
 
@@ -201,7 +201,7 @@ export class PedidosComponent implements OnInit {
     this.http.get<Color[]>('http://localhost:5000/api/colores-hilo')
       .subscribe({
         next: (data) => this.coloresHilo = ordenarAlfabetico(data),
-        error: (err) => console.error('Error al cargar colores hilo:', err)
+        error: (err) => {}
       });
   }
 
@@ -428,7 +428,7 @@ export class PedidosComponent implements OnInit {
             this.cargarPedidos();
             this.cerrarFormulario();
           },
-          error: (err) => console.error('Error al actualizar pedido:', err)
+          error: (err) => {}
         });
     } else {
       this.http.post('http://localhost:5000/api/pedidos', pedidoData)
@@ -437,7 +437,7 @@ export class PedidosComponent implements OnInit {
             this.cargarPedidos();
             this.cerrarFormulario();
           },
-          error: (err) => console.error('Error al guardar pedido:', err)
+          error: (err) => {}
         });
     }
   }
@@ -508,10 +508,10 @@ export class PedidosComponent implements OnInit {
                 this.cargarPedidos();
                 this.cancelarAccion();
               },
-              error: (err) => console.error('Error al eliminar pedido:', err)
+              error: (err) => {}
             });
         },
-        error: (err) => console.error('Error al crear venta:', err)
+        error: (err) => {}
       });
   }
 
@@ -599,10 +599,10 @@ export class PedidosComponent implements OnInit {
           this.http.post('http://localhost:5000/api/calculadora-memoria', { productos, contadorId })
             .subscribe({
               next: () => this.mostrarAlerta(`${itemToAdd.productoNombre} agregado a la calculadora de resina`, 'exito'),
-              error: (err) => console.error('Error al agregar a calculadora:', err)
+              error: (err) => {}
             });
         },
-        error: (err) => console.error('Error al obtener memoria:', err)
+        error: (err) => {}
       });
   }
 
@@ -622,7 +622,7 @@ export class PedidosComponent implements OnInit {
     this.http.put(`http://localhost:5000/api/pedidos/${pedido._id}`, { ...pedido, items })
       .subscribe({
         next: () => this.cargarPedidos(),
-        error: (err) => console.error('Error al cambiar estado:', err)
+        error: (err) => {}
       });
   }
 
@@ -655,7 +655,7 @@ export class PedidosComponent implements OnInit {
     this.http.put(`http://localhost:5000/api/pedidos/${pedido._id}`, { ...pedido, pagado: !pedido.pagado })
       .subscribe({
         next: () => this.cargarPedidos(),
-        error: (err) => console.error('Error al cambiar pagado:', err)
+        error: (err) => {}
       });
   }
 

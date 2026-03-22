@@ -21,15 +21,15 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
   
   // Formulario de login
   loginForm = new FormGroup({
-    email: new FormControl('', [Validators.required, Validators.email]),
+    email: new FormControl('', [Validators.required, Validators.pattern('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}$')]),
     password: new FormControl('', Validators.required),
   });
   
   // Formulario de registro
   registroForm = new FormGroup({
-    email: new FormControl('', [Validators.required, Validators.email]),
+    email: new FormControl('', [Validators.required, Validators.pattern('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}$')]),
     nombre: new FormControl('', Validators.required),
-    telefono: new FormControl(''),
+    telefono: new FormControl('', [Validators.pattern('^[ \\-\\+\\(\\)]*(?:\\d[ \\-\\+\\(\\)]*){10}$')]),
     password: new FormControl('', [Validators.required, Validators.minLength(6)]),
     confirmarPassword: new FormControl('', Validators.required),
   });
@@ -58,7 +58,7 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
         try {
           this.particleEffectSquare = new ParticleEffectSquare('particle-canvas-square-inicio');
         } catch (e) {
-          console.warn('Error inicializando partículas en login:', e);
+          
         }
       } else {
         this.initParticlesWithRetry(attempts + 1);
@@ -120,7 +120,7 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
           } else {
             this.popup = 'emailNoRegistrado';
           }
-          console.error('Error en el inicio de sesión:', err);
+          
         }
       });
   }
@@ -170,7 +170,7 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
           } else {
             this.popup = 'errorRegistro';
           }
-          console.error('Error en el registro:', err);
+          
         }
       });
   }

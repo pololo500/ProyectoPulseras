@@ -116,7 +116,7 @@ export class PopupColorComponent implements OnInit, OnChanges {
           error: (err) => {
             this.guardando = false;
             this.error = 'Error al actualizar el color';
-            console.error('Error:', err);
+            
           }
         });
     } else {
@@ -130,7 +130,7 @@ export class PopupColorComponent implements OnInit, OnChanges {
         error: (err) => {
           this.guardando = false;
           this.error = 'Error al guardar el color';
-          console.error('Error:', err);
+          
         }
       });
     }
@@ -160,7 +160,7 @@ export class PopupColorComponent implements OnInit, OnChanges {
         error: (err) => {
           this.eliminando = false;
           this.error = 'Error al eliminar el color';
-          console.error('Error:', err);
+          
         }
       });
   }
@@ -194,7 +194,7 @@ export class PopupColorComponent implements OnInit, OnChanges {
             this.mostrarAlertaPopup(`${res.colores.length} colores importados correctamente`, 'exito');
           },
           error: (err) => {
-            console.error('Error al importar colores:', err);
+            
             this.error = 'Error al importar colores';
           }
         });

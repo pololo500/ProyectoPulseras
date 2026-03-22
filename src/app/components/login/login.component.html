@@ -15,7 +15,7 @@
                     <input type="email" name="email" id="email" formControlName="email" placeholder="ejemplo@correo.com" required>
                     <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" class="error">
                         <span *ngIf="loginForm.get('email')?.errors?.['required']">El email es obligatorio</span>
-                        <span *ngIf="loginForm.get('email')?.errors?.['email']">Ingrese un email válido</span>
+                        <span *ngIf="loginForm.get('email')?.errors?.['email'] || loginForm.get('email')?.errors?.['pattern']">Ingrese un email válido</span>
                     </div>
                 </div>
                 <div>
@@ -42,7 +42,7 @@
                     <input type="email" name="regEmail" id="regEmail" formControlName="email" placeholder="ejemplo@correo.com" required>
                     <div *ngIf="registroForm.get('email')?.invalid && registroForm.get('email')?.touched" class="error">
                         <span *ngIf="registroForm.get('email')?.errors?.['required']">El email es obligatorio</span>
-                        <span *ngIf="registroForm.get('email')?.errors?.['email']">Ingrese un email válido</span>
+                        <span *ngIf="registroForm.get('email')?.errors?.['pattern'] || registroForm.get('email')?.errors?.['email']">Ingrese un email válido</span>
                     </div>
                 </div>
                 <div>
@@ -55,6 +55,9 @@
                 <div>
                     <label for="telefono">Teléfono (opcional)</label>
                     <input type="tel" name="telefono" id="telefono" formControlName="telefono" placeholder="11-1234-5678">
+                    <div *ngIf="registroForm.get('telefono')?.invalid && registroForm.get('telefono')?.touched" class="error">
+                        <span *ngIf="registroForm.get('telefono')?.errors?.['pattern']">El teléfono debe tener 10 números exactos (sin 0 ni 15)</span>
+                    </div>
                 </div>
                 <div>
                     <label for="regPassword">Contraseña *</label>

@@ -168,7 +168,7 @@ export class ModificarProductosComponent implements OnInit {
     this.http.get<Molde[]>('http://localhost:5000/api/moldes')
       .subscribe({
         next: (data) => this.moldes = ordenarAlfabetico(data),
-        error: (err) => console.error('Error al cargar moldes:', err)
+        error: (err) => {}
       });
   }
 
@@ -176,7 +176,7 @@ export class ModificarProductosComponent implements OnInit {
     this.http.get<Molde[]>('http://localhost:5000/api/moldes-hilo')
       .subscribe({
         next: (data) => this.moldesHilo = ordenarAlfabetico(data),
-        error: (err) => console.error('Error al cargar moldes de hilo:', err)
+        error: (err) => {}
       });
   }
 
@@ -184,7 +184,7 @@ export class ModificarProductosComponent implements OnInit {
     this.http.get<Color[]>('http://localhost:5000/api/colores')
       .subscribe({
         next: (data) => this.colores = data,
-        error: (err) => console.error('Error al cargar colores:', err)
+        error: (err) => {}
       });
   }
 
@@ -192,7 +192,7 @@ export class ModificarProductosComponent implements OnInit {
     this.http.get<Color[]>('http://localhost:5000/api/colores-hilo')
       .subscribe({
         next: (data) => this.coloresHilo = ordenarCromatico(data),
-        error: (err) => console.error('Error al cargar colores de hilo:', err)
+        error: (err) => {}
       });
   }
 
@@ -366,7 +366,7 @@ export class ModificarProductosComponent implements OnInit {
       .subscribe({
         next: (data) => this.subcategoriasDisponibles = data || [],
         error: (err) => {
-          console.error('Error al cargar subcategorías:', err);
+          
           this.subcategoriasDisponibles = [];
         }
       });
@@ -882,7 +882,7 @@ export class ModificarProductosComponent implements OnInit {
             this.cancelarEdicion();
           },
           error: (err) => {
-            console.error('Error al actualizar producto:', err);
+            
           }
         });
     };
@@ -904,7 +904,7 @@ export class ModificarProductosComponent implements OnInit {
           guardar(todasLasImagenes);
         })
         .catch((err) => {
-          console.error('Error al subir imágenes:', err);
+          
         });
     } else {
       guardar(imagenesExistentesFinal);
@@ -933,7 +933,7 @@ export class ModificarProductosComponent implements OnInit {
           this.cancelarEliminar();
         },
         error: (err) => {
-          console.error('Error al eliminar producto:', err);
+          
         }
       });
   }

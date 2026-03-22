@@ -171,7 +171,7 @@ export class StockComponent implements OnInit {
     this.http.get<StockItem[]>('http://localhost:5000/api/stock')
       .subscribe({
         next: (data) => this.stock = data,
-        error: (err) => console.error('Error al cargar stock:', err)
+        error: (err) => {}
       });
   }
 
@@ -179,7 +179,7 @@ export class StockComponent implements OnInit {
     this.http.get<Producto[]>('http://localhost:5000/api/productos')
       .subscribe({
         next: (data) => this.productos = data,
-        error: (err) => console.error('Error al cargar productos:', err)
+        error: (err) => {}
       });
   }
 
@@ -187,7 +187,7 @@ export class StockComponent implements OnInit {
     this.http.get<Molde[]>('http://localhost:5000/api/moldes')
       .subscribe({
         next: (data) => this.moldes = ordenarAlfabetico(data),
-        error: (err) => console.error('Error al cargar moldes:', err)
+        error: (err) => {}
       });
   }
 
@@ -195,7 +195,7 @@ export class StockComponent implements OnInit {
     this.http.get<Molde[]>('http://localhost:5000/api/moldes-hilo')
       .subscribe({
         next: (data) => this.moldesHilo = ordenarAlfabetico(data),
-        error: (err) => console.error('Error al cargar moldes de hilo:', err)
+        error: (err) => {}
       });
   }
 
@@ -203,7 +203,7 @@ export class StockComponent implements OnInit {
     this.http.get<Color[]>('http://localhost:5000/api/colores')
       .subscribe({
         next: (data) => this.colores = data,
-        error: (err) => console.error('Error al cargar colores:', err)
+        error: (err) => {}
       });
   }
 
@@ -211,7 +211,7 @@ export class StockComponent implements OnInit {
     this.http.get<Color[]>('http://localhost:5000/api/colores-hilo')
       .subscribe({
         next: (data) => this.coloresHilo = ordenarCromatico(data),
-        error: (err) => console.error('Error al cargar colores hilo:', err)
+        error: (err) => {}
       });
   }
 
@@ -430,19 +430,19 @@ export class StockComponent implements OnInit {
       return;
     }
 
-    console.log('📤 Enviando al stock:', this.nuevoStock);
+    
 
     this.http.post('http://localhost:5000/api/stock', this.nuevoStock)
       .subscribe({
         next: (response) => {
-          console.log('✅ Respuesta del servidor:', response);
+          
           this.mostrarAlerta('Producto agregado al stock exitosamente', 'exito');
           this.cargarStock();
           this.cerrarModalCargar();
         },
         error: (err) => {
-          console.error('❌ Error al guardar stock:', err);
-          console.error('Datos enviados:', this.nuevoStock);
+          
+          
           this.mostrarAlerta(`Error al guardar en el stock: ${err.error?.mensaje || err.message}`, 'error');
         }
       });
@@ -495,7 +495,7 @@ export class StockComponent implements OnInit {
           this.cerrarModalVender();
         },
         error: (err) => {
-          console.error('Error al registrar venta:', err);
+          
           this.mostrarAlerta('Error al registrar la venta', 'error');
         }
       });
@@ -531,7 +531,7 @@ export class StockComponent implements OnInit {
           this.cerrarModalEditarCantidad();
         },
         error: (err) => {
-          console.error('Error al actualizar cantidad:', err);
+          
           this.mostrarAlerta('Error al actualizar cantidad', 'error');
         }
       });
@@ -560,7 +560,7 @@ export class StockComponent implements OnInit {
           this.cerrarModalEliminarVariante();
         },
         error: (err) => {
-          console.error('Error al eliminar variante:', err);
+          
           this.mostrarAlerta('Error al eliminar variante', 'error');
         }
       });
@@ -656,7 +656,7 @@ export class StockComponent implements OnInit {
           this.cerrarModalAgregarVariante();
         },
         error: (err) => {
-          console.error('Error al agregar variante:', err);
+          
           this.mostrarAlerta('Error al agregar variante', 'error');
         }
       });

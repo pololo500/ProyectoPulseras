@@ -9,8 +9,10 @@
 .container {
   padding: 20px 20px 20px 20px;
   min-height: 100vh;
-  background-color: #1a1a2e;
-  color: #D6B435;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .header {
@@ -20,20 +22,39 @@
   max-width: 1400px;
   margin: 0 auto 30px auto;
   flex-wrap: wrap;
-  gap: 15px;
+  gap: 20px;
+  flex-direction: column;
 }
 
 h1 {
-  font-size: 2rem;
   margin: 0;
 }
 
 .header-acciones {
   display: flex;
-  gap: 10px;
+  gap: 20px;
+  justify-content: space-between;
+  width: 90%;
 }
 
 .btn-agregar {
+  background-color: #02c028;
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 0;
+}
+
+.btn-agregar:hover {
+  background-color: #06d22f;
+}
+
+.btn-importar {
   background-color: #D6B435;
   color: #000447;
   padding: 12px 24px;
@@ -43,23 +64,11 @@ h1 {
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
+  margin: 0;
 }
 
-.btn-agregar:hover {
+.btn-importar:hover {
   background-color: #C8962B;
-  transform: scale(1.02);
-}
-
-.btn-importar {
-  background-color: #17a2b8;
-  color: white;
-  padding: 12px 24px;
-  border: none;
-  border-radius: 8px;
-  font-weight: bold;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
 }
 
 /* Resumen */
@@ -69,6 +78,8 @@ h1 {
   gap: 30px;
   margin-bottom: 30px;
   flex-wrap: wrap;
+  align-self: center;
+  width: 90%;
 }
 
 .resumen-card {
@@ -121,6 +132,7 @@ h1 {
   max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
+  width: 90%;
 }
 
 .filtro-group {
@@ -154,17 +166,10 @@ h1 {
 
 .btn-limpiar {
   padding: 10px 20px;
-  border: 1px solid #888;
-  border-radius: 5px;
-  background-color: transparent;
-  color: #888;
+  border: 1px solid #D6B435;
   cursor: pointer;
   transition: all 0.3s ease;
-}
-
-.btn-limpiar:hover {
-  background-color: #888;
-  color: #000;
+  width: 95%;
 }
 
 /* Tabla */
@@ -172,6 +177,7 @@ h1 {
   overflow-x: auto;
   max-width: 1400px;
   margin: 0 auto;
+  width: 95%;
 }
 
 .ventas-table {

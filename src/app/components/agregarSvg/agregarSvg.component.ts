@@ -85,7 +85,7 @@ export class AgregarSvgComponent implements OnInit {
           this.cargando = false;
         },
         error: (err) => {
-          console.error('Error al cargar moldes:', err);
+          
           this.mostrarMensaje('Error al cargar los moldes', 'error');
           this.cargando = false;
         }
@@ -307,7 +307,7 @@ export class AgregarSvgComponent implements OnInit {
         },
         error: (err) => {
           this.guardando = false;
-          console.error('Error al guardar:', err);
+          
           this.mostrarMensaje('Error al guardar el SVG', 'error');
         }
       });
@@ -350,7 +350,7 @@ export class AgregarSvgComponent implements OnInit {
         },
         error: (err) => {
           this.guardando = false;
-          console.error('Error al eliminar:', err);
+          
           this.mostrarMensaje('Error al eliminar el SVG', 'error');
         }
       });

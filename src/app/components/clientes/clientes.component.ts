@@ -43,6 +43,7 @@ export class ClientesComponent implements OnInit {
     filtroNombre = '';
     filtroEmail = '';
     filtroPendientes: 'todos' | 'conPedidos' | 'sinPedidos' = 'todos';
+    mostrarFiltrosMobile = false;
     
     // Detalle de cliente
     mostrarDetalle = false;
@@ -111,7 +112,7 @@ export class ClientesComponent implements OnInit {
             this.aplicarFiltros();
             this.cargando = false;
         }).catch(err => {
-            console.error('Error al cargar datos:', err);
+            
             this.cargando = false;
         });
     }
@@ -144,6 +145,23 @@ export class ClientesComponent implements OnInit {
             
             return true;
         });
+    }
+
+    tieneFiltrosActivos(): boolean {
+        return this.filtroNombre !== '' || this.filtroEmail !== '' || this.filtroPendientes !== 'todos';
+    }
+
+    abrirFiltrosMobile(): void {
+        this.mostrarFiltrosMobile = true;
+    }
+
+    cerrarFiltrosMobile(): void {
+        this.mostrarFiltrosMobile = false;
+    }
+
+    aplicarFiltrosMovil(): void {
+        this.aplicarFiltros();
+        this.cerrarFiltrosMobile();
     }
 
     limpiarFiltros(): void {

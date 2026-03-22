@@ -138,12 +138,13 @@
                 [(ngModel)]="telefonoInput" 
                 placeholder="Ej: 1140766376"
                 [disabled]="guardandoTelefono">
-            <small>Ingresa tu número sin el 0 y sin el 15</small>
+            <small *ngIf="telefonoInput && !telefonoInput.match('^[ \\-\\+\\(\\)]*(?:\\d[ \\-\\+\\(\\)]*){10}$')">Debe contener 10 y sólo 10 números.</small>
+            <small *ngIf="!telefonoInput || telefonoInput.match('^[ \\-\\+\\(\\)]*(?:\\d[ \\-\\+\\(\\)]*){10}$')">Ingresa tu número sin el 0 y sin el 15</small>
         </div>
         
         <div class="popup-acciones">
             <button class="btn-cancelar" (click)="cerrarPopupTelefono()" [disabled]="guardandoTelefono">Cancelar</button>
-            <button class="btn-confirmar" (click)="guardarTelefono()" [disabled]="guardandoTelefono || !telefonoInput">
+            <button class="btn-confirmar" (click)="guardarTelefono()" [disabled]="guardandoTelefono || !telefonoInput || !telefonoInput.match('^[ \\-\\+\\(\\)]*(?:\\d[ \\-\\+\\(\\)]*){10}$')">
                 <span *ngIf="!guardandoTelefono">Guardar y continuar</span>
                 <span *ngIf="guardandoTelefono">Guardando...</span>
             </button>
@@ -221,7 +222,7 @@
                     <input type="email" id="loginEmail" formControlName="email" placeholder="ejemplo@correo.com">
                     <div class="form-error" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
                         <span *ngIf="loginForm.get('email')?.errors?.['required']">El email es obligatorio</span>
-                        <span *ngIf="loginForm.get('email')?.errors?.['email']">Ingrese un email válido</span>
+                        <span *ngIf="loginForm.get('email')?.errors?.['email'] || loginForm.get('email')?.errors?.['pattern']">Ingrese un email válido</span>
                     </div>
                 </div>
                 <div class="form-group">
@@ -241,7 +242,7 @@
                     <input type="email" id="regEmail" formControlName="email" placeholder="ejemplo@correo.com">
                     <div class="form-error" *ngIf="registroForm.get('email')?.invalid && registroForm.get('email')?.touched">
                         <span *ngIf="registroForm.get('email')?.errors?.['required']">El email es obligatorio</span>
-                        <span *ngIf="registroForm.get('email')?.errors?.['email']">Ingrese un email válido</span>
+                        <span *ngIf="registroForm.get('email')?.errors?.['email'] || registroForm.get('email')?.errors?.['pattern']">Ingrese un email válido</span>
                     </div>
                 </div>
                 <div class="form-group">
@@ -254,6 +255,9 @@
                 <div class="form-group">
                     <label for="regTelefono">Teléfono (opcional)</label>
                     <input type="tel" id="regTelefono" formControlName="telefono" placeholder="11-1234-5678">
+                    <div class="form-error" *ngIf="registroForm.get('telefono')?.invalid && registroForm.get('telefono')?.touched">
+                        <span *ngIf="registroForm.get('telefono')?.errors?.['pattern']">El teléfono debe tener 10 números (ej: 1140766376)</span>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="regPassword">Contraseña *</label>

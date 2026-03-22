@@ -166,7 +166,7 @@ export class AgregarProductoComponent implements OnInit {
     this.http.get<Molde[]>('http://localhost:5000/api/moldes')
       .subscribe({
         next: (data) => this.moldes = ordenarAlfabetico(data),
-        error: (err) => console.error('Error al cargar moldes:', err)
+        error: (err) => {}
       });
   }
 
@@ -174,7 +174,7 @@ export class AgregarProductoComponent implements OnInit {
     this.http.get<Molde[]>('http://localhost:5000/api/moldes-hilo')
       .subscribe({
         next: (data) => this.moldesHilo = ordenarAlfabetico(data),
-        error: (err) => console.error('Error al cargar moldes de hilo:', err)
+        error: (err) => {}
       });
   }
 
@@ -182,7 +182,7 @@ export class AgregarProductoComponent implements OnInit {
     this.http.get<Color[]>('http://localhost:5000/api/colores')
       .subscribe({
         next: (data) => this.colores = data,
-        error: (err) => console.error('Error al cargar colores:', err)
+        error: (err) => {}
       });
   }
 
@@ -190,7 +190,7 @@ export class AgregarProductoComponent implements OnInit {
     this.http.get<Color[]>('http://localhost:5000/api/colores-hilo')
       .subscribe({
         next: (data) => this.coloresHilo = ordenarCromatico(data),
-        error: (err) => console.error('Error al cargar colores de hilo:', err)
+        error: (err) => {}
       });
   }
 
@@ -231,7 +231,7 @@ export class AgregarProductoComponent implements OnInit {
       .subscribe({
         next: (data) => this.subcategorias = data || [],
         error: (err) => {
-          console.error('Error al cargar subcategorías:', err);
+          
           this.subcategorias = [];
         }
       });
@@ -501,22 +501,22 @@ export class AgregarProductoComponent implements OnInit {
     const materialFinal = formValue.material === '__nuevo__' ? this.nuevoMaterialNombre.trim() : formValue.material;
 
     if (this.archivosImagenes.length === 0) {
-      console.error('No hay archivos seleccionados');
+      
       return;
     }
 
     if (!productoFinal || !materialFinal) {
-      console.error('Producto y material son requeridos');
+      
       return;
     }
 
     // Validar molde si es resina
     if (this.esResina && !formValue.molde) {
-      console.error('Molde es requerido para productos de resina');
+      
       return;
     }
     if (this.esHiloEncerado && !formValue.molde) {
-      console.error('Molde es requerido para productos de hilo encerado');
+      
       return;
     }
 
@@ -579,12 +579,12 @@ export class AgregarProductoComponent implements OnInit {
               this.obtenerTiposProducto();
             },
             error: (err) => {
-              console.error('Error al guardar producto:', err);
+              
             }
           });
       })
       .catch((err) => {
-        console.error('Error al subir imágenes:', err);
+        
       });
   }
 }
