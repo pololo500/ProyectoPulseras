@@ -974,7 +974,7 @@ app.post('/api/productos', async (req, res) => {
     const datos = req.body;
     try {
         if (datos.coloresPorImagen) {
-            {});
+            {};
         }
         const nuevoProducto = new Producto(datos);
         const result = await nuevoProducto.save();
@@ -993,7 +993,7 @@ app.put('/api/productos/:id', async (req, res) => {
     const datos = req.body;
     try {
         if (datos.coloresPorImagen) {
-            {});
+            {};
         }
         const result = await Producto.findByIdAndUpdate(req.params.id, datos, { new: true });
         if (!result) return res.status(404).json({ mensaje: 'Producto no encontrado' });
@@ -1071,13 +1071,13 @@ app.post('/api/pedidos', async (req, res) => {
                             // Si la variante llega a 0, eliminarla
                             if (variante.cantidad === 0) {
                                 stockDoc.variantes = stockDoc.variantes.filter(v => v._id !== item.stockVarianteId);
-                                {}`);
+                                {};
                             }
 
                             // Si no quedan variantes, eliminar el documento de stock completo
                             if (stockDoc.variantes.length === 0) {
                                 await Stock.findByIdAndDelete(stockDoc._id);
-                                {}`);
+                                {};
                             } else {
                                 stockDoc.ultimaActualizacion = new Date();
                                 await stockDoc.save();
