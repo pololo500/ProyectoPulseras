@@ -12,17 +12,17 @@ const app = express();
 const port = 5000;
 
 cloudinary.config({
-    cloud_name: 'dkbkgyvw7',
-    api_key: '565626317237195',
-    api_secret: 'sv_Xhvu1QVeh2YgoGc0Wes98SbI',
-  });
-
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 // Middleware
 app.use(cors()); // Permite conexiones desde Angular
 app.use(express.json()); // Para procesar JSON en las peticiones
 
 // Conectar a MongoDB Atlas
-mongoose.connect('mongodb+srv://marronemicaela:Abril2004@clusterm.dwtrhrc.mongodb.net/LMPulserasDB?retryWrites=true&w=majority&appName=ClusterM')
+const dbUrl = process.env.MONGO_URI;
+mongoose.connect(dbUrl)
 .then(async () => {
     console.log('Conectado a MongoDB Atlas');
     await migrarDatosLegacy();
