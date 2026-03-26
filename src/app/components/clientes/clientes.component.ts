@@ -6,6 +6,7 @@ import { CapitalizePipe } from '../../extras/capitalizePipe';
 import { FormatoPrecioPipe } from '../../extras/formatoPrecio.pipe';
 import { GlobalService } from '../../services/global.service';
 import { PopupAlertaComponent } from '../popupAlerta/popupAlerta.component';
+import { environment } from '../../../environments/environment';
 
 interface Pedido {
     _id: string;
@@ -83,8 +84,8 @@ export class ClientesComponent implements OnInit {
         
         // Cargar usuarios y pedidos en paralelo
         Promise.all([
-            this.http.get<any[]>('http://localhost:5000/api/usuarios').toPromise(),
-            this.http.get<Pedido[]>('http://localhost:5000/api/pedidos').toPromise()
+            this.http.get<any[]>(`${environment.apiUrl}/usuarios`).toPromise(),
+            this.http.get<Pedido[]>(`${environment.apiUrl}/pedidos`).toPromise()
         ]).then(([usuarios, pedidos]) => {
             this.pedidos = pedidos || [];
             

@@ -7,6 +7,7 @@ import { CapitalizePipe } from '../../extras/capitalizePipe';
 import { ordenarCromatico, ordenarAlfabetico } from '../../extras/color-sort';
 import { GlobalService } from '../../services/global.service';
 import { PopupSubcategoriaComponent } from '../popupSubcategoria/popupSubcategoria.component';
+import { environment } from '../../../environments/environment';
 
 interface Molde {
   _id: string;
@@ -147,14 +148,14 @@ export class AgregarProductoComponent implements OnInit {
   }
   
   obtenerTiposProducto() {
-    this.http.get<string[]>('http://localhost:5000/api/productos/tipos')
+    this.http.get<string[]>(`${environment.apiUrl}/productos/tipos`)
       .subscribe(data => {
         this.tiposProducto = data;
       });
   }
 
   obtenerMateriales(producto: string) {
-    this.http.get<string[]>(`http://localhost:5000/api/productos/materiales/${producto}`)
+    this.http.get<string[]>(`${environment.apiUrl}/productos/materiales/${producto}`)
       .subscribe(data => {
         this.materiales = data;
         this.addProductForm.get('material')?.setValue('');
@@ -163,7 +164,7 @@ export class AgregarProductoComponent implements OnInit {
   }
 
   cargarMoldes() {
-    this.http.get<Molde[]>('http://localhost:5000/api/moldes')
+    this.http.get<Molde[]>(`${environment.apiUrl}/moldes`)
       .subscribe({
         next: (data) => this.moldes = ordenarAlfabetico(data),
         error: (err) => {}
@@ -171,7 +172,7 @@ export class AgregarProductoComponent implements OnInit {
   }
 
   cargarMoldesHilo() {
-    this.http.get<Molde[]>('http://localhost:5000/api/moldes-hilo')
+    this.http.get<Molde[]>(`${environment.apiUrl}/moldes-hilo`)
       .subscribe({
         next: (data) => this.moldesHilo = ordenarAlfabetico(data),
         error: (err) => {}
@@ -179,7 +180,7 @@ export class AgregarProductoComponent implements OnInit {
   }
 
   cargarColores() {
-    this.http.get<Color[]>('http://localhost:5000/api/colores')
+    this.http.get<Color[]>(`${environment.apiUrl}/colores`)
       .subscribe({
         next: (data) => this.colores = data,
         error: (err) => {}
@@ -187,7 +188,7 @@ export class AgregarProductoComponent implements OnInit {
   }
 
   cargarColoresHilo() {
-    this.http.get<Color[]>('http://localhost:5000/api/colores-hilo')
+    this.http.get<Color[]>(`${environment.apiUrl}/colores-hilo`)
       .subscribe({
         next: (data) => this.coloresHilo = ordenarCromatico(data),
         error: (err) => {}
@@ -227,7 +228,7 @@ export class AgregarProductoComponent implements OnInit {
       return;
     }
     
-    this.http.get<string[]>(`http://localhost:5000/api/productos/subcategorias/${producto}/${material}`)
+    this.http.get<string[]>(`${environment.apiUrl}/productos/subcategorias/${producto}/${material}`)
       .subscribe({
         next: (data) => this.subcategorias = data || [],
         error: (err) => {
@@ -558,7 +559,7 @@ export class AgregarProductoComponent implements OnInit {
           body.coloresPorImagen = coloresConDatos;
         }
 
-        this.http.post('http://localhost:5000/api/productos', body)
+        this.http.post(`${environment.apiUrl}/productos`, body)
           .subscribe({
             next: (res) => {
               this.addProductForm.reset();

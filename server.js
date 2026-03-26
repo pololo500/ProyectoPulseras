@@ -6,6 +6,7 @@ const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
 const fs = require('fs');
 const crypto = require('crypto');
+require('dotenv').config();
 
 
 const app = express();

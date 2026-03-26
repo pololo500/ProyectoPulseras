@@ -4,6 +4,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { GlobalService } from '../../services/global.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-perfil',
@@ -58,7 +59,7 @@ export class PerfilComponent implements OnInit {
   }
 
   cargarDatosUsuario(): void {
-    this.http.get<any>(`http://localhost:5000/api/usuarios/${this.email}`)
+    this.http.get<any>(`${environment.apiUrl}/usuarios/${this.email}`)
       .subscribe({
         next: (usuario) => {
           const nombre = usuario.nombre || '';
@@ -128,7 +129,7 @@ export class PerfilComponent implements OnInit {
       telefono: this.datosForm.value.telefono
     };
     
-    this.http.put<any>(`http://localhost:5000/api/usuarios/${this.email}/datos`, datos)
+    this.http.put<any>(`${environment.apiUrl}/usuarios/${this.email}/datos`, datos)
       .subscribe({
         next: (res) => {
           this.cargando = false;
@@ -165,7 +166,7 @@ export class PerfilComponent implements OnInit {
       passwordNuevo: this.passwordForm.value.passwordNuevo
     };
     
-    this.http.put<any>(`http://localhost:5000/api/usuarios/${this.email}/password`, datos)
+    this.http.put<any>(`${environment.apiUrl}/usuarios/${this.email}/password`, datos)
       .subscribe({
         next: (res) => {
           this.cargando = false;

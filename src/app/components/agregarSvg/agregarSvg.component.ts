@@ -8,6 +8,7 @@ import { ordenarAlfabetico } from '../../extras/color-sort';
 import { GlobalService } from '../../services/global.service';
 import { PopupMoldeComponent } from '../popupMolde/popupMolde.component';
 import { PopupConfirmComponent } from '../popupConfirm/popupConfirm.component';
+import { environment } from '../../../environments/environment';
 
 interface Capa {
   nombre: string;
@@ -78,7 +79,7 @@ export class AgregarSvgComponent implements OnInit {
 
   cargarMoldes(): void {
     this.cargando = true;
-    this.http.get<Molde[]>('http://localhost:5000/api/moldes')
+    this.http.get<Molde[]>(`${environment.apiUrl}/moldes`)
       .subscribe({
         next: (data) => {
           this.moldes = ordenarAlfabetico(data);
@@ -291,7 +292,7 @@ export class AgregarSvgComponent implements OnInit {
       svgAreaMappings: this.areaMappings
     };
 
-    this.http.put(`http://localhost:5000/api/moldes/${this.moldeSeleccionado._id}`, datosActualizados)
+    this.http.put(`${environment.apiUrl}/moldes/${this.moldeSeleccionado._id}`, datosActualizados)
       .subscribe({
         next: () => {
           this.guardando = false;
@@ -329,7 +330,7 @@ export class AgregarSvgComponent implements OnInit {
       svgAreaMappings: []
     };
 
-    this.http.put(`http://localhost:5000/api/moldes/${this.moldeSeleccionado._id}`, datosActualizados)
+    this.http.put(`${environment.apiUrl}/moldes/${this.moldeSeleccionado._id}`, datosActualizados)
       .subscribe({
         next: () => {
           this.guardando = false;

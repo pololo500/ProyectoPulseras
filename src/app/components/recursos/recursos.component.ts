@@ -9,6 +9,7 @@ import { GlobalService } from '../../services/global.service';
 import { PopupMoldeComponent } from '../popupMolde/popupMolde.component';
 import { PopupColorComponent } from '../popupColor/popupColor.component';
 import { PopupConfirmComponent } from '../popupConfirm/popupConfirm.component';
+import { environment } from '../../../environments/environment';
 
 interface Capa {
   nombre: string;
@@ -129,7 +130,7 @@ export class RecursosComponent implements OnInit {
   // ==================== COLORES ====================
   cargarColores(): void {
     this.cargandoColores = true;
-    this.http.get<Color[]>('http://localhost:5000/api/colores').subscribe({
+    this.http.get<Color[]>(`${environment.apiUrl}/colores`).subscribe({
       next: (data) => { this.colores = data; this.cargandoColores = false; },
       error: (err) => {  this.cargandoColores = false; }
     });
@@ -156,7 +157,7 @@ export class RecursosComponent implements OnInit {
   // ==================== COLORES HILO ENCERADO ====================
   cargarColoresHilo(): void {
     this.cargandoColoresHilo = true;
-    this.http.get<Color[]>('http://localhost:5000/api/colores-hilo').subscribe({
+    this.http.get<Color[]>(`${environment.apiUrl}/colores-hilo`).subscribe({
       next: (data) => { this.coloresHilo = data; this.cargandoColoresHilo = false; },
       error: (err) => {  this.cargandoColoresHilo = false; }
     });
@@ -252,7 +253,7 @@ export class RecursosComponent implements OnInit {
   // ==================== MOLDES ====================
   cargarMoldes(): void {
     this.cargandoMoldes = true;
-    this.http.get<Molde[]>('http://localhost:5000/api/moldes').subscribe({
+    this.http.get<Molde[]>(`${environment.apiUrl}/moldes`).subscribe({
       next: (data) => { this.moldes = ordenarAlfabetico(data); this.cargandoMoldes = false; },
       error: (err) => {  this.cargandoMoldes = false; }
     });
@@ -312,7 +313,7 @@ export class RecursosComponent implements OnInit {
   // ==================== MOLDES HILO ====================
   cargarMoldesHilo(): void {
     this.cargandoMoldesHilo = true;
-    this.http.get<Molde[]>('http://localhost:5000/api/moldes-hilo').subscribe({
+    this.http.get<Molde[]>(`${environment.apiUrl}/moldes-hilo`).subscribe({
       next: (data) => { this.moldesHilo = ordenarAlfabetico(data); this.cargandoMoldesHilo = false; },
       error: (err) => {  this.cargandoMoldesHilo = false; }
     });
@@ -510,7 +511,7 @@ export class RecursosComponent implements OnInit {
       svgContent: this.prepararSvg(this.svgContent),
       svgAreaMappings: this.areaMappings
     };
-    this.http.put(`http://localhost:5000/api/moldes/${this.moldeSeleccionado._id}`, datosActualizados)
+    this.http.put(`${environment.apiUrl}/moldes/${this.moldeSeleccionado._id}`, datosActualizados)
       .subscribe({
         next: () => {
           this.guardandoSvg = false;
@@ -539,7 +540,7 @@ export class RecursosComponent implements OnInit {
     if (!this.moldeSeleccionado) return;
     this.guardandoSvg = true;
     const datosActualizados = { svgContent: null, svgAreaMappings: [] };
-    this.http.put(`http://localhost:5000/api/moldes/${this.moldeSeleccionado._id}`, datosActualizados)
+    this.http.put(`${environment.apiUrl}/moldes/${this.moldeSeleccionado._id}`, datosActualizados)
       .subscribe({
         next: () => {
           this.guardandoSvg = false;
@@ -669,7 +670,7 @@ export class RecursosComponent implements OnInit {
       svgContent: this.prepararSvg(this.svgContentHilo),
       svgAreaMappings: this.areaMappingsHilo
     };
-    this.http.put(`http://localhost:5000/api/moldes-hilo/${this.moldeHiloSeleccionado._id}`, datosActualizados)
+    this.http.put(`${environment.apiUrl}/moldes-hilo/${this.moldeHiloSeleccionado._id}`, datosActualizados)
       .subscribe({
         next: () => {
           this.guardandoSvgHilo = false;
@@ -698,7 +699,7 @@ export class RecursosComponent implements OnInit {
     if (!this.moldeHiloSeleccionado) return;
     this.guardandoSvgHilo = true;
     const datosActualizados = { svgContent: null, svgAreaMappings: [] };
-    this.http.put(`http://localhost:5000/api/moldes-hilo/${this.moldeHiloSeleccionado._id}`, datosActualizados)
+    this.http.put(`${environment.apiUrl}/moldes-hilo/${this.moldeHiloSeleccionado._id}`, datosActualizados)
       .subscribe({
         next: () => {
           this.guardandoSvgHilo = false;

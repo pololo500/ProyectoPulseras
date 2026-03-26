@@ -8,6 +8,7 @@ import { FormatoPrecioPipe } from '../../extras/formatoPrecio.pipe';
 import { CarritoService, ItemCarrito } from '../../services/carrito.service';
 import { PopupAlertaComponent } from '../popupAlerta/popupAlerta.component';
 import { Subscription } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-carrito',
@@ -158,7 +159,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
     
     // Verificar si tiene teléfono guardado
     const email = sessionStorage.getItem('email') || '';
-    this.http.get<any>(`http://localhost:5000/api/usuarios/${email}`)
+    this.http.get<any>(`${environment.apiUrl}/usuarios/${email}`)
       .subscribe({
         next: (usuario) => {
           if (usuario && usuario.telefono && usuario.telefono.trim() !== '') {
@@ -199,7 +200,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
     const email = sessionStorage.getItem('email') || '';
     const nombreUsuario = sessionStorage.getItem('nombreUsuario') || '';
     
-    this.http.put(`http://localhost:5000/api/usuarios/${email}/datos`, { 
+    this.http.put(`${environment.apiUrl}/usuarios/${email}/datos`, { 
       nombre: nombreUsuario,
       telefono: this.telefonoInput.trim() 
     })
@@ -227,7 +228,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
     this.procesando = true;
     
     // Obtener stock actualizado
-    this.http.get<any[]>('http://localhost:5000/api/stock').subscribe({
+    this.http.get<any[]>(`${environment.apiUrl}/stock`).subscribe({
       next: (stockItems) => {
         const email = sessionStorage.getItem('email') || '';
         const nombreUsuario = sessionStorage.getItem('nombreUsuario') || 'Cliente';
@@ -299,7 +300,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
         };
         
         // Crear el pedido único
-        this.http.post('http://localhost:5000/api/pedidos', pedido)
+        this.http.post(`${environment.apiUrl}/pedidos`, pedido)
           .subscribe({
             next: () => {
               // Generar mensaje de WhatsApp
@@ -397,7 +398,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
       password: this.loginForm.value.password
     };
   
-    this.http.post<any>(`http://localhost:5000/api/login`, formData)
+    this.http.post<any>(`${environment.apiUrl}/login`, formData)
       .subscribe({
         next: (res) => {
           if (res.success) {
@@ -450,7 +451,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
       password: this.registroForm.value.password
     };
   
-    this.http.post<any>(`http://localhost:5000/api/usuarios/registro`, formData)
+    this.http.post<any>(`${environment.apiUrl}/usuarios/registro`, formData)
       .subscribe({
         next: (res) => {
           if (res.success) {

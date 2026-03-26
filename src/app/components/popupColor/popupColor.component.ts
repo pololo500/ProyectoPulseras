@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { PopupConfirmComponent } from '../popupConfirm/popupConfirm.component';
 import { PopupAlertaComponent } from '../popupAlerta/popupAlerta.component';
+import { environment } from '../../../environments/environment';
 
 interface ColorEditar {
   _id: string;
@@ -38,7 +39,7 @@ export class PopupColorComponent implements OnInit, OnChanges {
   mostrarConfirmEliminar: boolean = false;
 
   get apiUrl(): string {
-    return this.tipoColor === 'hilo' ? 'http://localhost:5000/api/colores-hilo' : 'http://localhost:5000/api/colores';
+    return this.tipoColor === 'hilo' ? `${environment.apiUrl}/colores-hilo` : `${environment.apiUrl}/colores`;
   }
 
   // Popup alerta

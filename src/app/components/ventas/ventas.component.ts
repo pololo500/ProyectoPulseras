@@ -6,6 +6,7 @@ import { CapitalizePipe } from '../../extras/capitalizePipe';
 import { FormatoPrecioPipe } from '../../extras/formatoPrecio.pipe';
 import { GlobalService } from '../../services/global.service';
 import { PopupAlertaComponent } from '../popupAlerta/popupAlerta.component';
+import { environment } from '../../../environments/environment';
 
 interface ColorCapa {
   capaIndex: number;
@@ -126,7 +127,7 @@ export class VentasComponent implements OnInit {
   }
 
   cargarVentas() {
-    this.http.get<Venta[]>('http://localhost:5000/api/ventas')
+    this.http.get<Venta[]>(`${environment.apiUrl}/ventas`)
       .subscribe({
         next: (data) => {
           this.ventas = data;
@@ -138,7 +139,7 @@ export class VentasComponent implements OnInit {
   }
 
   cargarProductos() {
-    this.http.get<Producto[]>('http://localhost:5000/api/productos')
+    this.http.get<Producto[]>(`${environment.apiUrl}/productos`)
       .subscribe({
         next: (data) => {
           this.productos = data;
@@ -301,7 +302,7 @@ export class VentasComponent implements OnInit {
       nota: this.nuevaVentaNota
     };
 
-    this.http.post('http://localhost:5000/api/ventas', venta)
+    this.http.post(`${environment.apiUrl}/ventas`, venta)
       .subscribe({
         next: () => {
           this.cargarVentas();
@@ -366,7 +367,7 @@ export class VentasComponent implements OnInit {
             nota: venta.nota || ''
           };
 
-          this.http.post('http://localhost:5000/api/ventas', ventaNormalizada)
+          this.http.post(`${environment.apiUrl}/ventas`, ventaNormalizada)
             .subscribe({
               next: () => {
                 importados++;

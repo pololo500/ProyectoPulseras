@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { PopupConfirmComponent } from '../popupConfirm/popupConfirm.component';
 import { PopupAlertaComponent } from '../popupAlerta/popupAlerta.component';
+import { environment } from '../../../environments/environment';
 
 interface Capa {
   nombre: string;
@@ -56,7 +57,7 @@ export class PopupMoldeComponent implements OnInit, OnChanges {
   }
 
   get apiBase(): string {
-    return this.tipoMolde === 'hilo' ? 'http://localhost:5000/api/moldes-hilo' : 'http://localhost:5000/api/moldes';
+    return this.tipoMolde === 'hilo' ? `${environment.apiUrl}/moldes-hilo` : `${environment.apiUrl}/moldes`;
   }
 
   constructor(private http: HttpClient) {}

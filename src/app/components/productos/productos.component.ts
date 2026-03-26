@@ -11,6 +11,7 @@ import { FormatoPrecioPipe } from '../../extras/formatoPrecio.pipe';
 import { CarritoService, ColorPorCapa } from '../../services/carrito.service';
 import { FavoritosService, ItemFavorito } from '../../services/favoritos.service';
 import { PopupExitoComponent, ColorInfo } from '../popupExito/popupExito.component';
+import { environment } from '../../../environments/environment';
 
 interface Color {
   _id: string;
@@ -205,12 +206,12 @@ export class ProductosComponent implements OnInit {
   cargarDatos(): void {
     // Cargar productos, colores, coloresHilo, moldes, moldesHilo y stock en paralelo
     forkJoin({
-      productos: this.http.get<Producto[]>('http://localhost:5000/api/productos'),
-      colores: this.http.get<Color[]>('http://localhost:5000/api/colores'),
-      coloresHilo: this.http.get<Color[]>('http://localhost:5000/api/colores-hilo'),
-      moldes: this.http.get<Molde[]>('http://localhost:5000/api/moldes'),
-      moldesHilo: this.http.get<Molde[]>('http://localhost:5000/api/moldes-hilo'),
-      stock: this.http.get<StockItem[]>('http://localhost:5000/api/stock')
+      productos: this.http.get<Producto[]>(`${environment.apiUrl}/productos`),
+      colores: this.http.get<Color[]>(`${environment.apiUrl}/colores`),
+      coloresHilo: this.http.get<Color[]>(`${environment.apiUrl}/colores-hilo`),
+      moldes: this.http.get<Molde[]>(`${environment.apiUrl}/moldes`),
+      moldesHilo: this.http.get<Molde[]>(`${environment.apiUrl}/moldes-hilo`),
+      stock: this.http.get<StockItem[]>(`${environment.apiUrl}/stock`)
     }).subscribe({
       next: (data) => {
         // Cargar colores
@@ -266,7 +267,7 @@ export class ProductosComponent implements OnInit {
   }
 
   cargarColores(): void {
-    this.http.get<Color[]>('http://localhost:5000/api/colores')
+    this.http.get<Color[]>(`${environment.apiUrl}/colores`)
       .subscribe({
         next: (data) => this.colores = data,
         error: (err) => {}
@@ -274,7 +275,7 @@ export class ProductosComponent implements OnInit {
   }
 
   cargarMoldes(): void {
-    this.http.get<Molde[]>('http://localhost:5000/api/moldes')
+    this.http.get<Molde[]>(`${environment.apiUrl}/moldes`)
       .subscribe({
         next: (data) => this.moldes = ordenarAlfabetico(data),
         error: (err) => {}
@@ -290,7 +291,7 @@ export class ProductosComponent implements OnInit {
   }
 
   cargarProductos(): void {
-    this.http.get<Producto[]>('http://localhost:5000/api/productos')
+    this.http.get<Producto[]>(`${environment.apiUrl}/productos`)
       .subscribe({
         next: (data) => {
           // Inicializar cantidad en 1 para cada producto
@@ -1256,7 +1257,7 @@ export class ProductosComponent implements OnInit {
       password: this.loginForm.value.password
     };
   
-    this.http.post<any>(`http://localhost:5000/api/login`, formData)
+    this.http.post<any>(`${environment.apiUrl}/login`, formData)
       .subscribe({
         next: (res) => {
           if (res.success) {
@@ -1307,7 +1308,7 @@ export class ProductosComponent implements OnInit {
       password: this.registroForm.value.password
     };
   
-    this.http.post<any>(`http://localhost:5000/api/usuarios/registro`, formData)
+    this.http.post<any>(`${environment.apiUrl}/usuarios/registro`, formData)
       .subscribe({
         next: (res) => {
           if (res.success) {

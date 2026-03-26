@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { CapitalizePipe } from '../../extras/capitalizePipe';
+import { environment } from '../../../environments/environment';
 
 interface Producto {
   _id: string;
@@ -48,7 +49,7 @@ export class InicioAdminComponent implements OnInit, OnDestroy {
   }
 
   obtenerProductos() {
-    this.http.get<Producto[]>('http://localhost:5000/api/productos')
+    this.http.get<Producto[]>(`${environment.apiUrl}/productos`)
       .subscribe(data => {
         const productosPorTipo = new Map<string, Producto[]>();
         

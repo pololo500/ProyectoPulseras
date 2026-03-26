@@ -8,6 +8,7 @@ import { ParticleEffectSquare } from '../../extras/particle-effect-square';
 import { Router } from '@angular/router';
 import { CarritoService } from '../../services/carrito.service';
 import { FavoritosService } from '../../services/favoritos.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
     selector: 'app-login',
@@ -94,7 +95,7 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
       password: this.loginForm.value.password
     };
   
-    this.http.post<any>(`http://localhost:5000/api/login`, formData)
+    this.http.post<any>(`${environment.apiUrl}/login`, formData)
       .subscribe({
         next: (res) => {
           if(res.success) {
@@ -146,7 +147,7 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
       password: this.registroForm.value.password
     };
   
-    this.http.post<any>(`http://localhost:5000/api/usuarios/registro`, formData)
+    this.http.post<any>(`${environment.apiUrl}/usuarios/registro`, formData)
       .subscribe({
         next: (res) => {
           if(res.success) {

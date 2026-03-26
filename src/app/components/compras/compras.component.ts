@@ -7,6 +7,7 @@ import { FormatoPrecioPipe } from '../../extras/formatoPrecio.pipe';
 import { GlobalService } from '../../services/global.service';
 import { PopupConfirmComponent } from '../popupConfirm/popupConfirm.component';
 import { PopupAlertaComponent } from '../popupAlerta/popupAlerta.component';
+import { environment } from '../../../environments/environment';
 
 interface Compra {
   _id?: string;
@@ -81,7 +82,7 @@ export class ComprasComponent implements OnInit {
   }
 
   cargarCompras() {
-    this.http.get<Compra[]>('http://localhost:5000/api/compras')
+    this.http.get<Compra[]>(`${environment.apiUrl}/compras`)
       .subscribe({
         next: (data) => {
           this.compras = data;
@@ -91,7 +92,7 @@ export class ComprasComponent implements OnInit {
   }
 
   cargarLugares() {
-    this.http.get<string[]>('http://localhost:5000/api/compras/lugares')
+    this.http.get<string[]>(`${environment.apiUrl}/compras/lugares`)
       .subscribe({
         next: (data) => {
           this.lugares = data;
@@ -164,7 +165,7 @@ export class ComprasComponent implements OnInit {
 
     if (this.compraEditando) {
       // Actualizar
-      this.http.put(`http://localhost:5000/api/compras/${this.compraEditando._id}`, compraData)
+      this.http.put(`${environment.apiUrl}/compras/${this.compraEditando._id}`, compraData)
         .subscribe({
           next: () => {
             this.cargarCompras();
@@ -175,7 +176,7 @@ export class ComprasComponent implements OnInit {
         });
     } else {
       // Crear
-      this.http.post('http://localhost:5000/api/compras', compraData)
+      this.http.post(`${environment.apiUrl}/compras`, compraData)
         .subscribe({
           next: () => {
             this.cargarCompras();
@@ -217,7 +218,7 @@ export class ComprasComponent implements OnInit {
   eliminarCompra() {
     if (!this.compraAEliminar) return;
 
-    this.http.delete(`http://localhost:5000/api/compras/${this.compraAEliminar._id}`)
+    this.http.delete(`${environment.apiUrl}/compras/${this.compraAEliminar._id}`)
       .subscribe({
         next: () => {
           this.cargarCompras();
@@ -278,7 +279,7 @@ export class ComprasComponent implements OnInit {
           costoIndividual: (c.costoUnidad || 0) / (c.cantidadIndividual || 1)
         }));
 
-        this.http.post('http://localhost:5000/api/compras/importar', { compras: comprasProcesadas })
+        this.http.post(`${environment.apiUrl}/compras/importar`, { compras: comprasProcesadas })
           .subscribe({
             next: (res: any) => {
               this.mostrarAlerta(`${res.cantidad || comprasProcesadas.length} compras importadas correctamente`, 'exito');

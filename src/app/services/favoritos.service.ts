@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 export interface ItemFavorito {
     _id: string;
@@ -21,7 +22,7 @@ export class FavoritosService {
     // Producto pendiente para agregar después del login
     private productoPendiente: ItemFavorito | null = null;
 
-    private apiUrl = 'http://localhost:5000/api';
+    private apiUrl = environment.apiUrl;
 
     constructor(private http: HttpClient) {
         this.cargarFavoritosLocal();

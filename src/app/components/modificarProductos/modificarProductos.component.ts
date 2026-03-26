@@ -10,6 +10,7 @@ import { FormatoPrecioPipe } from '../../extras/formatoPrecio.pipe';
 import { GlobalService } from '../../services/global.service';
 import { PopupSubcategoriaComponent } from '../popupSubcategoria/popupSubcategoria.component';
 import { PopupConfirmComponent } from '../popupConfirm/popupConfirm.component';
+import { environment } from '../../../environments/environment';
 
 interface Molde {
   _id: string;
@@ -150,7 +151,7 @@ export class ModificarProductosComponent implements OnInit {
   }
 
   cargarProductos() {
-    this.http.get<Producto[]>('http://localhost:5000/api/productos')
+    this.http.get<Producto[]>(`${environment.apiUrl}/productos`)
       .subscribe(data => {
         this.productos = data;
         this.aplicarFiltros();
@@ -158,14 +159,14 @@ export class ModificarProductosComponent implements OnInit {
   }
 
   cargarTiposProducto() {
-    this.http.get<string[]>('http://localhost:5000/api/productos/tipos')
+    this.http.get<string[]>(`${environment.apiUrl}/productos/tipos`)
       .subscribe(data => {
         this.tiposProducto = data;
       });
   }
 
   cargarMoldes() {
-    this.http.get<Molde[]>('http://localhost:5000/api/moldes')
+    this.http.get<Molde[]>(`${environment.apiUrl}/moldes`)
       .subscribe({
         next: (data) => this.moldes = ordenarAlfabetico(data),
         error: (err) => {}
@@ -173,7 +174,7 @@ export class ModificarProductosComponent implements OnInit {
   }
 
   cargarMoldesHilo() {
-    this.http.get<Molde[]>('http://localhost:5000/api/moldes-hilo')
+    this.http.get<Molde[]>(`${environment.apiUrl}/moldes-hilo`)
       .subscribe({
         next: (data) => this.moldesHilo = ordenarAlfabetico(data),
         error: (err) => {}
@@ -181,7 +182,7 @@ export class ModificarProductosComponent implements OnInit {
   }
 
   cargarColores() {
-    this.http.get<Color[]>('http://localhost:5000/api/colores')
+    this.http.get<Color[]>(`${environment.apiUrl}/colores`)
       .subscribe({
         next: (data) => this.colores = data,
         error: (err) => {}
@@ -189,7 +190,7 @@ export class ModificarProductosComponent implements OnInit {
   }
 
   cargarColoresHilo() {
-    this.http.get<Color[]>('http://localhost:5000/api/colores-hilo')
+    this.http.get<Color[]>(`${environment.apiUrl}/colores-hilo`)
       .subscribe({
         next: (data) => this.coloresHilo = ordenarCromatico(data),
         error: (err) => {}
@@ -198,7 +199,7 @@ export class ModificarProductosComponent implements OnInit {
 
   cargarMateriales(producto: string) {
     if (producto) {
-      this.http.get<string[]>(`http://localhost:5000/api/productos/materiales/${producto}`)
+      this.http.get<string[]>(`${environment.apiUrl}/productos/materiales/${producto}`)
         .subscribe(data => {
           this.materiales = data;
         });
@@ -362,7 +363,7 @@ export class ModificarProductosComponent implements OnInit {
       return;
     }
     
-    this.http.get<string[]>(`http://localhost:5000/api/productos/subcategorias/${producto}/${material}`)
+    this.http.get<string[]>(`${environment.apiUrl}/productos/subcategorias/${producto}/${material}`)
       .subscribe({
         next: (data) => this.subcategoriasDisponibles = data || [],
         error: (err) => {
@@ -502,7 +503,7 @@ export class ModificarProductosComponent implements OnInit {
 
   cargarMaterialesEdicion(producto: string) {
     if (producto) {
-      this.http.get<string[]>(`http://localhost:5000/api/productos/materiales/${producto}`)
+      this.http.get<string[]>(`${environment.apiUrl}/productos/materiales/${producto}`)
         .subscribe(data => {
           this.materialesEdicion = data;
         });
@@ -874,7 +875,7 @@ export class ModificarProductosComponent implements OnInit {
         .filter(c => c !== null);
       body.coloresPorImagen = coloresRemapeados;
 
-      this.http.put(`http://localhost:5000/api/productos/${this.productoEditando!._id}`, body)
+      this.http.put(`${environment.apiUrl}/productos/${this.productoEditando!._id}`, body)
         .subscribe({
           next: () => {
             this.cargarProductos();
@@ -925,7 +926,7 @@ export class ModificarProductosComponent implements OnInit {
   eliminarProducto() {
     if (!this.productoAEliminar) return;
 
-    this.http.delete(`http://localhost:5000/api/productos/${this.productoAEliminar._id}`)
+    this.http.delete(`${environment.apiUrl}/productos/${this.productoAEliminar._id}`)
       .subscribe({
         next: () => {
           this.cargarProductos();

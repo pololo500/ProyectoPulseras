@@ -11,6 +11,7 @@ import { CapitalizePipe } from '../../extras/capitalizePipe';
 import { ordenarCromatico, ordenarAlfabetico } from '../../extras/color-sort';
 import { FormatoPrecioPipe } from '../../extras/formatoPrecio.pipe';
 import { PopupExitoComponent, ColorInfo } from '../popupExito/popupExito.component';
+import { environment } from '../../../environments/environment';
 
 interface Color {
     _id: string;
@@ -198,12 +199,12 @@ export class FavoritosComponent implements OnInit, OnDestroy {
 
     cargarDatos(): void {
         forkJoin({
-            productos: this.http.get<Producto[]>('http://localhost:5000/api/productos'),
-            colores: this.http.get<Color[]>('http://localhost:5000/api/colores'),
-            coloresHilo: this.http.get<Color[]>('http://localhost:5000/api/colores-hilo'),
-            moldes: this.http.get<Molde[]>('http://localhost:5000/api/moldes'),
-            moldesHilo: this.http.get<Molde[]>('http://localhost:5000/api/moldes-hilo'),
-            stock: this.http.get<StockItem[]>('http://localhost:5000/api/stock')
+            productos: this.http.get<Producto[]>(`${environment.apiUrl}/productos`),
+            colores: this.http.get<Color[]>(`${environment.apiUrl}/colores`),
+            coloresHilo: this.http.get<Color[]>(`${environment.apiUrl}/colores-hilo`),
+            moldes: this.http.get<Molde[]>(`${environment.apiUrl}/moldes`),
+            moldesHilo: this.http.get<Molde[]>(`${environment.apiUrl}/moldes-hilo`),
+            stock: this.http.get<StockItem[]>(`${environment.apiUrl}/stock`)
         }).subscribe({
             next: (data) => {
                 this.productos = data.productos;
@@ -1081,7 +1082,7 @@ export class FavoritosComponent implements OnInit, OnDestroy {
             password: this.loginForm.value.password
         };
 
-        this.http.post<any>('http://localhost:5000/api/login', formData)
+        this.http.post<any>(`${environment.apiUrl}/login`, formData)
             .subscribe({
                 next: (res) => {
                     if (res.success) {
@@ -1128,7 +1129,7 @@ export class FavoritosComponent implements OnInit, OnDestroy {
             password: this.registroForm.value.password
         };
 
-        this.http.post<any>('http://localhost:5000/api/usuarios/registro', formData)
+        this.http.post<any>(`${environment.apiUrl}/usuarios/registro`, formData)
             .subscribe({
                 next: (res) => {
                     if (res.success) {

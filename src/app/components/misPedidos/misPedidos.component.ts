@@ -8,6 +8,7 @@ import { FormatoPrecioPipe } from '../../extras/formatoPrecio.pipe';
 import { GlobalService } from '../../services/global.service';
 import { PopupAlertaComponent } from '../popupAlerta/popupAlerta.component';
 import { PopupConfirmComponent } from '../popupConfirm/popupConfirm.component';
+import { environment } from '../../../environments/environment';
 
 interface ColorCapa {
     capaIndex: number;
@@ -111,7 +112,7 @@ export class MisPedidosComponent implements OnInit {
     }
 
     cargarPedidos(): void {
-        this.http.get<Pedido[]>('http://localhost:5000/api/pedidos')
+        this.http.get<Pedido[]>(`${environment.apiUrl}/pedidos`)
             .subscribe({
                 next: (data) => {
                     // Filtrar solo los pedidos del cliente actual
@@ -125,7 +126,7 @@ export class MisPedidosComponent implements OnInit {
     }
 
     cargarHistorial(): void {
-        this.http.get<Venta[]>('http://localhost:5000/api/ventas')
+        this.http.get<Venta[]>(`${environment.apiUrl}/ventas`)
             .subscribe({
                 next: (data) => {
                     // Filtrar solo las ventas del cliente actual
@@ -321,11 +322,11 @@ export class MisPedidosComponent implements OnInit {
         };
         
         // Primero crear la venta, luego eliminar el pedido
-        this.http.post('http://localhost:5000/api/ventas', venta)
+        this.http.post(`${environment.apiUrl}/ventas`, venta)
             .subscribe({
                 next: () => {
                     // Eliminar el pedido
-                    this.http.delete(`http://localhost:5000/api/pedidos/${pedido._id}`)
+                    this.http.delete(`${environment.apiUrl}/pedidos/${pedido._id}`)
                         .subscribe({
                             next: () => {
                                 this.cancelando = false;
@@ -357,7 +358,7 @@ export class MisPedidosComponent implements OnInit {
         
         this.guardandoNota = true;
         
-        this.http.put(`http://localhost:5000/api/pedidos/${this.pedidoSeleccionado._id}`, {
+        this.http.put(`${environment.apiUrl}/pedidos/${this.pedidoSeleccionado._id}`, {
             ...this.pedidoSeleccionado,
             nota: this.notaEditada
         }).subscribe({

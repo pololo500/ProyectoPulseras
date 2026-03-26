@@ -6,6 +6,7 @@ import { CapitalizePipe } from '../../extras/capitalizePipe';
 import { ordenarCromatico, ordenarAlfabetico } from '../../extras/color-sort';
 import { PopupConfirmComponent } from '../popupConfirm/popupConfirm.component';
 import { PopupAlertaComponent } from '../popupAlerta/popupAlerta.component';
+import { environment } from '../../../environments/environment';
 
 interface ColorCapaStock {
   capaIndex: number;
@@ -168,7 +169,7 @@ export class StockComponent implements OnInit {
   }
 
   cargarStock(): void {
-    this.http.get<StockItem[]>('http://localhost:5000/api/stock')
+    this.http.get<StockItem[]>(`${environment.apiUrl}/stock`)
       .subscribe({
         next: (data) => this.stock = data,
         error: (err) => {}
@@ -176,7 +177,7 @@ export class StockComponent implements OnInit {
   }
 
   cargarProductos(): void {
-    this.http.get<Producto[]>('http://localhost:5000/api/productos')
+    this.http.get<Producto[]>(`${environment.apiUrl}/productos`)
       .subscribe({
         next: (data) => this.productos = data,
         error: (err) => {}
@@ -184,7 +185,7 @@ export class StockComponent implements OnInit {
   }
 
   cargarMoldes(): void {
-    this.http.get<Molde[]>('http://localhost:5000/api/moldes')
+    this.http.get<Molde[]>(`${environment.apiUrl}/moldes`)
       .subscribe({
         next: (data) => this.moldes = ordenarAlfabetico(data),
         error: (err) => {}
@@ -192,7 +193,7 @@ export class StockComponent implements OnInit {
   }
 
   cargarMoldesHilo(): void {
-    this.http.get<Molde[]>('http://localhost:5000/api/moldes-hilo')
+    this.http.get<Molde[]>(`${environment.apiUrl}/moldes-hilo`)
       .subscribe({
         next: (data) => this.moldesHilo = ordenarAlfabetico(data),
         error: (err) => {}
@@ -200,7 +201,7 @@ export class StockComponent implements OnInit {
   }
 
   cargarColores(): void {
-    this.http.get<Color[]>('http://localhost:5000/api/colores')
+    this.http.get<Color[]>(`${environment.apiUrl}/colores`)
       .subscribe({
         next: (data) => this.colores = data,
         error: (err) => {}
@@ -208,7 +209,7 @@ export class StockComponent implements OnInit {
   }
 
   cargarColoresHilo(): void {
-    this.http.get<Color[]>('http://localhost:5000/api/colores-hilo')
+    this.http.get<Color[]>(`${environment.apiUrl}/colores-hilo`)
       .subscribe({
         next: (data) => this.coloresHilo = ordenarCromatico(data),
         error: (err) => {}
@@ -432,7 +433,7 @@ export class StockComponent implements OnInit {
 
     
 
-    this.http.post('http://localhost:5000/api/stock', this.nuevoStock)
+    this.http.post(`${environment.apiUrl}/stock`, this.nuevoStock)
       .subscribe({
         next: (response) => {
           
@@ -487,7 +488,7 @@ export class StockComponent implements OnInit {
       varianteId: this.varianteSeleccionada._id
     };
 
-    this.http.post(`http://localhost:5000/api/stock/${this.stockSeleccionado._id}/vender`, payload)
+    this.http.post(`${environment.apiUrl}/stock/${this.stockSeleccionado._id}/vender`, payload)
       .subscribe({
         next: () => {
           this.mostrarAlerta('Venta registrada exitosamente', 'exito');
@@ -524,7 +525,7 @@ export class StockComponent implements OnInit {
       cantidad: this.cantidadTemporal
     };
 
-    this.http.put(`http://localhost:5000/api/stock/${this.stockAEditar._id}/variante/${this.varianteAEditar._id}/cantidad`, payload)
+    this.http.put(`${environment.apiUrl}/stock/${this.stockAEditar._id}/variante/${this.varianteAEditar._id}/cantidad`, payload)
       .subscribe({
         next: () => {
           this.cargarStock();
@@ -552,7 +553,7 @@ export class StockComponent implements OnInit {
   confirmarEliminarVariante(): void {
     if (!this.stockSeleccionado || !this.varianteAEliminar) return;
 
-    this.http.delete(`http://localhost:5000/api/stock/${this.stockSeleccionado._id}/variante/${this.varianteAEliminar._id}`)
+    this.http.delete(`${environment.apiUrl}/stock/${this.stockSeleccionado._id}/variante/${this.varianteAEliminar._id}`)
       .subscribe({
         next: () => {
           this.mostrarAlerta('Variante eliminada', 'exito');
@@ -648,7 +649,7 @@ export class StockComponent implements OnInit {
       return;
     }
 
-    this.http.post(`http://localhost:5000/api/stock/${this.stockParaVariante._id}/variante`, this.nuevaVarianteExistente)
+    this.http.post(`${environment.apiUrl}/stock/${this.stockParaVariante._id}/variante`, this.nuevaVarianteExistente)
       .subscribe({
         next: () => {
           this.mostrarAlerta('Variante agregada exitosamente', 'exito');

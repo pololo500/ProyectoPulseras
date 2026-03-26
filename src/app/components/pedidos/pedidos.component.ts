@@ -8,6 +8,7 @@ import { FormatoPrecioPipe } from '../../extras/formatoPrecio.pipe';
 import { GlobalService } from '../../services/global.service';
 import { PopupConfirmComponent } from '../popupConfirm/popupConfirm.component';
 import { PopupAlertaComponent } from '../popupAlerta/popupAlerta.component';
+import { environment } from '../../../environments/environment';
 
 interface ColorCapa {
   capaIndex: number;
@@ -155,7 +156,7 @@ export class PedidosComponent implements OnInit {
   }
 
   cargarPedidos() {
-    this.http.get<Pedido[]>('http://localhost:5000/api/pedidos')
+    this.http.get<Pedido[]>(`${environment.apiUrl}/pedidos`)
       .subscribe({
         next: (data) => this.pedidos = data,
         error: (err) => {}
@@ -163,7 +164,7 @@ export class PedidosComponent implements OnInit {
   }
 
   cargarProductos() {
-    this.http.get<Producto[]>('http://localhost:5000/api/productos')
+    this.http.get<Producto[]>(`${environment.apiUrl}/productos`)
       .subscribe({
         next: (data) => {
           this.productos = data;
@@ -174,7 +175,7 @@ export class PedidosComponent implements OnInit {
   }
 
   cargarMoldes() {
-    this.http.get<Molde[]>('http://localhost:5000/api/moldes')
+    this.http.get<Molde[]>(`${environment.apiUrl}/moldes`)
       .subscribe({
         next: (data) => this.moldes = ordenarAlfabetico(data),
         error: (err) => {}
@@ -182,7 +183,7 @@ export class PedidosComponent implements OnInit {
   }
 
   cargarMoldesHilo() {
-    this.http.get<Molde[]>('http://localhost:5000/api/moldes-hilo')
+    this.http.get<Molde[]>(`${environment.apiUrl}/moldes-hilo`)
       .subscribe({
         next: (data) => this.moldesHilo = ordenarAlfabetico(data),
         error: (err) => {}
@@ -190,7 +191,7 @@ export class PedidosComponent implements OnInit {
   }
 
   cargarColores() {
-    this.http.get<Color[]>('http://localhost:5000/api/colores')
+    this.http.get<Color[]>(`${environment.apiUrl}/colores`)
       .subscribe({
         next: (data) => this.colores = ordenarAlfabetico(data),
         error: (err) => {}
@@ -198,7 +199,7 @@ export class PedidosComponent implements OnInit {
   }
 
   cargarColoresHilo() {
-    this.http.get<Color[]>('http://localhost:5000/api/colores-hilo')
+    this.http.get<Color[]>(`${environment.apiUrl}/colores-hilo`)
       .subscribe({
         next: (data) => this.coloresHilo = ordenarAlfabetico(data),
         error: (err) => {}
@@ -422,7 +423,7 @@ export class PedidosComponent implements OnInit {
     };
 
     if (this.pedidoEditando) {
-      this.http.put(`http://localhost:5000/api/pedidos/${this.pedidoEditando._id}`, pedidoData)
+      this.http.put(`${environment.apiUrl}/pedidos/${this.pedidoEditando._id}`, pedidoData)
         .subscribe({
           next: () => {
             this.cargarPedidos();
@@ -431,7 +432,7 @@ export class PedidosComponent implements OnInit {
           error: (err) => {}
         });
     } else {
-      this.http.post('http://localhost:5000/api/pedidos', pedidoData)
+      this.http.post(`${environment.apiUrl}/pedidos`, pedidoData)
         .subscribe({
           next: () => {
             this.cargarPedidos();
@@ -499,10 +500,10 @@ export class PedidosComponent implements OnInit {
     // Copiar items a la venta
     venta.items = this.pedidoAccion.items;
 
-    this.http.post('http://localhost:5000/api/ventas', venta)
+    this.http.post(`${environment.apiUrl}/ventas`, venta)
       .subscribe({
         next: () => {
-          this.http.delete(`http://localhost:5000/api/pedidos/${this.pedidoAccion!._id}`)
+          this.http.delete(`${environment.apiUrl}/pedidos/${this.pedidoAccion!._id}`)
             .subscribe({
               next: () => {
                 this.cargarPedidos();
@@ -552,7 +553,7 @@ export class PedidosComponent implements OnInit {
     }
 
     // Obtener memoria actual
-    this.http.get<any>('http://localhost:5000/api/calculadora-memoria')
+    this.http.get<any>(`${environment.apiUrl}/calculadora-memoria`)
       .subscribe({
         next: (memoria) => {
           const productos = memoria.productos || [];
@@ -596,7 +597,7 @@ export class PedidosComponent implements OnInit {
           contadorId++;
 
           // Guardar memoria actualizada
-          this.http.post('http://localhost:5000/api/calculadora-memoria', { productos, contadorId })
+          this.http.post(`${environment.apiUrl}/calculadora-memoria`, { productos, contadorId })
             .subscribe({
               next: () => this.mostrarAlerta(`${itemToAdd.productoNombre} agregado a la calculadora de resina`, 'exito'),
               error: (err) => {}
@@ -619,7 +620,7 @@ export class PedidosComponent implements OnInit {
     const items = [...this.getItemsPedido(pedido)];
     items[itemIndex] = { ...items[itemIndex], estado: nuevoEstado };
     
-    this.http.put(`http://localhost:5000/api/pedidos/${pedido._id}`, { ...pedido, items })
+    this.http.put(`${environment.apiUrl}/pedidos/${pedido._id}`, { ...pedido, items })
       .subscribe({
         next: () => this.cargarPedidos(),
         error: (err) => {}
@@ -652,7 +653,7 @@ export class PedidosComponent implements OnInit {
 
   // Cambiar pagado inline
   cambiarPagado(pedido: Pedido) {
-    this.http.put(`http://localhost:5000/api/pedidos/${pedido._id}`, { ...pedido, pagado: !pedido.pagado })
+    this.http.put(`${environment.apiUrl}/pedidos/${pedido._id}`, { ...pedido, pagado: !pedido.pagado })
       .subscribe({
         next: () => this.cargarPedidos(),
         error: (err) => {}

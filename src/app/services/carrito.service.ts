@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface ColorPorCapa {
   capaIndex: number;
@@ -32,7 +33,7 @@ export interface ItemCarrito {
   providedIn: 'root'
 })
 export class CarritoService {
-  private apiUrl = 'http://localhost:5000/api';
+  private apiUrl = environment.apiUrl;
   private carritoSubject = new BehaviorSubject<ItemCarrito[]>([]);
   public carrito$ = this.carritoSubject.asObservable();
 

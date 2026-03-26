@@ -10,6 +10,7 @@ import { CapitalizePipe } from '../../extras/capitalizePipe';
 import { ordenarCromatico, ordenarAlfabetico } from '../../extras/color-sort';
 import { GlobalService } from '../../services/global.service';
 import jsPDF from 'jspdf';
+import { environment } from '../../../environments/environment';
 
 interface Capa {
   nombre: string;
@@ -117,21 +118,21 @@ export class CalculadoraResinaComponent implements OnInit {
   }
 
   cargarMoldes(): void {
-    this.http.get<Molde[]>('http://localhost:5000/api/moldes').subscribe({
+    this.http.get<Molde[]>(`${environment.apiUrl}/moldes`).subscribe({
       next: (data) => this.moldes = ordenarAlfabetico(data),
       error: (err) => {}
     });
   }
 
   cargarColores(): void {
-    this.http.get<Color[]>('http://localhost:5000/api/colores').subscribe({
+    this.http.get<Color[]>(`${environment.apiUrl}/colores`).subscribe({
       next: (data) => this.colores = data,
       error: (err) => {}
     });
   }
 
   cargarMemoria(): void {
-    this.http.get<{ productos: ProductoTabla[]; contadorId: number }>('http://localhost:5000/api/calculadora-memoria').subscribe({
+    this.http.get<{ productos: ProductoTabla[]; contadorId: number }>(`${environment.apiUrl}/calculadora-memoria`).subscribe({
       next: (data) => {
         if (data && data.productos && data.productos.length > 0) {
           let necesitaMigracion = false;
@@ -188,7 +189,7 @@ export class CalculadoraResinaComponent implements OnInit {
       productos: this.productos,
       contadorId: this.contadorId
     };
-    this.http.post('http://localhost:5000/api/calculadora-memoria', datos).subscribe({
+    this.http.post(`${environment.apiUrl}/calculadora-memoria`, datos).subscribe({
       next: () => {},
       error: (err) => {}
     });
@@ -200,7 +201,7 @@ export class CalculadoraResinaComponent implements OnInit {
 
   confirmarLimpiar(): void {
     this.mostrarPopupConfirm = false;
-    this.http.delete('http://localhost:5000/api/calculadora-memoria').subscribe({
+    this.http.delete(`${environment.apiUrl}/calculadora-memoria`).subscribe({
       next: () => {
         this.productos = [];
         this.contadorId = 1;
@@ -270,7 +271,7 @@ export class CalculadoraResinaComponent implements OnInit {
 
   // Recargar colores desde el servidor
   recargarColores(): void {
-    this.http.get<Color[]>('http://localhost:5000/api/colores').subscribe({
+    this.http.get<Color[]>(`${environment.apiUrl}/colores`).subscribe({
       next: (data) => this.colores = data,
       error: (err) => {}
     });
@@ -554,7 +555,7 @@ export class CalculadoraResinaComponent implements OnInit {
       doc.setPage(i);
       doc.setFontSize(8);
       doc.setTextColor(150);
-      doc.text(`LM Pulseras - Página ${i} de ${pageCount}`, 105, 290, { align: 'center' });
+      doc.text(`LM HermanHadas - Página ${i} de ${pageCount}`, 105, 290, { align: 'center' });
     }
 
     // Descargar PDF
@@ -594,7 +595,7 @@ export class CalculadoraResinaComponent implements OnInit {
     }
 
     // Buscar el producto base en la base de datos
-    this.http.get<any[]>('http://localhost:5000/api/productos').subscribe({
+    this.http.get<any[]>(`${environment.apiUrl}/productos`).subscribe({
       next: (productos) => {
         // Buscar un producto que use este molde
         const productoBase = productos.find(p => 
@@ -634,7 +635,7 @@ export class CalculadoraResinaComponent implements OnInit {
         
 
         // Enviar a stock
-        this.http.post('http://localhost:5000/api/stock', stockData).subscribe({
+        this.http.post(`${environment.apiUrl}/stock`, stockData).subscribe({
           next: (response) => {
             
             this.mostrarAlerta(`✓ Producto agregado al stock: ${producto.cantidad} x ${producto.moldeNombre}`, 'exito');
