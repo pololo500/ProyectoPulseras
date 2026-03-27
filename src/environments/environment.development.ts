@@ -1,4 +1,4 @@
 export const environment = {
-  production: true,
-  apiUrl: 'https://lmhermanhadasbackend.onrender.com/' // Link de Render
+  production: false,
+  apiUrl: 'http://localhost:5000/api'
 };
